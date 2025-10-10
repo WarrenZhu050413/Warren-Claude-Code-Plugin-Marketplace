@@ -1,0 +1,39 @@
+# Warren's personal files
+commands/warren/
+tests/warren/
+
+# Personal configuration (user-specific snippets)
+scripts/config.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup.*
+backups/
+
+# Test outputs
+test_results/
+*.log
+
+# Config overrides
+.env

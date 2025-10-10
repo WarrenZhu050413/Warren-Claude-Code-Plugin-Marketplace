@@ -1,0 +1,20 @@
+{
+  "name": "claude-code-snippets",
+  "version": "1.0.0",
+  "description": "Inject context snippets into prompts via regex matching anywhere in your message - not just at the beginning!",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "keywords": [
+    "snippets",
+    "context",
+    "injection",
+    "regex",
+    "hooks",
+    "automation"
+  ],
+  "license": "MIT",
+  "commands": "./commands",
+  "hooks": "./hooks/hooks.json"
+}

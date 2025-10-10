@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spending Tracker Statusline Integration Plan</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --code-bg: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg-secondary);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            opacity: 0.95;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        h3 {
+            color: var(--text);
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        h4 {
+            color: var(--text);
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .learning-objectives {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .learning-objectives h3 {
+            color: var(--success);
+            margin-top: 0;
+        }
+
+        .concept-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .concept-card h4 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        .architecture-diagram {
+            background: var(--code-bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .step {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--primary);
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .badge-easy { background: #dcfce7; color: #166534; }
+        .badge-medium { background: #fef3c7; color: #92400e; }
+        .badge-advanced { background: #fee2e2; color: #991b1b; }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text);
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .file-path {
+            background: var(--code-bg);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--primary);
+            font-size: 0.9em;
+        }
+
+        details {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary);
+            user-select: none;
+        }
+
+        summary:hover {
+            color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Spending Tracker Statusline Integration</h1>
+            <p>Add automatic cost tracking to Claude Code statusline</p>
+        </header>
+
+        <div class="content">
+            <!-- Executive Summary -->
+            <section>
+                <div class="summary-box">
+                    <h2 style="border: none; margin-bottom: 1rem;">📋 Executive Summary</h2>
+                    <p><strong>What:</strong> Enable the spending-tracker plugin to integrate with Claude Code's statusline for automatic cost tracking.</p>
+                    <p style="margin-top: 0.5rem;"><strong>Approach:</strong> Provide helper scripts and example configurations that users can drop into their statusline command. The plugin tracks costs automatically but display is optional—users choose what to show.</p>
+                    <p style="margin-top: 0.5rem;"><strong>Complexity:</strong> 🟡 Medium (2-3 hours) - Requires understanding statusline architecture and creating reusable bash functions.</p>
+                </div>
+            </section>
+
+            <!-- Learning Objectives -->
+            <section>
+                <div class="learning-objectives">
+                    <h3>📚 What You'll Learn</h3>
+                    <ul>
+                        <li><strong>Core Concepts:</strong> Claude Code statusline architecture, JSON pipe-based communication, session-based delta tracking</li>
+                        <li><strong>Design Patterns:</strong> Separation of concerns (tracking vs. display), composable shell functions, optional feature flags</li>
+                        <li><strong>Technologies:</strong> Bash scripting, jq for JSON parsing, Python CLI tools, file-based IPC</li>
+                        <li><strong>Skills:</strong> Create plugin statusline helpers, design user-configurable integrations, write defensive bash scripts</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Background & Key Concepts -->
+            <section>
+                <h2>🎓 Background & Key Concepts</h2>
+
+                <div class="concept-card">
+                    <h4>💡 Concept: Claude Code Statusline</h4>
+                    <p><strong>What it is:</strong> A customizable command that runs on every statusline update, receiving JSON input via stdin and outputting formatted text.</p>
+                    <p><strong>Think of it as:</strong> A "React render function" for your terminal status bar—it gets props (JSON) and returns UI (text with ANSI colors).</p>
+                    <p><strong>Why it's relevant:</strong> The statusline runs frequently and has access to session cost data, making it perfect for automatic spending tracking.</p>
+                    <p><strong>Learn more:</strong> <code>settings.json → statusLine.command</code></p>
+                </div>
+
+                <div class="concept-card">
+                    <h4>💡 Concept: Session-Based Delta Tracking</h4>
+                    <p><strong>What it is:</strong> Remembering the last known cost for each session and only tracking the delta (new spending) on each update.</p>
+                    <p><strong>Think of it as:</strong> A "diff" system for costs—like git tracking changes, not re-committing the entire file every time.</p>
+                    <p><strong>Why we use it:</strong> The statusline updates many times per session with cumulative costs. Without delta tracking, we'd count the same $0.10 ten times and show $1.00 total.</p>
+                    <p><strong>Analogy:</strong>
+                        <pre>❌ Without delta: $0.10 + $0.10 + $0.10 = $0.30 (wrong!)
+✅ With delta: $0.00→$0.10 (add $0.10), $0.10→$0.10 (add $0.00), $0.10→$0.15 (add $0.05) = $0.15 total</pre>
+                    </p>
+                </div>
+
+                <div class="concept-card">
+                    <h4>💡 Concept: Separation of Tracking and Display</h4>
+                    <p><strong>What it is:</strong> Tracking cost (writing to data files) is separate from displaying cost (showing in statusline).</p>
+                    <p><strong>Think of it as:</strong> Database writes vs. UI rendering—you can save data without showing it, or show data without saving it.</p>
+                    <p><strong>Why this matters:</strong> Users might want to track spending for analytics but not clutter their statusline. Or show totals without per-session tracking.</p>
+                    <p><strong>Design principle:</strong> "Do one thing well"—the plugin provides tracking functions; users compose their display.</p>
+                </div>
+
+                <div class="architecture-diagram">
+                    <strong>Architecture Overview: How Statusline Integration Works</strong>
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│ Claude Code (every status update)                              │
+└───────────────────┬─────────────────────────────────────────────┘
+                    │ Sends JSON via stdin:
+                    │ {"cost": {"total_cost_usd": 1.25},
+                    │  "transcript_path": "~/.claude/history/abc123.jsonl"}
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ User's Statusline Script (~/.claude/statusline-command.sh)     │
+│                                                                 │
+│  1. Read JSON input                                            │
+│  2. Source plugin helper: source track-spending-helper.sh      │
+│  3. Call: track_spending_auto "$json"  ← Plugin function       │
+│  4. Call: get_spending_display         ← Optional display      │
+│  5. Output formatted statusline                                │
+└───────────────────┬─────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Plugin Helper (track-spending-helper.sh)                       │
+│                                                                 │
+│  • track_spending_auto()  - Parses JSON, calls Python script   │
+│  • get_spending_display() - Returns formatted display string   │
+│  • track_spending_silent() - Track without display             │
+└───────────────────┬─────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Python Script (track_spending.py)                              │
+│                                                                 │
+│  • Extracts session_id from transcript_path                    │
+│  • Calculates delta: new_cost - last_known_cost                │
+│  • Updates ~/.claude/spending_data/{daily,hourly,session}.json │
+│  • Returns delta_added to caller                               │
+└─────────────────────────────────────────────────────────────────┘
+
+<strong>Data Flow Example:</strong>
+Session starts → $0.00 (track: +$0.00)
+After message 1 → $0.15 (track: +$0.15, total: $0.15)
+After message 2 → $0.28 (track: +$0.13, total: $0.28) ✓ Correct!
+</pre>
+                </div>
+            </section>
+
+            <!-- How This Works -->
+            <section>
+                <h2>🏗️ How This Works (Runtime Behavior)</h2>
+
+                <h3>Data Flow: From Statusline Update to Tracked Cost</h3>
+                <ol>
+                    <li><strong>Trigger:</strong> Claude Code updates statusline (every few seconds during active session)</li>
+                    <li><strong>Input:</strong> Claude sends JSON via stdin with <code>cost.total_cost_usd</code> and <code>transcript_path</code></li>
+                    <li><strong>Parse:</strong> User's statusline script reads JSON using <code>jq</code></li>
+                    <li><strong>Source Helper:</strong> Script sources <code>track-spending-helper.sh</code> from plugin directory</li>
+                    <li><strong>Auto-Track:</strong> Calls <code>track_spending_auto "$input"</code> which:
+                        <ul>
+                            <li>Extracts session ID from transcript path (filename without extension)</li>
+                            <li>Calls <code>track_spending.py add-session --session-id XYZ --cost $amount</code></li>
+                            <li>Python script calculates delta and updates JSON data files</li>
+                        </ul>
+                    </li>
+                    <li><strong>Display (Optional):</strong> Calls <code>get_spending_display</code> to get formatted output</li>
+                    <li><strong>Output:</strong> Returns statusline text (with optional spending info)</li>
+                </ol>
+
+                <div class="info-box">
+                    <strong>💡 Key Insight:</strong> The plugin provides <em>functions</em>, not a complete statusline. Users integrate tracking into their existing statusline script by calling these functions. This preserves their custom formatting while adding spending features.
+                </div>
+
+                <h3>User Configuration Options</h3>
+                <div class="concept-card">
+                    <h4>Option 1: Track + Display</h4>
+                    <pre><code>source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+display=$(get_spending_display)
+printf "📁 %s | %s" "$dir" "$display"</code></pre>
+                    <p>Shows: <code>📁 my-project | 💰 $1.25 | 📅 $5.00/day</code></p>
+                </div>
+
+                <div class="concept-card">
+                    <h4>Option 2: Track Only (No Display)</h4>
+                    <pre><code>source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_silent "$input"
+printf "📁 %s ⚙️ %s" "$dir" "$model"</code></pre>
+                    <p>Shows: <code>📁 my-project ⚙️ Sonnet 4.5</code> (tracking happens silently)</p>
+                </div>
+
+                <div class="concept-card">
+                    <h4>Option 3: Custom Display</h4>
+                    <pre><code>source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+# Get totals and format your own way
+totals=$(python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format json)
+daily=$(echo "$totals" | jq -r '.daily_total')
+printf "📁 %s | Today: $%.2f" "$dir" "$daily"</code></pre>
+                    <p>Shows: <code>📁 my-project | Today: $5.23</code></p>
+                </div>
+            </section>
+
+            <!-- Prerequisites -->
+            <section>
+                <h2>✅ Prerequisites & Context</h2>
+                <ul>
+                    <li>✅ Plugin already has <code>track_spending.py</code> in <code>scripts/</code> directory</li>
+                    <li>✅ Python script supports <code>add-session</code> command with delta tracking</li>
+                    <li>✅ Data directory (<code>~/.claude/spending_data/</code>) is created automatically</li>
+                    <li>⚠️ Need to create: Bash helper script with reusable functions</li>
+                    <li>⚠️ Need to create: Example statusline configurations</li>
+                    <li>⚠️ Need to update: README with statusline integration docs</li>
+                </ul>
+            </section>
+
+            <!-- Step-by-Step Implementation -->
+            <section>
+                <h2>🔨 Step-by-Step Implementation</h2>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Create Bash Helper Script</div>
+                        <span class="badge badge-medium">🟡 Medium</span>
+                    </div>
+                    <p><strong>File:</strong> <span class="file-path">spending-tracker-plugin/scripts/track-spending-helper.sh</span></p>
+                    <p><strong>Rationale:</strong> Provides reusable bash functions that users can source in their statusline scripts. Abstracts complexity of JSON parsing and error handling.</p>
+
+                    <h4>Implementation Details:</h4>
+                    <pre><code>#!/bin/bash
+# Spending Tracker Helper for Claude Code Statusline
+# Source this file in your statusline-command.sh
+
+# Get the plugin directory (works even when sourced)
+PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TRACK_SCRIPT="$PLUGIN_DIR/track_spending.py"
+
+# Track spending automatically (with display)
+# Usage: track_spending_auto "$input_json"
+track_spending_auto() {
+    local input="$1"
+    track_spending_silent "$input"
+}
+
+# Track spending silently (no display)
+# Usage: track_spending_silent "$input_json"
+track_spending_silent() {
+    local input="$1"
+
+    # Extract cost and transcript path
+    local cost_raw=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
+    local transcript_path=$(echo "$input" | jq -r '.transcript_path // empty')
+
+    # Only track if we have valid data
+    if [ -z "$cost_raw" ] || [ "$cost_raw" = "null" ] || [ "$cost_raw" = "0" ]; then
+        return 0
+    fi
+
+    # Extract session ID from transcript path
+    local session_id="unknown"
+    if [ -n "$transcript_path" ] && [ "$transcript_path" != "null" ]; then
+        local transcript_name=$(basename "$transcript_path")
+        session_id="${transcript_name%.jsonl}"
+    fi
+
+    # Track spending (suppress output)
+    python3 "$TRACK_SCRIPT" add-session \
+        --session-id "$session_id" \
+        --cost "$cost_raw" \
+        2>/dev/null >/dev/null
+}
+
+# Get formatted spending display
+# Returns: "💰 $X.XX | 📅 $X.XX/day | ⏰ $X.XX/hr"
+get_spending_display() {
+    local totals=$(python3 "$TRACK_SCRIPT" get --format json 2>/dev/null || echo '{}')
+    local daily=$(echo "$totals" | jq -r '.daily_total // 0')
+    local hourly=$(echo "$totals" | jq -r '.hourly_total // 0')
+
+    local output=""
+
+    # Format daily total
+    if [ "$daily" != "0" ] && [ "$daily" != "null" ]; then
+        local daily_display=$(printf "\$%.2f" "$daily")
+        output="📅 $daily_display/day"
+    fi
+
+    # Format hourly total
+    if [ "$hourly" != "0" ] && [ "$hourly" != "null" ]; then
+        local hourly_display=$(printf "\$%.2f" "$hourly")
+        if [ -n "$output" ]; then
+            output="$output | ⏰ $hourly_display/hr"
+        else
+            output="⏰ $hourly_display/hr"
+        fi
+    fi
+
+    echo "$output"
+}</code></pre>
+
+                    <div class="warning-box">
+                        <strong>⚠️ Common Pitfall:</strong> When using <code>dirname "${BASH_SOURCE[0]}"</code>, it only works if the script is sourced. For direct execution, use <code>$0</code> instead. Our helper is designed to be sourced, so <code>BASH_SOURCE</code> is correct.
+                    </div>
+
+                    <p><strong>Verification:</strong></p>
+                    <pre><code># Test the helper functions
+source spending-tracker-plugin/scripts/track-spending-helper.sh
+echo '{"cost":{"total_cost_usd":1.25},"transcript_path":"test.jsonl"}' | track_spending_auto
+get_spending_display  # Should show totals if data exists</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Create Example Statusline Configuration</div>
+                        <span class="badge badge-easy">🟢 Easy</span>
+                    </div>
+                    <p><strong>File:</strong> <span class="file-path">spending-tracker-plugin/examples/statusline-example.sh</span></p>
+                    <p><strong>Rationale:</strong> Provide copy-paste examples for common use cases. Users learn by example more than by reading docs.</p>
+
+                    <h4>Create examples directory and file:</h4>
+                    <pre><code>#!/bin/bash
+# Example Statusline Integration for Spending Tracker Plugin
+# Copy relevant sections to your ~/.claude/settings.json statusLine.command
+
+# Read JSON input from Claude Code
+input=$(cat)
+
+# Extract basic info
+dir=$(echo "$input" | jq -r '.workspace.current_dir')
+model=$(echo "$input" | jq -r '.model.display_name')
+
+# ============================================================================
+# OPTION 1: Track + Display (Recommended)
+# ============================================================================
+# Source the plugin helper
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+
+# Track spending automatically
+track_spending_auto "$input"
+
+# Get formatted display
+spending_display=$(get_spending_display)
+
+# Output statusline with spending info
+if [ -n "$spending_display" ]; then
+    printf "📁 %s | ⚙️ %s | %s" "$(basename "$dir")" "$model" "$spending_display"
+else
+    printf "📁 %s | ⚙️ %s" "$(basename "$dir")" "$model"
+fi
+
+# ============================================================================
+# OPTION 2: Track Silently (No Display)
+# ============================================================================
+# source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+# track_spending_silent "$input"
+# printf "📁 %s | ⚙️ %s" "$(basename "$dir")" "$model"
+
+# ============================================================================
+# OPTION 3: Custom Display Format
+# ============================================================================
+# source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+# track_spending_auto "$input"
+#
+# # Get totals and format your way
+# totals=$(python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format json)
+# daily=$(echo "$totals" | jq -r '.daily_total')
+#
+# if [ "$daily" != "0" ] && [ "$daily" != "null" ]; then
+#     printf "📁 %s | 💰 Today: \$%.2f" "$(basename "$dir")" "$daily"
+# else
+#     printf "📁 %s" "$(basename "$dir")"
+# fi</code></pre>
+
+                    <p><strong>Verification:</strong> Test the example script works standalone before adding to settings.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Update README with Statusline Documentation</div>
+                        <span class="badge badge-medium">🟡 Medium</span>
+                    </div>
+                    <p><strong>File:</strong> <span class="file-path">spending-tracker-plugin/README.md</span></p>
+                    <p><strong>Rationale:</strong> Clear documentation is critical. Users need to know the plugin requires statusline integration and how to set it up.</p>
+
+                    <h4>Add new sections:</h4>
+                    <ul>
+                        <li><strong>Dependencies section</strong> - Explain statusline requirement</li>
+                        <li><strong>Statusline Integration section</strong> - Step-by-step setup guide</li>
+                        <li><strong>Configuration Options</strong> - Document track-only vs track+display</li>
+                        <li><strong>Troubleshooting</strong> - Common issues with statusline integration</li>
+                    </ul>
+
+                    <details>
+                        <summary>View README additions</summary>
+                        <pre><code>## Dependencies
+
+**Important:** This plugin requires statusline integration to automatically track spending. The plugin provides helper scripts that you integrate into your statusline command.
+
+**Why statusline?** Claude Code exposes session cost data via the statusline JSON input. This is the only reliable way to access real-time cost information for tracking.
+
+**Do I need to display costs?** No! You can track spending silently and view statistics via `/spending-stats` command. Display is optional.
+
+## Statusline Integration
+
+### Quick Setup
+
+1. **Source the helper script** in your statusline command:
+   ```bash
+   source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+   ```
+
+2. **Call tracking function**:
+   ```bash
+   track_spending_auto "$input"  # Track + enable display
+   # OR
+   track_spending_silent "$input"  # Track only (no display)
+   ```
+
+3. **Optionally display totals**:
+   ```bash
+   spending_display=$(get_spending_display)
+   printf "📁 %s | %s" "$dir" "$spending_display"
+   ```
+
+### Complete Example
+
+Edit your `~/.claude/settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/my-statusline.sh"
+  }
+}
+```
+
+Create `~/.claude/my-statusline.sh`:
+
+```bash
+#!/bin/bash
+input=$(cat)
+dir=$(echo "$input" | jq -r '.workspace.current_dir')
+model=$(echo "$input" | jq -r '.model.display_name')
+
+# Load spending tracker
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+
+# Get display
+spending=$(get_spending_display)
+
+# Output
+if [ -n "$spending" ]; then
+    printf "📁 %s | ⚙️ %s | %s" "$(basename "$dir")" "$model" "$spending"
+else
+    printf "📁 %s | ⚙️ %s" "$(basename "$dir")" "$model"
+fi
+```
+
+### Configuration Options
+
+**Option 1: Track + Display (Default)**
+```bash
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+spending=$(get_spending_display)
+```
+Shows: `📅 $5.25/day | ⏰ $1.23/hr`
+
+**Option 2: Track Silently**
+```bash
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_silent "$input"
+```
+No display, but data is tracked. View with `/spending-stats`.
+
+**Option 3: Custom Format**
+```bash
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+
+# Get raw data and format yourself
+totals=$(python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format json)
+daily=$(echo "$totals" | jq -r '.daily_total')
+printf "Today: $%.2f" "$daily"
+```
+
+### Troubleshooting Statusline
+
+**Helper script not found:**
+- Ensure plugin is installed: `/plugin list`
+- Check path: `ls ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh`
+- Use absolute path in source command
+
+**Tracking not working:**
+- Verify statusline command is running: check for syntax errors
+- Test manually: `echo '{"cost":{"total_cost_usd":1.5}}' | bash ~/.claude/my-statusline.sh`
+- Check data directory exists: `ls ~/.claude/spending_data/`
+
+**Display not showing:**
+- Call `get_spending_display` after `track_spending_auto`
+- Ensure there's tracked data: `/spending-stats`
+- Check for jq errors: `which jq`</code></pre>
+                    </details>
+                </div>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Add Installation Note to Plugin Manifest</div>
+                        <span class="badge badge-easy">🟢 Easy</span>
+                    </div>
+                    <p><strong>File:</strong> <span class="file-path">spending-tracker-plugin/.claude-plugin/plugin.json</span></p>
+                    <p><strong>Rationale:</strong> Users should see a clear note about statusline requirement when browsing the marketplace.</p>
+
+                    <p>Update description to mention statusline:</p>
+                    <pre><code>{
+  "name": "spending-tracker",
+  "version": "1.0.0",
+  "description": "Track Claude Code API spending with daily and hourly breakdowns. Requires statusline integration (helper scripts included).",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "commands": "./commands"
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Create Installation Guide</div>
+                        <span class="badge badge-easy">🟢 Easy</span>
+                    </div>
+                    <p><strong>File:</strong> <span class="file-path">spending-tracker-plugin/INSTALL.md</span></p>
+                    <p><strong>Rationale:</strong> Separate installation docs from usage docs. New users need a quick-start path.</p>
+
+                    <pre><code># Installation Guide
+
+## Prerequisites
+
+- Claude Code installed
+- `jq` installed (`brew install jq` on macOS)
+- Python 3 installed
+
+## Step 1: Install Plugin
+
+```bash
+/plugin install spending-tracker@warren-claude-code-plugin-marketplace
+```
+
+## Step 2: Set Up Statusline
+
+Choose one of these options:
+
+### Option A: Minimal Setup (Track Only)
+
+Add to your statusline script:
+
+```bash
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_silent "$input"
+```
+
+✅ **Done!** Costs are now tracked. Use `/spending-stats` to view.
+
+### Option B: Full Setup (Track + Display)
+
+Replace your statusline with example:
+
+```bash
+cp ~/.claude/plugins/spending-tracker/examples/statusline-example.sh ~/.claude/my-statusline.sh
+chmod +x ~/.claude/my-statusline.sh
+```
+
+Update `~/.claude/settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/my-statusline.sh"
+  }
+}
+```
+
+Restart Claude Code.
+
+✅ **Done!** You'll see spending in your statusline.
+
+## Step 3: Verify Installation
+
+Run a conversation, then check:
+
+```bash
+/spending-stats
+```
+
+You should see tracked data.
+
+## Troubleshooting
+
+See [README.md](README.md#troubleshooting-statusline) for common issues.</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Test Complete Integration</div>
+                        <span class="badge badge-medium">🟡 Medium</span>
+                    </div>
+                    <p><strong>Rationale:</strong> End-to-end testing ensures all pieces work together before users install.</p>
+
+                    <h4>Test Checklist:</h4>
+                    <ul>
+                        <li>✅ Helper script sources correctly</li>
+                        <li>✅ <code>track_spending_auto</code> tracks costs without errors</li>
+                        <li>✅ <code>track_spending_silent</code> tracks without output</li>
+                        <li>✅ <code>get_spending_display</code> returns formatted string</li>
+                        <li>✅ Example statusline script runs without errors</li>
+                        <li>✅ Data files are created in <code>~/.claude/spending_data/</code></li>
+                        <li>✅ <code>/spending-stats</code> command shows tracked data</li>
+                    </ul>
+
+                    <pre><code># Manual test sequence
+cd spending-tracker-plugin
+
+# Test 1: Source helper
+source scripts/track-spending-helper.sh
+echo "✅ Helper sourced"
+
+# Test 2: Track spending with mock input
+echo '{"cost":{"total_cost_usd":1.25},"transcript_path":"test-session.jsonl"}' | {
+    input=$(cat)
+    track_spending_auto "$input"
+    echo "✅ Tracking function executed"
+}
+
+# Test 3: Get display
+display=$(get_spending_display)
+echo "Display output: $display"
+echo "✅ Display function works"
+
+# Test 4: Check data files
+ls -la ~/.claude/spending_data/
+echo "✅ Data files exist"
+
+# Test 5: Verify via stats command
+# (Install plugin first, then run /spending-stats)</code></pre>
+                </div>
+            </section>
+
+            <!-- Testing & Validation -->
+            <section>
+                <h2>🧪 Testing & Validation</h2>
+
+                <h3>Unit Tests (Manual)</h3>
+                <div class="concept-card">
+                    <h4>Test: Helper Script Functions</h4>
+                    <pre><code>source scripts/track-spending-helper.sh
+
+# Test PLUGIN_DIR resolution
+echo "Plugin dir: $PLUGIN_DIR"
+[ -f "$TRACK_SCRIPT" ] && echo "✅ Script found" || echo "❌ Script not found"
+
+# Test with valid JSON
+test_input='{"cost":{"total_cost_usd":2.50},"transcript_path":"test.jsonl"}'
+echo "$test_input" | {
+    input=$(cat)
+    track_spending_silent "$input"
+    echo "✅ Silent tracking works"
+}
+
+# Test with missing cost (should not error)
+test_input='{"transcript_path":"test.jsonl"}'
+echo "$test_input" | {
+    input=$(cat)
+    track_spending_silent "$input"
+    echo "✅ Graceful handling of missing cost"
+}
+
+# Test display function
+display=$(get_spending_display)
+echo "Display: [$display]"
+[ -n "$display" ] && echo "✅ Display output non-empty" || echo "⚠️ No data to display yet"</code></pre>
+                </div>
+
+                <h3>Integration Test</h3>
+                <div class="concept-card">
+                    <h4>Test: Full Statusline Integration</h4>
+                    <pre><code># Create test statusline
+cat > /tmp/test-statusline.sh <<'EOF'
+#!/bin/bash
+input=$(cat)
+source ~/.claude/plugins/spending-tracker/scripts/track-spending-helper.sh
+track_spending_auto "$input"
+spending=$(get_spending_display)
+echo "Statusline output: $spending"
+EOF
+
+chmod +x /tmp/test-statusline.sh
+
+# Test with mock data
+echo '{"cost":{"total_cost_usd":3.75},"transcript_path":"integration-test.jsonl"}' | bash /tmp/test-statusline.sh
+
+# Verify output
+echo "✅ Integration test complete"</code></pre>
+                </div>
+            </section>
+
+            <!-- Edge Cases -->
+            <section>
+                <h2>⚠️ Edge Cases & Error Handling</h2>
+
+                <div class="warning-box">
+                    <h4>Edge Case 1: Missing jq</h4>
+                    <p><strong>Scenario:</strong> User doesn't have <code>jq</code> installed</p>
+                    <p><strong>Handling:</strong> Helper script should check for jq and print helpful error</p>
+                    <pre><code>if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required. Install with: brew install jq" >&2
+    return 1
+fi</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Edge Case 2: Plugin Not Installed</h4>
+                    <p><strong>Scenario:</strong> User tries to source helper before installing plugin</p>
+                    <p><strong>Handling:</strong> Check if track_spending.py exists</p>
+                    <pre><code>if [ ! -f "$TRACK_SCRIPT" ]; then
+    echo "Error: Spending tracker plugin not found. Install with: /plugin install spending-tracker" >&2
+    return 1
+fi</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Edge Case 3: Malformed JSON Input</h4>
+                    <p><strong>Scenario:</strong> Claude Code sends unexpected JSON format</p>
+                    <p><strong>Handling:</strong> Use <code>jq -r '.field // empty'</code> to handle missing fields gracefully</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Edge Case 4: Permission Errors</h4>
+                    <p><strong>Scenario:</strong> Can't write to <code>~/.claude/spending_data/</code></p>
+                    <p><strong>Handling:</strong> Python script creates directory with proper permissions. If fails, log error but don't crash statusline.</p>
+                </div>
+            </section>
+
+            <!-- Success Criteria -->
+            <section>
+                <h2>✅ Success Criteria</h2>
+
+                <ul>
+                    <li>✅ Helper script exists at <code>scripts/track-spending-helper.sh</code></li>
+                    <li>✅ Three functions work: <code>track_spending_auto</code>, <code>track_spending_silent</code>, <code>get_spending_display</code></li>
+                    <li>✅ Example statusline configuration provided in <code>examples/</code></li>
+                    <li>✅ README documents statusline requirement prominently</li>
+                    <li>✅ INSTALL.md provides step-by-step setup guide</li>
+                    <li>✅ Manual testing confirms all functions work</li>
+                    <li>✅ Users can track costs without displaying them</li>
+                    <li>✅ Users can customize display format if desired</li>
+                </ul>
+            </section>
+
+            <!-- Next Steps -->
+            <section>
+                <h2>🚀 Next Steps After Implementation</h2>
+
+                <ol>
+                    <li>Update marketplace <code>marketplace.json</code> with new version number</li>
+                    <li>Test plugin installation on clean environment</li>
+                    <li>Create demo video or GIF showing setup process</li>
+                    <li>Consider adding configuration file (<code>~/.claude/spending-tracker.conf</code>) for advanced users</li>
+                    <li>Gather user feedback on which display format is most useful</li>
+                </ol>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

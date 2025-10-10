@@ -1,0 +1,11 @@
+{
+  "mappings": [
+    {
+      "name": "HTML",
+      "pattern": "\\bHTML\\b\\.?",
+      "snippet": ["snippets/HTML.md"],
+      "enabled": true,
+      "separator": "\n"
+    }
+  ]
+}

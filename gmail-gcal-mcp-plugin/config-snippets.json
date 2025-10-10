@@ -1,0 +1,20 @@
+{
+  "mappings": [
+    {
+      "pattern": "\\b(email|mail|e-mail|message|inbox|send\\s+(to|message))\\b\\.?",
+      "snippet": ["snippets/mail.md"],
+      "enabled": true,
+      "separator": "\n",
+      "name": "mail",
+      "description": "Gmail automation - triggered by email/mail/message keywords"
+    },
+    {
+      "pattern": "\\b(gcal|g-cal|google\\s*calendar|calendar|event|schedule|appointment)\\b\\.?",
+      "snippet": ["snippets/gcal.md"],
+      "enabled": true,
+      "separator": "\n",
+      "name": "gcal",
+      "description": "Google Calendar automation - triggered by calendar/event/schedule keywords"
+    }
+  ]
+}

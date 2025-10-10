@@ -4,5 +4,24 @@
     "name": "Fucheng Warren Zhu",
     "email": "wzhu@college.harvard.edu"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "claude-code-snippets",
+      "version": "1.0.0",
+      "description": "Inject context snippets into prompts via regex matching anywhere in your message - not just at the beginning!",
+      "source": "./claude-code-snippets-plugin"
+    },
+    {
+      "name": "gmail-gcal-mcp",
+      "version": "1.0.0",
+      "description": "Gmail and Google Calendar automation via MCP servers with smart context injection for email and calendar keywords",
+      "source": "./gmail-gcal-mcp-plugin"
+    },
+    {
+      "name": "spending-tracker",
+      "version": "1.0.0",
+      "description": "Track Claude Code API spending with daily and hourly breakdowns",
+      "source": "./spending-tracker-plugin"
+    }
+  ]
 }

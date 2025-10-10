@@ -1,0 +1,10 @@
+{
+  "name": "spending-tracker",
+  "version": "1.0.0",
+  "description": "Track Claude Code API spending with daily and hourly breakdowns",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "commands": "./commands"
+}

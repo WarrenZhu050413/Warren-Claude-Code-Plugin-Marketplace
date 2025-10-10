@@ -1,0 +1,12 @@
+{
+  "name": "gmail-gcal-mcp",
+  "version": "1.0.0",
+  "description": "Gmail and Google Calendar automation via MCP servers with smart context injection for email and calendar keywords",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "homepage": "https://github.com/WZhu21/Warren-Claude-Code-Plugin-Marketplace",
+  "commands": "./commands",
+  "snippets": "./snippets"
+}
