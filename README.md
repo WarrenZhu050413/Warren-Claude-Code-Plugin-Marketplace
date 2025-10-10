@@ -11,12 +11,12 @@ This marketplace contains custom plugins for Claude Code. Currently empty but re
 To add this marketplace to your Claude Code installation, use:
 
 ```bash
-/plugin marketplace add https://github.com/YOUR_USERNAME/Warren-Claude-Code-Plugin-Marketplace
+/plugin marketplace add https://github.com/WarrenZhu050413/Warren-Claude-Code-Plugin-Marketplace
 ```
 
 ## Marketplace Structure
 
-The `marketplace.json` file defines available plugins in this marketplace.
+The `.claude-plugin/marketplace.json` file defines available plugins in this marketplace.
 
 ## Owner
 
