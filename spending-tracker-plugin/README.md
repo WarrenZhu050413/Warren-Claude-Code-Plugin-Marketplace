@@ -2,6 +2,14 @@
 
 Track your Claude Code API spending with daily and hourly breakdowns. This plugin provides slash commands to view statistics and manage your spending data.
 
+## ⚠️ Important: Statusline Integration Required
+
+This plugin requires manual integration with your Claude Code statusline for automatic tracking. The plugin provides a Python script that you call from your statusline—no automatic hooks or helper scripts.
+
+**Why?** Claude Code exposes cost data only through the statusline JSON input. Manual integration is safer and gives you full control over your statusline.
+
+**Data Storage:** All spending data is stored in `~/.claude/plugins/spending-tracker/spending_data/` (within the plugin directory).
+
 ## Features
 
 - Track API spending per day and per hour
@@ -9,7 +17,7 @@ Track your Claude Code API spending with daily and hourly breakdowns. This plugi
 - Session-based delta tracking (only counts new spending)
 - Thread-safe file operations with locking
 - Automatic cleanup of old data (30-day retention)
-- Integration with Claude Code statusline
+- Manual statusline integration (copy/paste code)
 
 ## Installation
 
@@ -86,43 +94,109 @@ Reset all spending tracking data. This operation is destructive and requires con
 /spending-reset -f           # Skip confirmation (short flag)
 ```
 
-## Integration with Statusline
+## Manual Statusline Integration
 
-This plugin includes the `track_spending.py` script that can be integrated with your Claude Code statusline to automatically track spending and display it in the status bar.
+You need to manually add tracking code to your statusline script. This approach is safer than auto-sourcing scripts and gives you full control.
 
-### Setup Instructions
+### Step 1: Locate Your Statusline Script
 
-1. The script is located at: `~/.claude/plugins/spending-tracker/scripts/track_spending.py`
+Your statusline script is defined in `~/.claude/settings.json`:
 
-2. In your statusline script, you can call:
-   ```bash
-   # Track spending with session-based delta tracking
-   python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py add-session \
-     --session-id "$session_id" \
-     --cost "$cost_dollars"
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  }
+}
+```
 
-   # Get current totals
-   python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format json
-   ```
+### Step 2: Add Tracking Code
 
-3. See `statusline-command.sh` example in the repository for full integration
+Add this code to your statusline script where you have access to `$cost_raw` and `$transcript_path` variables:
+
+```bash
+# ============================================================================
+# SPENDING TRACKER INTEGRATION
+# ============================================================================
+# Track spending using plugin (data stored in plugin directory)
+if [ -n "$cost_raw" ] && [ "$cost_raw" != "null" ]; then
+    cost_dollars=$(echo "$cost_raw" | awk '{printf "%.8f", $1}')
+
+    if (($(echo "$cost_dollars > 0" | bc -l))); then
+        # Extract session ID from transcript path
+        session_id="unknown"
+        if [ -n "$transcript_path" ] && [ "$transcript_path" != "null" ]; then
+            transcript_name=$(basename "$transcript_path")
+            session_id="${transcript_name%.jsonl}"
+        fi
+
+        # Call plugin script with --data-dir pointing to plugin directory
+        PLUGIN_DATA_DIR="$HOME/.claude/plugins/spending-tracker/spending_data"
+        python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+            add-session \
+            --data-dir "$PLUGIN_DATA_DIR" \
+            --session-id "$session_id" \
+            --cost "$cost_dollars" \
+            2>/dev/null >/dev/null
+    fi
+fi
+```
+
+### Step 3 (Optional): Display Spending Totals
+
+If you want to show spending in your statusline, add this code:
+
+```bash
+# Get spending totals for display
+PLUGIN_DATA_DIR="$HOME/.claude/plugins/spending-tracker/spending_data"
+totals_json=$(python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+    get \
+    --data-dir "$PLUGIN_DATA_DIR" \
+    --format json \
+    2>/dev/null || echo '{}')
+
+daily_total=$(echo "$totals_json" | jq -r '.daily_total // 0')
+hourly_total=$(echo "$totals_json" | jq -r '.hourly_total // 0')
+
+# Display however you like
+if [ "$daily_total" != "0" ]; then
+    printf "💰 Today: $%.2f" "$daily_total"
+fi
+```
+
+### Complete Example
+
+See `examples/statusline-command-example.sh` for a complete working statusline with tracking integrated
 
 ## Data Storage
 
-Spending data is stored in `~/.claude/spending_data/`:
+Spending data is stored in `~/.claude/plugins/spending-tracker/spending_data/`:
 
 - `daily.json` - Daily spending totals
 - `hourly.json` - Hourly spending totals
 - `session_state.json` - Session tracking for delta calculations
 - `.lock` files - Thread-safe file locking
 
+**Note:** Data is stored within the plugin directory for easy management. Uninstalling the plugin will remove all data.
+
 ## Configuration
 
-The script includes configurable options (edit `scripts/track_spending.py`):
+### Data Directory
+
+The script accepts a `--data-dir` argument to specify where to store data. This defaults to the plugin directory when called from the statusline integration code.
+
+You can also override via environment variable:
+```bash
+export SPENDING_TRACKER_DATA_DIR="$HOME/my-custom-location"
+```
+
+### Other Settings
+
+Edit `scripts/track_spending.py` for these options:
 
 ```python
 CONFIG = {
-    "data_dir": "~/.claude/spending_data",
     "retention_days": 30,          # Keep data for 30 days
     "lock_timeout": 5,             # Max 5 seconds to acquire lock
     "decimal_places": 8,           # Precision for cost tracking
@@ -156,22 +230,38 @@ Total tracked: $0.20 ✓
 The underlying Python script can also be used directly:
 
 ```bash
+# Set data directory for plugin
+PLUGIN_DATA_DIR="$HOME/.claude/plugins/spending-tracker/spending_data"
+
 # Add cost with session tracking (recommended)
-python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py add-session \
+python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+  add-session \
+  --data-dir "$PLUGIN_DATA_DIR" \
   --session-id "unique-session-id" \
   --cost 5.25
 
 # Get totals (JSON format)
-python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format json
+python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+  get \
+  --data-dir "$PLUGIN_DATA_DIR" \
+  --format json
 
 # Get totals (text format)
-python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py get --format text
+python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+  get \
+  --data-dir "$PLUGIN_DATA_DIR" \
+  --format text
 
 # Show statistics
-python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py stats
+python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+  stats \
+  --data-dir "$PLUGIN_DATA_DIR"
 
 # Reset all data (requires --confirm)
-python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py reset --confirm
+python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py \
+  reset \
+  --data-dir "$PLUGIN_DATA_DIR" \
+  --confirm
 ```
 
 ## Troubleshooting
@@ -182,9 +272,10 @@ python3 ~/.claude/plugins/spending-tracker/scripts/track_spending.py reset --con
 - Restart Claude Code
 
 **Data not tracking:**
-- Verify data directory exists: `~/.claude/spending_data/`
+- Verify statusline integration code is added correctly
+- Check data directory gets created: `~/.claude/plugins/spending-tracker/spending_data/`
+- Test manually: Run `/spending-stats` after a conversation
 - Check file permissions
-- Review statusline integration
 
 **Reset not working:**
 - Always requires `--confirm` flag for safety
