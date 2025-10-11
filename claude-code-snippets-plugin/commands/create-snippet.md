@@ -86,16 +86,96 @@ Transform user input → proper regex:
 - Convert relative → absolute paths
 - Validate file exists before calling CLI
 
-## Phase 4: Execute CLI
+## Phase 4: Build Complete Preview (**MANDATORY**)
+
+**CRITICAL**: Before creating the snippet, show COMPLETE preview to user.
+
+### Generate Comprehensive Preview
+
+Display all details of the snippet that will be created:
+
+```
+═══════════════════════════════════════════════════════════
+📋 PREVIEW: New Snippet '{name}'
+═══════════════════════════════════════════════════════════
+
+🏷️  NAME: {name}
+
+🔍 PATTERN: {formatted_pattern}
+   Alternatives: {count}
+   ${alternatives.map(a => `  • ${a}`).join('\n')}
+
+📄 CONTENT:
+   Source: ${file_path ? `File: ${file_path}` : 'Inline content'}
+   Size: ${content_size} bytes (${Math.round(content_size/1024)}KB)
+
+   Preview (first 10 lines):
+   ─────────────────────────────────────────────────────────
+   ${content.split('\n').slice(0, 10).join('\n')}
+   ${content.split('\n').length > 10 ? '... (truncated, total ' + content.split('\n').length + ' lines)' : ''}
+   ─────────────────────────────────────────────────────────
+
+📍 LOCATION: ${CLAUDE_PLUGIN_ROOT}/commands/warren/{name}.md
+
+🔘 STATUS: ✓ Enabled (will inject on match)
+
+💡 TRIGGERS ON: ${natural_language_triggers}
+
+═══════════════════════════════════════════════════════════
+```
+
+### Request Approval (**MANDATORY GATE**)
+
+**CRITICAL**: Do NOT create snippet without explicit approval.
+
+```
+🚦 Do you want to create this snippet?
+
+Options:
+  [Y] Yes - Create snippet as shown
+  [N] No - Cancel, do not create
+  [D] Details - Show full content before deciding
+  [M] Modify - Adjust pattern or content
+
+Your choice [Y/N/D/M]:
+```
+
+Handle responses:
+- **Y/yes**: Proceed to Phase 5 (Execute)
+- **N/no**: Abort, display cancellation message
+- **D/details**: Show complete content, then re-ask
+- **M/modify**: Return to Phase 2 with refinements
+
+If user says NO:
+```
+❌ Snippet creation cancelled. No snippet was created.
+```
+
+If user requests Details:
+```bash
+echo ""
+echo "📄 Full Snippet Content:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "$content"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Pattern alternatives:"
+# Show all pattern alternatives in detail
+```
+
+## Phase 5: Execute CLI (**ONLY AFTER APPROVAL**)
+
+**PREREQUISITE**: Phase 4 must have received explicit approval.
 
 ```bash
-result=$(cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py create "$name" \
+result=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py create "$name" \
   --pattern "$formatted_pattern" \
+  --snippets-dir ../commands/warren \
   ${content:+--content "$content"} \
   ${file_path:+--file "$file_path"} 2>&1)
 ```
 
-## Phase 5: Handle Result
+## Phase 6: Handle Result
 
 ### On Success
 
@@ -133,14 +213,14 @@ Let me help. What words should trigger this snippet?
 I'll format them correctly.
 ```
 
-## Phase 6: Create and Run Test Suite
+## Phase 7: Create and Run Test Suite
 
 After success, automatically create and run tests:
 
 ```bash
 # Create test suite
-mkdir -p ${CLAUDE_PLUGIN_ROOT}/tests/shared
-cat > ${CLAUDE_PLUGIN_ROOT}/tests/shared/${name}_test.sh << 'EOF'
+mkdir -p /Users/wz/.claude/tests/shared
+cat > /Users/wz/.claude/tests/shared/${name}_test.sh << 'EOF'
 #!/bin/bash
 # Test Suite for Snippet: {name}
 # Pattern: {pattern}
@@ -157,7 +237,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Test 1: Snippet exists
 echo "Test 1: Checking snippet exists..."
-if cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py list | grep -q "$SNIPPET_NAME"; then
+if cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list --snippets-dir ../commands/warren | grep -q "$SNIPPET_NAME"; then
     echo "  ✅ PASS"
     ((TESTS_PASSED++))
 else
@@ -167,7 +247,7 @@ fi
 
 # Test 2: Pattern matching
 echo "Test 2: Testing pattern matching..."
-if cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py test "$SNIPPET_NAME" "Testing $TEST_KEYWORD" | grep -q "matched"; then
+if cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py test "$SNIPPET_NAME" "Testing $TEST_KEYWORD" --snippets-dir ../commands/warren | grep -q "matched"; then
     echo "  ✅ PASS"
     ((TESTS_PASSED++))
 else
@@ -192,31 +272,36 @@ echo "Results: ✅ $TESTS_PASSED passed, ❌ $TESTS_FAILED failed"
 [ $TESTS_FAILED -eq 0 ] && echo "🎉 All tests passed!" || echo "⚠️  Some tests failed"
 EOF
 
-chmod +x ${CLAUDE_PLUGIN_ROOT}/tests/shared/${name}_test.sh
+chmod +x /Users/wz/.claude/tests/shared/${name}_test.sh
 
 # Run tests
-${CLAUDE_PLUGIN_ROOT}/tests/shared/${name}_test.sh
+/Users/wz/.claude/tests/shared/${name}_test.sh
 ```
 
-## Phase 7: Display Full Snippet
+## Phase 8: Display Full Snippet
 
 After tests, show complete snippet content for verification:
 
 ```bash
-snippet_file=$(echo "$result" | python3 -c "import json, sys; ...")
+snippet_file=$(echo "$result" | python3 -c "import json, sys; data=json.load(sys.stdin); print('commands/warren/' + data['data']['name'] + '.md')" 2>/dev/null)
 echo ""
 echo "📄 Full Snippet Content:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cat "${CLAUDE_PLUGIN_ROOT}/scripts/$snippet_file"
+cat "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/$snippet_file"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
 ## Important Notes
 
+- **ALWAYS show preview**: Before creating any snippet
+- **NEVER create without approval**: Hard requirement - must get explicit Y/yes
+- **Preview must be comprehensive**: Show pattern, content preview, location, triggers
+- **Support detailed view**: Allow users to see full content before approving
+- **Handle cancellation gracefully**: No changes if user says no
 - **Be conversational**: Use natural language
 - **Validate early**: Check before calling CLI
 - **Format clearly**: Use emojis and structure
 - **Handle errors gracefully**: Never show raw JSON
-- **Always run tests**: Catch issues immediately
-- **Always display snippet**: Users verify content
-- **Use ${CLAUDE_PLUGIN_ROOT}**: For all plugin paths
+- **Always run tests**: Catch issues immediately after creation
+- **Always display snippet**: Users verify content after creation
+- **Use absolute path**: /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin

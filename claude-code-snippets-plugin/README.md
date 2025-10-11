@@ -460,24 +460,39 @@ claude -p "In my project, how should I structure this?"
 
 ## Development & Customization
 
-### Using config.local.json for Personal Snippets
+### Configuration Files
 
-**Recommended approach**: Keep your personal snippets in `config.local.json`:
+The plugin includes an **example `config.local.json`** with useful, non-sensitive commands I personally find helpful:
 
+**Included example snippets**:
+- Email/Gmail automation context
+- Google Calendar helpers
+- Search optimization tactics
+- HTML formatting guidelines
+- Code testing patterns (Playwright, TEST keyword)
+- Neovim configuration helpers
+- Subagent visualization
+- Text/clear commands
+- And many more!
+
+**Note**: These are **real snippets I use** that don't expose sensitive information. They're committed to the repo as examples you can learn from or use directly.
+
+**To customize**:
 ```bash
-# Create your personal config (if it doesn't exist)
+# Edit the config directly
 cd scripts/
-cp config.json config.local.json
+vim config.local.json
 
-# Edit config.local.json with your personal snippets
-# This file is gitignored - your snippets stay private!
+# Or copy and modify
+cp config.local.json config.my-custom.json
 ```
 
-**Why use config.local.json?**
-- ✅ Your snippets never get committed to git
-- ✅ You can update the plugin without losing your snippets
-- ✅ Base examples in config.json still work
-- ✅ Your config overrides base config by name
+**Why publish config.local.json?**
+- ✅ Shows real-world usage patterns
+- ✅ Ready to use out of the box with 20+ snippets
+- ✅ You can see how I organize my snippets
+- ✅ Easy to customize for your workflow
+- ✅ Sensitive snippets are kept separate (gitignored)
 
 ### Direct Config Editing
 

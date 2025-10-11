@@ -40,7 +40,7 @@ Extract from `$ARGUMENTS`:
 Always show current state first:
 
 ```bash
-current=$(cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py list "$name" 2>&1)
+current=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list "$name" --snippets-dir ../commands/warren 2>&1)
 ```
 
 Display:
@@ -161,7 +161,8 @@ fi
 **PREREQUISITE**: Phase 3 must have received explicit approval.
 
 ```bash
-result=$(cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py update "$name" \
+result=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py update "$name" \
+  --snippets-dir ../commands/warren \
   ${pattern:+--pattern "$pattern"} \
   ${content:+--content "$content"} \
   ${file:+--file "$file"} \
@@ -247,7 +248,7 @@ snippet_file=$(echo "$result" | python3 -c "import json, sys; ...")
 echo ""
 echo "📄 Updated Snippet Content:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cat "${CLAUDE_PLUGIN_ROOT}/scripts/$snippet_file"
+cat "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/$snippet_file"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 

@@ -2,9 +2,6 @@
 commands/warren/
 tests/warren/
 
-# Personal configuration (user-specific snippets)
-scripts/config.local.json
-
 # Python
 __pycache__/
 *.py[cod]
@@ -37,3 +34,6 @@ test_results/
 
 # Config overrides
 .env
+*.bak
+config.local.json
+config.local.json.bak

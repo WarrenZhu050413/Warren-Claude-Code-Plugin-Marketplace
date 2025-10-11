@@ -13,7 +13,7 @@ Parse `$ARGUMENTS` for optional snippet name. If provided, show detailed view of
 ## Execute
 
 ```bash
-cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py list ${name:+$name} 2>&1
+cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list ${name:+$name} --snippets-dir ../commands/warren 2>&1
 ```
 
 ## Output Formatting

@@ -17,7 +17,7 @@ Extract from `$ARGUMENTS`:
 Before deletion, show what will be deleted:
 
 ```bash
-current=$(cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py list "$name" 2>&1)
+current=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list "$name" --snippets-dir ../commands/warren 2>&1)
 ```
 
 Display:
@@ -41,7 +41,7 @@ Display:
 This will:
   • Remove snippet from configuration
   • Delete snippet file: {file}
-  • Create backup at: ${CLAUDE_PLUGIN_ROOT}/scripts/backups/{timestamp}_{name}/
+  • Create backup at: /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/backups/{timestamp}_{name}/
 
 ⚠️  This action cannot be undone (except via backup).
 
@@ -62,7 +62,7 @@ If user cancels:
 Only after confirmation:
 
 ```bash
-result=$(cd ${CLAUDE_PLUGIN_ROOT}/scripts && python3 snippets_cli.py delete "$name" --backup 2>&1)
+result=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py delete "$name" --backup --snippets-dir ../commands/warren 2>&1)
 exit_code=$?
 ```
 
@@ -74,7 +74,7 @@ exit_code=$?
 ✅ Snippet '{name}' deleted successfully!
 
 📦 Backup created:
-  Location: ${CLAUDE_PLUGIN_ROOT}/scripts/backups/{timestamp}_{name}/
+  Location: /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/backups/{timestamp}_{name}/
   Files:
     • {name}.md ({size})
     • config_backup.json

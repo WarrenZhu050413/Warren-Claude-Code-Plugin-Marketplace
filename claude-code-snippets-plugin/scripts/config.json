@@ -3,9 +3,20 @@
     {
       "name": "HTML",
       "pattern": "\\bHTML\\b\\.?",
-      "snippet": ["snippets/HTML.md"],
+      "snippet": [
+        "snippets/HTML.md"
+      ],
       "enabled": true,
       "separator": "\n"
+    },
+    {
+      "name": "nvim",
+      "pattern": "\\b(nvim|neovim|vim\\s+(config|configuration|setup)|\\.vimrc|init\\.vim|init\\.lua)\\b",
+      "snippet": [
+        "snippets/nvim.md"
+      ],
+      "separator": "\n",
+      "enabled": true
     }
   ]
 }

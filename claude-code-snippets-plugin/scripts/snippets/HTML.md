@@ -10,7 +10,7 @@ When providing explanations, documentation, or informational content:
 
 ## Primary Purpose
 
-**VERIFICATION_HASH:** `6e4b9f2d8a1c3057`
+**VERIFICATION_HASH:** `8c73bf20e73d10f9`
 
 The HTML output should prioritize **important information first** with **progressive disclosure** through:
 - Critical information prominently displayed and always visible
@@ -25,6 +25,12 @@ The HTML output should prioritize **important information first** with **progres
 2. Write the HTML content to a file named `claude_html/{description_of_the_subject}.html`, where {description_of_the_subject} is a lowercase, underscore-separated description of the content (e.g., `claude_html/git_analysis.html`, `claude_html/code_review.html`, `claude_html/project_overview.html`)
 3. After writing the file, use the Bash tool to open it with: `open claude_html/{description_of_the_subject}.html` (macOS) or appropriate command for the OS
 4. Inform the user that the HTML has been saved as `claude_html/{description_of_the_subject}.html` and opened
+
+## Snippet Storage Location
+**NOTE:** This HTML output snippet is stored in the Claude Code snippets plugin at:
+- **Path:** `~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts/snippets/HTML.md`
+- **Purpose:** Provides consistent HTML formatting instructions across all Claude Code sessions
+- **Management:** Use `/claude-code-snippets:read-snippets`, `/claude-code-snippets:update-snippet`, etc. to manage snippets
 
 ## Compact Design Principles
 - **Visual Communication Priority**: When explaining systems, architectures, flows, or relationships, STRONGLY PREFER Mermaid diagrams over prose. A diagram is worth 1000 words. See Mermaid templates at `~/.claude/templates/mermaid/`.
@@ -385,19 +391,56 @@ button:hover {
 
 ### Code Blocks
 ```css
-pre, code {
+/* Inline code */
+code {
     background: linear-gradient(135deg, rgba(245, 245, 220, 0.3), rgba(255, 255, 255, 0.5));
     border: 1px solid rgba(139, 0, 0, 0.1);
     padding: 2px 4px;
-    margin: 1px 0;
+    margin: 0 1px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
     font-size: 12px;
     line-height: 1.1;
+    border-radius: 2px;
 }
 
+/* Block code - CRITICAL: white-space preserves newlines and indentation */
 pre {
-    padding: 4px 6px;
-    margin: 2px 0;
-    overflow-x: auto;
+    background: linear-gradient(135deg, rgba(245, 245, 220, 0.3), rgba(255, 255, 255, 0.5));
+    border: 1px solid rgba(139, 0, 0, 0.1);
+    padding: 6px 8px;
+    margin: 4px 0;
+    font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;       /* Preserve newlines and spaces, wrap long lines */
+    word-wrap: break-word;       /* Break long words if needed */
+    overflow-x: auto;            /* Horizontal scroll for very long lines */
+    tab-size: 4;                 /* Set tab width to 4 spaces */
+    -moz-tab-size: 4;
+    border-radius: 3px;
+}
+
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: inherit;        /* Inherit pre-wrap from parent */
+}
+
+/* Dark mode code blocks */
+[data-theme="dark"] code {
+    background: rgba(40, 40, 40, 0.8);
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] pre {
+    background: rgba(30, 30, 30, 0.9);
+    border-color: #555;
+    color: #e0e0e0;
 }
 
 table {
