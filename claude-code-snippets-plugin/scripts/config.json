@@ -17,6 +17,15 @@
       ],
       "separator": "\n",
       "enabled": true
+    },
+    {
+      "name": "tdd",
+      "pattern": "\\bTDD\\b",
+      "snippet": [
+        "snippets/tdd.md"
+      ],
+      "separator": "\n",
+      "enabled": true
     }
   ]
 }
