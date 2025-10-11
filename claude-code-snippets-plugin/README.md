@@ -108,8 +108,8 @@ claude -p "I need help with docker containers"
 
 The plugin uses a **layered configuration system** in `scripts/`:
 
-- **config.json**: Base configuration (committed to git, shared with all users)
-- **config.local.json**: Your personal configuration (gitignored, private to you)
+- **config.json**: Minimal shared examples (2 snippets: HTML, nvim, TDD)
+- **config.local.json**: **Example configuration with 20+ useful snippets** (committed as examples)
 - **snippets/\*.md**: Your actual snippet content files
 
 ### Layered Configuration System
@@ -117,24 +117,37 @@ The plugin uses a **layered configuration system** in `scripts/`:
 The plugin loads both configuration files and **merges them intelligently**:
 
 1. **Base config (`config.json`)**:
-   - Committed to git
-   - Contains example/shared snippets
-   - Updated by plugin maintainer
+   - Minimal shared examples
+   - Contains 2 snippets (HTML, nvim)
+   - Simple starting point
 
-2. **Local config (`config.local.json`)**:
-   - **Gitignored** - never committed
-   - Your personal snippets
+2. **Example config (`config.local.json`)**:
+   - **Contains 20+ example snippets** from real usage
+   - Shows patterns for email, calendar, search, HTML, testing, etc.
+   - **Committed to repo** as learning examples
+   - References files in `commands/warren/` (your personal snippets directory)
    - **Overrides base config** by snippet name
 
 3. **Merge behavior**:
    - If a snippet name exists in both configs, **local wins**
    - Otherwise, snippets from both configs are combined
-   - Result: You get base examples + your personal snippets
+   - Result: You get base examples + example snippets
+
+**What's included in config.local.json**:
+- 20+ real-world snippet examples
+- Patterns for common workflows (email, calendar, HTML, search, etc.)
+- Non-sensitive snippets only (sensitive ones are gitignored)
+- References your personal snippets in `commands/warren/`
+
+**To use the examples**:
+1. Browse `config.local.json` to see what's available
+2. Create your own snippets in `commands/warren/` to match the patterns
+3. Or modify the patterns to match your own workflow
 
 **Example**:
 
 ```json
-// config.json (base - 1 snippet)
+// config.json (base - 2 snippets)
 {
   "mappings": [
     {
@@ -142,30 +155,36 @@ The plugin loads both configuration files and **merges them intelligently**:
       "pattern": "\\bHTML\\b\\.?",
       "snippet": ["snippets/HTML.md"],
       "enabled": true
+    },
+    {
+      "name": "nvim",
+      "pattern": "\\b(nvim|neovim)\\b",
+      "snippet": ["snippets/nvim.md"],
+      "enabled": true
     }
   ]
 }
 
-// config.local.json (your personal - overrides HTML, adds 21 more)
+// config.local.json (example snippets - 20+ examples)
 {
   "mappings": [
     {
-      "name": "HTML",
-      "pattern": "\\bHTML\\b\\.?",
-      "snippet": ["snippets/HTML.md"],  // Your custom HTML snippet
+      "name": "mail",
+      "pattern": "\\b(email|mail|gmail)\\b",
+      "snippet": ["../commands/warren/mail.md"],
       "enabled": true
     },
     {
-      "name": "docker",
-      "pattern": "\\b(docker|container)\\b",
-      "snippet": ["snippets/docker.md"],
+      "name": "gcal",
+      "pattern": "\\b(calendar|gcal)\\b",
+      "snippet": ["../commands/warren/gcal.md"],
       "enabled": true
     }
-    // ... 20 more personal snippets
+    // ... 20+ more example snippets
   ]
 }
 
-// Result: 22 snippets loaded (your HTML overrides base HTML)
+// Result: All snippets loaded and available as examples
 ```
 
 ### Config Structure
@@ -304,28 +323,31 @@ Claude receives your prompt + HTML snippet
 │   ├── read-snippets.md         # /read-snippets command
 │   ├── update-snippet.md        # /update-snippet command
 │   ├── delete-snippet.md        # /delete-snippet command
-│   └── warren/                  # Personal snippets (gitignored)
-│       └── *.md
+│   └── warren/                  # Example personal snippets (committed)
+│       ├── *.md                 # 20+ example snippets
+│       └── sensitive/           # Gitignored sensitive snippets
 ├── hooks/
 │   └── hooks.json               # Hook configuration
 ├── scripts/
-│   ├── config.json              # Base configuration (committed)
-│   ├── config.local.json        # Personal configuration (gitignored)
+│   ├── config.json              # Base configuration (2 snippets)
+│   ├── config.local.json        # Example configuration (20+ snippets, committed)
 │   ├── snippets_cli.py          # CLI tool for CRUD operations
 │   ├── snippet_injector.py      # Hook script (runs automatically)
 │   └── snippets/
-│       └── HTML.md              # Example snippet
+│       ├── HTML.md              # Shared HTML snippet
+│       └── nvim.md              # Shared nvim snippet
 ├── tests/
-│   ├── shared/                  # Shared test files
-│   └── warren/                  # Personal tests (gitignored)
-├── .gitignore                   # Excludes personal files
+│   └── warren/                  # Example test files (committed)
+│       ├── *.sh                 # Test scripts for snippets
+│       └── sensitive/           # Gitignored sensitive tests
+├── .gitignore                   # Excludes only sensitive files
 └── README.md                    # This file
 ```
 
-**Gitignored directories** (personal, never committed):
-- `commands/warren/` - Your personal snippet files
-- `tests/warren/` - Your personal test files
-- `scripts/config.local.json` - Your personal snippet configuration
+**Gitignored directories** (sensitive only):
+- `commands/warren/sensitive/` - Sensitive snippet files only
+- `tests/warren/sensitive/` - Sensitive test files only
+- **Everything else is committed as examples**, including `config.local.json`
 
 ## Advanced Usage
 
@@ -460,11 +482,11 @@ claude -p "In my project, how should I structure this?"
 
 ## Development & Customization
 
-### Configuration Files
+### Example Snippets in config.local.json
 
-The plugin includes an **example `config.local.json`** with useful, non-sensitive commands I personally find helpful:
+The plugin includes **20+ example snippets** in `config.local.json` to help you get started:
 
-**Included example snippets**:
+**What's included**:
 - Email/Gmail automation context
 - Google Calendar helpers
 - Search optimization tactics
@@ -475,24 +497,32 @@ The plugin includes an **example `config.local.json`** with useful, non-sensitiv
 - Text/clear commands
 - And many more!
 
-**Note**: These are **real snippets I use** that don't expose sensitive information. They're committed to the repo as examples you can learn from or use directly.
+**Important notes**:
+- ✅ **Committed to repo as examples** - these are real patterns I use
+- ✅ **Non-sensitive only** - sensitive snippets are in `commands/warren/sensitive/` (gitignored)
+- ✅ **Ready to use** - browse and learn from 20+ real-world examples
+- ✅ **References personal directory** - points to `commands/warren/` for snippet files
+- ✅ **Easy to customize** - modify patterns or content to fit your workflow
+
+**To use these examples**:
+1. Browse `scripts/config.local.json` to see available patterns
+2. Check `commands/warren/` for the actual snippet files
+3. Use the snippets as-is, or customize them to your needs
+4. Add your own sensitive snippets in `commands/warren/sensitive/` (automatically gitignored)
 
 **To customize**:
 ```bash
-# Edit the config directly
+# View examples
 cd scripts/
+cat config.local.json
+
+# Edit existing snippets
 vim config.local.json
 
-# Or copy and modify
-cp config.local.json config.my-custom.json
+# Add your own in the sensitive directory (gitignored)
+mkdir -p ../commands/warren/sensitive
+vim ../commands/warren/sensitive/my-private-snippet.md
 ```
-
-**Why publish config.local.json?**
-- ✅ Shows real-world usage patterns
-- ✅ Ready to use out of the box with 20+ snippets
-- ✅ You can see how I organize my snippets
-- ✅ Easy to customize for your workflow
-- ✅ Sensitive snippets are kept separate (gitignored)
 
 ### Direct Config Editing
 

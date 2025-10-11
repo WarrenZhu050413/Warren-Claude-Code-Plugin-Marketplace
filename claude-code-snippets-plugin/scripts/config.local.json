@@ -1,0 +1,202 @@
+{
+  "mappings": [
+    {
+      "pattern": "\\b(codex)\\\\b\\\\.?",
+      "snippet": [
+        "../commands/warren/codex.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "codex"
+    },
+    {
+      "pattern": "\\b(email|mail|e-mail|message|inbox|send\\s+(to|message))\\b\\.?",
+      "snippet": [
+        "../commands/warren/mail.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "mail"
+    },
+    {
+      "pattern": "\\b(gcal|g-cal|google\\s*calendar|calendar|event|schedule|appointment)\\b\\.?",
+      "snippet": [
+        "../commands/warren/gcal.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "gcal"
+    },
+    {
+      "pattern": "\\bHTML\\b\\.?",
+      "snippet": [
+        "../commands/warren/HTML.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "HTML"
+    },
+    {
+      "pattern": "\\bSTYLE\\b\\.?",
+      "snippet": [
+        "../commands/warren/style.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "style"
+    },
+    {
+      "pattern": "\\b(subagent|sub-agent|sub\\s+agent)s?\\b\\.?",
+      "snippet": [
+        "../commands/warren/subagent-viz.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "subagent-viz"
+    },
+    {
+      "pattern": "\\b(PLANHTML|html_plan|html-plan)\\b\\.?",
+      "snippet": [
+        "../commands/warren/PLANHTML.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "PLANHTML"
+    },
+    {
+      "pattern": "\\bexa\\b\\.?",
+      "snippet": [
+        "../commands/warren/exa.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "exa"
+    },
+    {
+      "pattern": "\\b(search|searching|websearch|web[\\s-]?search|find[\\s-]?information|look[\\s-]?up|research|researching|comprehensive[\\s-]?search)\\b\\.?",
+      "snippet": [
+        "../commands/warren/search.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "search"
+    },
+    {
+      "pattern": "\\b(DOWNLOAD|DLD)\\b\\.?",
+      "snippet": [
+        "../commands/warren/sensitive/download-pdf.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "download-pdf"
+    },
+    {
+      "pattern": "\\b(snippetV|snippet-verify|verify-snippets?)\\b\\.?",
+      "snippet": [
+        "../commands/warren/snippet-verify.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "snippet-verify"
+    },
+    {
+      "pattern": "\\b(playwrightchromeextensions?|playwrightextensions?)\\b\\.?",
+      "snippet": [
+        "../commands/warren/playwright_chrome_extensions.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "playwright_chrome_extensions"
+    },
+    {
+      "pattern": "\\b(claude-?docs?)\\b\\.?",
+      "snippet": [
+        "../commands/warren/claude-docs.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "claude-docs"
+    },
+    {
+      "pattern": "\\b(ht|htkung)\\b\\.?",
+      "snippet": [
+        "../commands/warren/sensitive/htkung.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "htkung"
+    },
+    {
+      "pattern": "\\b(shit)?(POST|post)\\b\\.?",
+      "snippet": [
+        "../commands/warren/sensitive/post.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "post"
+    },
+    {
+      "pattern": "\\bNOTIFY\\b\\.?",
+      "snippet": [
+        "../commands/warren/NOTIFY.md"
+      ],
+      "enabled": true,
+      "separator": "\n",
+      "name": "NOTIFY"
+    },
+    {
+      "name": "TEST",
+      "pattern": "\\bTEST\\b\\.?",
+      "snippet": [
+        "../commands/warren/TEST.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "txt",
+      "pattern": "TXT[/:\\.]\\s*",
+      "snippet": [
+        "../commands/warren/txt.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "clear",
+      "pattern": "CLEAR[/:\\.]?\\s*",
+      "snippet": [
+        "../commands/warren/clear.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "playwright-testing",
+      "pattern": "\\b(playwright)\\b\\.?",
+      "snippet": [
+        "../commands/warren/playwright-testing.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "add-todo",
+      "pattern": "\\b(TODO|add-todo)\\b",
+      "snippet": [
+        "../commands/warren/add-todo.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "nvim",
+      "pattern": "\\b(nvim|neovim)\\b\\.?",
+      "snippet": [
+        "../commands/warren/nvim.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    }
+  ]
+}

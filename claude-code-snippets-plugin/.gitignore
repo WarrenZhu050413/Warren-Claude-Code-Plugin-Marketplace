@@ -1,6 +1,6 @@
-# Warren's personal files
-commands/warren/sensitive
-tests/warren/
+# Sensitive files only
+commands/warren/sensitive/
+tests/warren/sensitive/
 
 # Python
 __pycache__/
@@ -35,5 +35,3 @@ test_results/
 # Config overrides
 .env
 *.bak
-config.local.json
-config.local.json.bak

@@ -115,7 +115,7 @@ Display all details of the snippet that will be created:
    ${content.split('\n').length > 10 ? '... (truncated, total ' + content.split('\n').length + ' lines)' : ''}
    ─────────────────────────────────────────────────────────
 
-📍 LOCATION: ${CLAUDE_PLUGIN_ROOT}/commands/warren/{name}.md
+📍 LOCATION: /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/commands/snippets/{name}.md
 
 🔘 STATUS: ✓ Enabled (will inject on match)
 
@@ -283,11 +283,11 @@ chmod +x /Users/wz/.claude/tests/shared/${name}_test.sh
 After tests, show complete snippet content for verification:
 
 ```bash
-snippet_file=$(echo "$result" | python3 -c "import json, sys; data=json.load(sys.stdin); print('commands/warren/' + data['data']['name'] + '.md')" 2>/dev/null)
+snippet_name=$(echo "$result" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['data']['name'])" 2>/dev/null)
 echo ""
 echo "📄 Full Snippet Content:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cat "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/$snippet_file"
+cat "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/commands/snippets/${snippet_name}.md"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
