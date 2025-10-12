@@ -53,37 +53,86 @@ class SnippetManager:
     def __init__(self, config_path: Path, snippets_dir: Path):
         self.config_path = config_path
         self.snippets_dir = snippets_dir
+        self.local_config_path = config_path.parent / "config.local.json"
         self.config = self._load_config()
+        self.local_only_config = self._load_local_only()
 
     def _load_config(self) -> Dict:
-        """Load and validate config file"""
-        if not self.config_path.exists():
-            return {"mappings": []}
+        """Load and merge base config with local config (local takes priority)"""
+        # Load base config (config.json)
+        base_config = {"mappings": []}
+        if self.config_path.exists():
+            try:
+                with open(self.config_path) as f:
+                    base_config = json.load(f)
+                    if "mappings" not in base_config:
+                        base_config["mappings"] = []
+            except json.JSONDecodeError as e:
+                raise SnippetError(
+                    "CONFIG_ERROR",
+                    f"Invalid JSON in base config file: {e}",
+                    {"path": str(self.config_path)}
+                )
 
-        try:
-            with open(self.config_path) as f:
-                config = json.load(f)
-                if "mappings" not in config:
-                    config["mappings"] = []
-                return config
-        except json.JSONDecodeError as e:
-            raise SnippetError(
-                "CONFIG_ERROR",
-                f"Invalid JSON in config file: {e}",
-                {"path": str(self.config_path)}
-            )
+        # Load local config (config.local.json) if it exists
+        local_config_path = self.config_path.parent / "config.local.json"
+        local_config = {"mappings": []}
+        if local_config_path.exists():
+            try:
+                with open(local_config_path) as f:
+                    local_config = json.load(f)
+                    if "mappings" not in local_config:
+                        local_config["mappings"] = []
+            except json.JSONDecodeError as e:
+                raise SnippetError(
+                    "CONFIG_ERROR",
+                    f"Invalid JSON in local config file: {e}",
+                    {"path": str(local_config_path)}
+                )
+
+        # Merge configs: local overrides base by name
+        merged_mappings = {}
+        for mapping in base_config.get("mappings", []):
+            name = mapping.get("name", "")
+            if name:
+                merged_mappings[name] = mapping
+
+        # Override/add from local config (local takes priority)
+        for mapping in local_config.get("mappings", []):
+            name = mapping.get("name", "")
+            if name:
+                merged_mappings[name] = mapping
+
+        return {"mappings": list(merged_mappings.values())}
+
+    def _load_local_only(self) -> Dict:
+        """Load ONLY the local config (without merging with base)"""
+        local_config = {"mappings": []}
+        if self.local_config_path.exists():
+            try:
+                with open(self.local_config_path) as f:
+                    local_config = json.load(f)
+                    if "mappings" not in local_config:
+                        local_config["mappings"] = []
+            except json.JSONDecodeError as e:
+                raise SnippetError(
+                    "CONFIG_ERROR",
+                    f"Invalid JSON in local config file: {e}",
+                    {"path": str(self.local_config_path)}
+                )
+        return local_config
 
     def _save_config(self):
-        """Save config file with backup"""
-        # Create backup
-        if self.config_path.exists():
-            backup_path = self.config_path.with_suffix('.json.bak')
-            shutil.copy2(self.config_path, backup_path)
+        """Save ONLY local config changes to config.local.json (no base config data)"""
+        # Create backup of local config if it exists
+        if self.local_config_path.exists():
+            backup_path = self.local_config_path.with_suffix('.json.bak')
+            shutil.copy2(self.local_config_path, backup_path)
 
-        # Save new config
-        self.config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.config_path, 'w') as f:
-            json.dump(self.config, f, indent=2)
+        # Save only local config (not merged)
+        self.local_config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.local_config_path, 'w') as f:
+            json.dump(self.local_only_config, f, indent=2)
             f.write('\n')
 
     def _validate_pattern(self, pattern: str) -> bool:
@@ -99,7 +148,7 @@ class SnippetManager:
             )
 
     def _find_snippet(self, name: str) -> Optional[Dict]:
-        """Find snippet by name"""
+        """Find snippet by name in merged config"""
         for mapping in self.config["mappings"]:
             # First check explicit name field if present
             if "name" in mapping and mapping["name"] == name:
@@ -108,6 +157,17 @@ class SnippetManager:
             # Fallback: check if name.md file is in the snippet array
             snippet_file = f"snippets/{name}.md"
             snippet_array = mapping["snippet"]
+            if snippet_file in snippet_array:
+                return mapping
+        return None
+
+    def _find_in_local_config(self, name: str) -> Optional[Dict]:
+        """Find snippet by name in local-only config"""
+        for mapping in self.local_only_config["mappings"]:
+            if "name" in mapping and mapping["name"] == name:
+                return mapping
+            snippet_file = f"snippets/{name}.md"
+            snippet_array = mapping.get("snippet", [])
             if snippet_file in snippet_array:
                 return mapping
         return None
@@ -204,8 +264,9 @@ class SnippetManager:
 
         self._validate_pattern(pattern)
 
-        snippet_file = f"snippets/{name}.md"
+        # Get relative path from config directory to snippet file
         snippet_path = self._get_snippet_path(name)
+        snippet_file = str(snippet_path.relative_to(self.config_path.parent))
 
         # Check if snippet already exists
         if self._find_snippet(name) and not force:
@@ -285,24 +346,49 @@ class SnippetManager:
             snippet_files = [snippet_file]
             total_size = snippet_path.stat().st_size
 
-        # Update or add config mapping (always use array format)
-        existing = self._find_snippet(name)
-        if existing:
-            existing["pattern"] = pattern
-            existing["enabled"] = enabled
-            existing["snippet"] = snippet_files  # Always array
-            existing["separator"] = separator
-            existing["name"] = name  # Add explicit name field
+        # Update or add to LOCAL config only (not merged config)
+        # First check if it exists in local config
+        local_existing = None
+        for mapping in self.local_only_config["mappings"]:
+            if mapping.get("name") == name:
+                local_existing = mapping
+                break
+
+        if local_existing:
+            # Update existing local entry
+            local_existing["pattern"] = pattern
+            local_existing["enabled"] = enabled
+            local_existing["snippet"] = snippet_files
+            local_existing["separator"] = separator
+            local_existing["name"] = name
         else:
-            self.config["mappings"].append({
-                "name": name,  # Add explicit name field
+            # Add new entry to local config
+            self.local_only_config["mappings"].append({
+                "name": name,
                 "pattern": pattern,
-                "snippet": snippet_files,  # Always array
+                "snippet": snippet_files,
                 "separator": separator,
                 "enabled": enabled
             })
 
         self._save_config()
+
+        # Also update merged config for this session
+        existing = self._find_snippet(name)
+        if existing:
+            existing["pattern"] = pattern
+            existing["enabled"] = enabled
+            existing["snippet"] = snippet_files
+            existing["separator"] = separator
+            existing["name"] = name
+        else:
+            self.config["mappings"].append({
+                "name": name,
+                "pattern": pattern,
+                "snippet": snippet_files,
+                "separator": separator,
+                "enabled": enabled
+            })
 
         return {
             "name": name,
@@ -410,6 +496,11 @@ class SnippetManager:
             changes["pattern"] = {"old": existing["pattern"], "new": pattern}
             existing["pattern"] = pattern
 
+            # Also update in local config
+            local_existing = self._find_in_local_config(name)
+            if local_existing:
+                local_existing["pattern"] = pattern
+
         # Update content
         content_updated = False
         if content is not None or file_path is not None:
@@ -438,10 +529,15 @@ class SnippetManager:
                 changes["enabled"] = {"old": old_enabled, "new": enabled}
                 existing["enabled"] = enabled
 
+                # Also update in local config
+                local_existing = self._find_in_local_config(name)
+                if local_existing:
+                    local_existing["enabled"] = enabled
+
         # Rename
         if rename:
-            new_snippet_file = f"snippets/{rename}.md"
             new_snippet_path = self._get_snippet_path(rename)
+            new_snippet_file = str(new_snippet_path.relative_to(self.config_path.parent))
 
             # Check new name doesn't exist
             if self._find_snippet(rename):
@@ -455,9 +551,16 @@ class SnippetManager:
             if snippet_path.exists():
                 snippet_path.rename(new_snippet_path)
 
-            # Update config (always use array format)
+            # Update merged config
             existing["snippet"] = [new_snippet_file]
             changes["name"] = {"old": name, "new": rename}
+
+            # Also update in local config
+            local_existing = self._find_in_local_config(name)
+            if local_existing:
+                local_existing["snippet"] = [new_snippet_file]
+                local_existing["name"] = rename
+
             name = rename
 
         # Update verification hash if content or pattern changed
@@ -511,11 +614,18 @@ class SnippetManager:
             snippet_path.unlink()
             deleted_files.append(str(snippet_path))
 
-        # Remove from config
+        # Remove from merged config
         self.config["mappings"] = [
             m for m in self.config["mappings"]
-            if m["snippet"] != existing["snippet"]
+            if m.get("name") != name
         ]
+
+        # Remove from local config
+        self.local_only_config["mappings"] = [
+            m for m in self.local_only_config["mappings"]
+            if m.get("name") != name
+        ]
+
         self._save_config()
 
         return {
@@ -569,7 +679,7 @@ class SnippetManager:
         }
 
     def test(self, name: str, text: str) -> Dict:
-        """Test if pattern matches text"""
+        """Test if pattern matches text (case-sensitive)"""
         existing = self._find_snippet(name)
         if not existing:
             raise SnippetError(
@@ -579,7 +689,7 @@ class SnippetManager:
             )
 
         pattern = existing["pattern"]
-        matches = re.findall(pattern, text, re.IGNORECASE)
+        matches = re.findall(pattern, text)
 
         return {
             "name": name,
@@ -703,7 +813,7 @@ def main():
     # Set defaults for paths
     script_dir = Path(__file__).parent
     config_path = args.config or script_dir / "config.json"
-    snippets_dir = args.snippets_dir or script_dir / "snippets"
+    snippets_dir = args.snippets_dir or script_dir.parent / "commands" / "local"
 
     try:
         manager = SnippetManager(config_path, snippets_dir)

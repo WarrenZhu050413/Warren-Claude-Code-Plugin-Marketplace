@@ -1,9 +1,27 @@
 {
   "mappings": [
     {
+      "name": "nvim",
+      "pattern": "\\b(nvim|neovim)\\b\\.?",
+      "snippet": [
+        "../commands/local/nvim.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "tdd",
+      "pattern": "\\bTDD\\b",
+      "snippet": [
+        "../commands/local/tdd.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
       "pattern": "\\b(codex)\\\\b\\\\.?",
       "snippet": [
-        "../commands/warren/codex.md"
+        "../commands/local/codex.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -12,7 +30,7 @@
     {
       "pattern": "\\b(email|mail|e-mail|message|inbox|send\\s+(to|message))\\b\\.?",
       "snippet": [
-        "../commands/warren/mail.md"
+        "../commands/local/mail.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -21,25 +39,16 @@
     {
       "pattern": "\\b(gcal|g-cal|google\\s*calendar|calendar|event|schedule|appointment)\\b\\.?",
       "snippet": [
-        "../commands/warren/gcal.md"
+        "../commands/local/gcal.md"
       ],
       "enabled": true,
       "separator": "\n",
       "name": "gcal"
     },
     {
-      "pattern": "\\bHTML\\b\\.?",
+      "pattern": "\\bSTYLE\\b[.:]?",
       "snippet": [
-        "../commands/warren/HTML.md"
-      ],
-      "enabled": true,
-      "separator": "\n",
-      "name": "HTML"
-    },
-    {
-      "pattern": "\\bSTYLE\\b\\.?",
-      "snippet": [
-        "../commands/warren/style.md"
+        "../commands/local/style.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -48,7 +57,7 @@
     {
       "pattern": "\\b(subagent|sub-agent|sub\\s+agent)s?\\b\\.?",
       "snippet": [
-        "../commands/warren/subagent-viz.md"
+        "../commands/local/subagent-viz.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -57,7 +66,7 @@
     {
       "pattern": "\\b(PLANHTML|html_plan|html-plan)\\b\\.?",
       "snippet": [
-        "../commands/warren/PLANHTML.md"
+        "../commands/local/PLANHTML.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -66,7 +75,7 @@
     {
       "pattern": "\\bexa\\b\\.?",
       "snippet": [
-        "../commands/warren/exa.md"
+        "../commands/local/exa.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -75,7 +84,7 @@
     {
       "pattern": "\\b(search|searching|websearch|web[\\s-]?search|find[\\s-]?information|look[\\s-]?up|research|researching|comprehensive[\\s-]?search)\\b\\.?",
       "snippet": [
-        "../commands/warren/search.md"
+        "../commands/local/search.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -84,7 +93,7 @@
     {
       "pattern": "\\b(DOWNLOAD|DLD)\\b\\.?",
       "snippet": [
-        "../commands/warren/sensitive/download-pdf.md"
+        "../commands/local/sensitive/download-pdf.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -93,7 +102,7 @@
     {
       "pattern": "\\b(snippetV|snippet-verify|verify-snippets?)\\b\\.?",
       "snippet": [
-        "../commands/warren/snippet-verify.md"
+        "../commands/local/snippet-verify.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -102,7 +111,7 @@
     {
       "pattern": "\\b(playwrightchromeextensions?|playwrightextensions?)\\b\\.?",
       "snippet": [
-        "../commands/warren/playwright_chrome_extensions.md"
+        "../commands/local/playwright_chrome_extensions.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -111,7 +120,7 @@
     {
       "pattern": "\\b(claude-?docs?)\\b\\.?",
       "snippet": [
-        "../commands/warren/claude-docs.md"
+        "../commands/local/claude-docs.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -120,7 +129,7 @@
     {
       "pattern": "\\b(ht|htkung)\\b\\.?",
       "snippet": [
-        "../commands/warren/sensitive/htkung.md"
+        "../commands/local/sensitive/htkung.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -129,7 +138,7 @@
     {
       "pattern": "\\b(shit)?(POST|post)\\b\\.?",
       "snippet": [
-        "../commands/warren/sensitive/post.md"
+        "../commands/local/sensitive/post.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -138,7 +147,7 @@
     {
       "pattern": "\\bNOTIFY\\b\\.?",
       "snippet": [
-        "../commands/warren/NOTIFY.md"
+        "../commands/local/NOTIFY.md"
       ],
       "enabled": true,
       "separator": "\n",
@@ -148,7 +157,7 @@
       "name": "TEST",
       "pattern": "\\bTEST\\b\\.?",
       "snippet": [
-        "../commands/warren/TEST.md"
+        "../commands/local/TEST.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -157,7 +166,7 @@
       "name": "txt",
       "pattern": "TXT[/:\\.]\\s*",
       "snippet": [
-        "../commands/warren/txt.md"
+        "../commands/local/txt.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -166,7 +175,7 @@
       "name": "clear",
       "pattern": "CLEAR[/:\\.]?\\s*",
       "snippet": [
-        "../commands/warren/clear.md"
+        "../commands/local/clear.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -175,7 +184,7 @@
       "name": "playwright-testing",
       "pattern": "\\b(playwright)\\b\\.?",
       "snippet": [
-        "../commands/warren/playwright-testing.md"
+        "../commands/local/playwright-testing.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -184,16 +193,16 @@
       "name": "add-todo",
       "pattern": "\\b(TODO|add-todo)\\b",
       "snippet": [
-        "../commands/warren/add-todo.md"
+        "../commands/local/add-todo.md"
       ],
       "separator": "\n",
       "enabled": true
     },
     {
-      "name": "nvim",
-      "pattern": "\\b(nvim|neovim)\\b\\.?",
+      "name": "playwrightMCP",
+      "pattern": "\\b(playwright[\\s\\-]?mcp|mcp[\\s\\-]?playwright|browser[\\s\\-]?automation|playwright[\\s\\-]?test|web[\\s\\-]?automation|e2e[\\s\\-]?test|browser[\\s\\-]?test)\\b",
       "snippet": [
-        "../commands/warren/nvim.md"
+        "../commands/local/playwrightMCP.md"
       ],
       "separator": "\n",
       "enabled": true

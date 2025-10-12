@@ -22,6 +22,8 @@ description: Output pedagogically-rich structured plans in HTML format with mand
 
 **VERIFICATION_HASH:** `67bc5125f8d1b48c`
 
+**NOTE**: This snippet contains ONLY the planning and pedagogical logic. For HTML formatting and styling specifications, reference **@HTML.md** snippet.
+
 When you receive this trigger, you MUST create plans that **teach**, not just instruct.
 
 ## Philosophy: Plans as Learning Documents
@@ -503,7 +505,9 @@ if (typeof mcp__codex__codex === 'function') {
 ## Phase 3: HTML Output Formatting (After Review)
 
 ### HTML Style Guide Reference
-**CRITICAL**: Search for and read the HTML snippet for the single source of truth on HTML formatting.
+**CRITICAL**: Reference the HTML output snippet (@HTML.md) for the single source of truth on HTML formatting.
+
+**To access HTML formatting guidelines**: Use @HTML.md or activate the HTML snippet context.
 
 **Why HTML instead of Markdown**:
 - **Interactive elements**: Collapsibles, dark mode, expand/collapse—not possible in plain Markdown
@@ -511,13 +515,15 @@ if (typeof mcp__codex__codex === 'function') {
 - **Information density**: Two-column layouts pack more info in less scrolling
 - **User experience**: Professional presentation builds confidence in the plan
 
-The HTML snippet contains complete specifications for:
+**The @HTML.md snippet contains complete specifications for**:
 - Chinese aesthetic color palette (light + dark mode)
 - Dark mode toggle with theme persistence
-- Compact, information-dense layout
+- Compact, information-dense layout with proper `<pre>` tag handling
 - Progressive disclosure with collapsibles
 - Two-column layout defaults
 - Visual hierarchy and typography
+- Mermaid diagram integration
+- Code block formatting (CRITICAL: Always wrap code in `<pre><code>` tags)
 
 ### PEDAGOGICAL HTML Plan Structure (ENHANCED)
 

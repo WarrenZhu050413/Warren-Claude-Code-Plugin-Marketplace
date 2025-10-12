@@ -35,3 +35,10 @@ test_results/
 # Config overrides
 .env
 *.bak
+
+# git
+.annotations
+
+# claude code
+claude_html
+

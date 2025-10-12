@@ -4,28 +4,10 @@
       "name": "HTML",
       "pattern": "\\bHTML\\b\\.?",
       "snippet": [
-        "snippets/HTML.md"
+        "../commands/HTML.md"
       ],
       "enabled": true,
       "separator": "\n"
-    },
-    {
-      "name": "nvim",
-      "pattern": "\\b(nvim|neovim|vim\\s+(config|configuration|setup)|\\.vimrc|init\\.vim|init\\.lua)\\b",
-      "snippet": [
-        "snippets/nvim.md"
-      ],
-      "separator": "\n",
-      "enabled": true
-    },
-    {
-      "name": "tdd",
-      "pattern": "\\bTDD\\b",
-      "snippet": [
-        "snippets/tdd.md"
-      ],
-      "separator": "\n",
-      "enabled": true
     }
   ]
 }

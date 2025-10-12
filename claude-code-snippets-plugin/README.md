@@ -10,18 +10,24 @@ To install, you first have to install the `WarrenZhu050413/Warren-Claude-Code-Pl
 
 ### Step 1: Add the Marketplace
 
-![Add Marketplace](static/1-AddMarketPlace.png)
-*Add the Warren Claude Code Plugin Marketplace using `/plugin marketplace add WarrenZhu050413/Warren-Claude-Code-Plugin-Marketplace`*
+<figure>
+  <img src="static/1-AddMarketPlace.png" alt="Add Marketplace"/>
+  <figcaption>Add the Warren Claude Code Plugin Marketplace using <code>/plugin marketplace add WarrenZhu050413/Warren-Claude-Code-Plugin-Marketplace</code></figcaption>
+</figure>
 
 ### Step 2: Install the Marketplace
 
-![Install Marketplace](static/2-InstallMarketplace.png)
-*Confirm the marketplace installation*
+<figure>
+  <img src="static/2-InstallMarketplace.png" alt="Install Marketplace"/>
+  <figcaption>Confirm the marketplace installation</figcaption>
+</figure>
 
 ### Step 3: Browse and Install the Snippets Plugin
 
-![Browse and Install Plugin](static/3-BrowseAndInstallPlugins.png)
-*Browse available plugins and install the `claude-code-snippets-plugin`*
+<figure>
+  <img src="static/3-BrowseAndInstallPlugins.png" alt="Browse and Install Plugin"/>
+  <figcaption>Browse available plugins and install the <code>claude-code-snippets-plugin</code></figcaption>
+</figure>
 
 ## Quick Start
 
@@ -31,18 +37,24 @@ Test out the prompt:
 HTML Explain Claude Code Marketplace
 ```
 
-![HTML Test Prompt](static/4-HTMLTest.png)
-*Testing the HTML snippet injection with a simple prompt*
+<figure>
+  <img src="static/4-HTMLTest.png" alt="HTML Test Prompt"/>
+  <figcaption>Testing the HTML snippet injection with a simple prompt</figcaption>
+</figure>
 
 Double click `esc` to see that there is <user-prompt-submit-hook><html_output>...
 
-![User Prompt Submit Hook](static/5-UserPromptSubmitHTMLHoook.png)
-*The hook automatically injects HTML context when it detects the HTML keyword*
+<figure>
+  <img src="static/5-HTMLInActiveContext.png" alt="HTML In Active Context"/>
+  <figcaption>Claude announces "Active Context: HTML" showing the snippet was automatically injected</figcaption>
+</figure>
 
 And Claude Code will create and open an HTML file in your browser explaining Claude Code Marketplace
 
-![HTML Output in Browser](static/6-MarketPlaceHTML.png)
-*The resulting HTML file opened in browser with a beautifully formatted explanation*
+<figure>
+  <img src="static/6-MarketPlaceHTML.png" alt="HTML Output in Browser"/>
+  <figcaption>The resulting HTML file opened in browser with a beautifully formatted explanation</figcaption>
+</figure>
 
 ### Creating Your First Custom Snippet
 
@@ -58,11 +70,15 @@ claude
 # 4. Full snippet content shown for verification
 ```
 
-![Creating Batman Snippet](static/7-BatmanSnippetCreate.png)
-*Creating a custom Batman snippet that tells Claude to speak like Batman*
+<figure>
+  <img src="static/7-BatmanSnippetCreate.png" alt="Creating Batman Snippet"/>
+  <figcaption>Creating a custom Batman snippet that tells Claude to speak like Batman</figcaption>
+</figure>
 
-![Batman Snippet in Action](static/8-BatmanSnippetContinue.png)
-*The Batman snippet automatically activates and Claude responds in Batman's voice*
+<figure>
+  <img src="static/8-BatmanSnippetContinue.png" alt="Batman Snippet in Action"/>
+  <figcaption>The Batman snippet automatically activates and Claude responds in Batman's voice</figcaption>
+</figure>
 
 ### Other Commands
 

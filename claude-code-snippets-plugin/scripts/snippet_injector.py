@@ -69,8 +69,8 @@ try:
 
         pattern = mapping['pattern']
 
-        # All patterns are treated as regex with case-insensitive matching
-        if re.search(pattern, prompt, re.IGNORECASE):
+        # All patterns are treated as regex with case-sensitive matching
+        if re.search(pattern, prompt):
             # Store snippet files array and separator
             snippet_files = mapping['snippet']  # Now always an array
             separator = mapping.get('separator', '\n')
