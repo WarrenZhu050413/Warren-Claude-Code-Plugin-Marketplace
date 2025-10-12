@@ -6,17 +6,21 @@ description: List and view configured snippets
 
 Lists all configured snippets with their patterns and status.
 
-## Usage
+## Phase 1: Parse & Validate
 
-Parse `$ARGUMENTS` for optional snippet name. If provided, show detailed view of that snippet. Otherwise, list all snippets.
+Parse `$ARGUMENTS` for optional snippet name:
+- **No arguments**: List all snippets (summary view)
+- **With name**: Show detailed view of specific snippet
 
-## Execute
+Validate that snippet name (if provided) is non-empty and doesn't contain invalid characters.
+
+## Phase 2: Execute CLI
 
 ```bash
 cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list ${name:+$name} --snippets-dir ../commands/warren 2>&1
 ```
 
-## Output Formatting
+## Phase 3: Format Output
 
 ### For List (no name provided):
 
@@ -63,7 +67,7 @@ Summary:
   • Test: Type "{first_alternative}" to trigger injection
 ```
 
-## Error Handling
+## Phase 4: Handle Errors
 
 **If snippet not found:**
 ```
@@ -82,6 +86,32 @@ Create your first snippet with:
 /create-snippet {name}
 
 💡 Snippets automatically inject context when their pattern matches your message!
+```
+
+### Common Edge Cases
+
+**Snippet name with special characters:**
+```
+❌ Error: Snippet name may contain special characters.
+
+Try quoting the name: /read-snippets "my-snippet-name"
+```
+
+**Corrupted configuration:**
+```
+❌ Error: Failed to parse snippets configuration.
+
+The config.json file may be corrupted. To fix:
+1. Check backups/ directory for recent backup
+2. Restore from backup, or
+3. Delete config.json to start fresh (will lose all snippets)
+```
+
+**Permission denied:**
+```
+❌ Error: Permission denied reading snippets directory.
+
+Check permissions: ls -la /Users/wz/.claude/plugins/.../commands/warren/
 ```
 
 ## Important Notes

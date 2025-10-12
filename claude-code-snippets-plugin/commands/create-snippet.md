@@ -13,7 +13,7 @@ You are an intelligent wrapper around the `snippets_cli.py` tool. Your job is to
 6. **Display full snippet content** for verification
 7. **Create and run test suite** to verify snippet injection
 
-## Phase 1: Parse & Understand Intent
+## Phase 1: Parse & Validate
 
 Extract from `$ARGUMENTS`:
 - **Snippet name**: The identifier (e.g., "docker", "kubernetes")
@@ -22,6 +22,7 @@ Extract from `$ARGUMENTS`:
 
 ### Natural Language Examples
 
+**Imperative statements:**
 ```
 "create docker snippet for docker and containers"
 → name: docker, pattern: docker|containers, needs: content
@@ -31,6 +32,30 @@ Extract from `$ARGUMENTS`:
 
 "create snippet"
 → needs: everything (fully interactive)
+```
+
+**Questions:**
+```
+"Can you help me create a docker snippet?"
+→ name: docker, needs: pattern, content
+
+"How do I make a terraform snippet?"
+→ name: terraform, needs: pattern, content
+
+"I need a snippet for react, can you set that up?"
+→ name: react, needs: pattern, content
+```
+
+**Mixed/conversational:**
+```
+"Setup a kubernetes snippet using my k8s.md file"
+→ name: kubernetes, content: ~/k8s.md, needs: pattern
+
+"I want to add calendar context when I mention gcal or google calendar"
+→ name: gcal/calendar, pattern: gcal|google calendar, needs: content
+
+"Make a snippet that triggers on AWS or amazon web services"
+→ name: aws, pattern: aws|amazon web services, needs: content
 ```
 
 ## Phase 2: Interactive Guidance
@@ -63,7 +88,7 @@ List words (I'll format them): docker, container, dockerfile"
 Your choice [1-3]:"
 ```
 
-## Phase 3: Format Inputs
+## Phase 2a: Format Inputs
 
 ### Regex Pattern Formatting
 
@@ -86,7 +111,7 @@ Transform user input → proper regex:
 - Convert relative → absolute paths
 - Validate file exists before calling CLI
 
-## Phase 4: Build Complete Preview (**MANDATORY**)
+## Phase 3: Build Preview (**MANDATORY**)
 
 **CRITICAL**: Before creating the snippet, show COMPLETE preview to user.
 
@@ -124,7 +149,7 @@ Display all details of the snippet that will be created:
 ═══════════════════════════════════════════════════════════
 ```
 
-### Request Approval (**MANDATORY GATE**)
+## Phase 4: Request Approval (**MANDATORY GATE**)
 
 **CRITICAL**: Do NOT create snippet without explicit approval.
 
@@ -141,10 +166,10 @@ Your choice [Y/N/D/M]:
 ```
 
 Handle responses:
-- **Y/yes**: Proceed to Phase 5 (Execute)
+- **Y/yes**: Proceed to Phase 5 (Execute CLI)
 - **N/no**: Abort, display cancellation message
 - **D/details**: Show complete content, then re-ask
-- **M/modify**: Return to Phase 2 with refinements
+- **M/modify**: Return to Phase 2 (Interactive Guidance) with refinements
 
 If user says NO:
 ```
@@ -213,9 +238,63 @@ Let me help. What words should trigger this snippet?
 I'll format them correctly.
 ```
 
-## Phase 7: Create and Run Test Suite
+### Common Edge Cases
 
-After success, automatically create and run tests:
+**Empty or whitespace-only content:**
+```
+❌ Error: Snippet content cannot be empty.
+
+Please provide content via:
+- Inline: --content "your content here"
+- File: --file /path/to/content.md
+```
+
+**Special characters in snippet name:**
+```
+❌ Error: Invalid snippet name '{name}'.
+
+Snippet names must:
+- Contain only letters, numbers, hyphens, underscores
+- Not start with a hyphen
+- Be 1-50 characters long
+
+Example valid names: docker, my-snippet, aws_context
+```
+
+**File not found or not readable:**
+```
+❌ Error: Cannot read file: {file_path}
+
+Check that:
+- File exists and path is correct
+- You have read permissions
+- Path is absolute or properly resolved
+```
+
+**Disk space issues:**
+```
+❌ Error: Failed to write snippet file.
+
+Possible causes:
+- Insufficient disk space
+- Snippets directory not writable
+- File system full
+
+Check: df -h /Users/wz/.claude/
+```
+
+**Pattern conflicts with existing snippet:**
+```
+⚠️  Warning: Pattern overlaps with existing snippet '{existing_name}'.
+
+Both snippets will trigger on: {overlapping_terms}
+
+Continue anyway? [y/N]:
+```
+
+## Phase 7: Verification Testing
+
+After success, automatically create and run verification tests:
 
 ```bash
 # Create test suite
@@ -278,9 +357,9 @@ chmod +x /Users/wz/.claude/tests/shared/${name}_test.sh
 /Users/wz/.claude/tests/shared/${name}_test.sh
 ```
 
-## Phase 8: Display Full Snippet
+## Phase 8: Display & Verify Snippet
 
-After tests, show complete snippet content for verification:
+After verification tests, show complete snippet content:
 
 ```bash
 snippet_name=$(echo "$result" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['data']['name'])" 2>/dev/null)

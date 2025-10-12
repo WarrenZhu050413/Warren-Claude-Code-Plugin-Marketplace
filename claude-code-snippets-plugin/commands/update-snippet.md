@@ -12,7 +12,7 @@ You are an intelligent wrapper around `snippets_cli.py update`. Your job is to:
 5. **Execute & test** changes after approval
 6. **Display updated snippet** for verification
 
-## Phase 1: Parse Intent
+## Phase 1: Parse & Validate
 
 Extract from `$ARGUMENTS`:
 - **Snippet name**: Which snippet to update
@@ -35,9 +35,9 @@ Extract from `$ARGUMENTS`:
 → name: gcal, action: rename, new name: google-calendar
 ```
 
-## Phase 2: Get Current State
+## Phase 2: Show Current State
 
-Always show current state first:
+Always show current state before making changes:
 
 ```bash
 current=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py list "$name" --snippets-dir ../commands/warren 2>&1)
@@ -58,7 +58,7 @@ Status: {enabled ? '✓ Enabled' : '✗ Disabled'}
 Analyzing requested changes...
 ```
 
-## Phase 3: Build Complete Change Preview (**MANDATORY**)
+## Phase 3: Build Preview (**MANDATORY**)
 
 **CRITICAL**: Before ANY confirmation prompt, construct COMPLETE preview of all changes.
 
@@ -115,7 +115,7 @@ ${rename_changes ? `
 ═══════════════════════════════════════════════════════════
 ```
 
-### Request Approval (**MANDATORY GATE**)
+## Phase 4: Request Approval (**MANDATORY GATE**)
 
 **CRITICAL**: Do NOT proceed without explicit approval.
 
@@ -132,10 +132,10 @@ Your choice [Y/N/D/M]:
 ```
 
 Handle responses:
-- **Y/yes**: Proceed to Phase 4 (Execute)
+- **Y/yes**: Proceed to Phase 5 (Execute CLI)
 - **N/no**: Abort, display cancellation message
 - **D/details**: Show detailed diff, then re-ask
-- **M/modify**: Return to Phase 3 with refinements
+- **M/modify**: Return to Phase 3 (Build Preview) with refinements
 
 If user says NO:
 ```
@@ -156,9 +156,9 @@ if [ -n "$pattern_changes" ]; then
 fi
 ```
 
-## Phase 4: Execute Update (**ONLY AFTER APPROVAL**)
+## Phase 5: Execute CLI (**ONLY AFTER APPROVAL**)
 
-**PREREQUISITE**: Phase 3 must have received explicit approval.
+**PREREQUISITE**: Phase 4 must have received explicit approval.
 
 ```bash
 result=$(cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-code-snippets-plugin/scripts && python3 snippets_cli.py update "$name" \
@@ -181,9 +181,52 @@ Troubleshooting:
 - Check snippet name is correct
 - Verify file paths are accessible
 - Ensure no duplicate patterns/names
+- Confirm boolean values are lowercase (true/false)
+- Make sure snippet exists before updating
 ```
 
-## Phase 5: Format Result
+### Common Edge Cases
+
+**Rename conflict:**
+```
+❌ Error: Cannot rename to '{new_name}' - snippet already exists.
+
+Choose a different name or delete existing snippet first.
+```
+
+**Invalid enabled value:**
+```
+❌ Error: --enabled must be 'true' or 'false' (lowercase).
+
+You provided: {value}
+Correct usage: --enabled true  or  --enabled false
+```
+
+**Content and file both provided:**
+```
+❌ Error: Cannot use both --content and --file together.
+
+Use one or the other:
+- Update from file: --file /path/to/file.md
+- Update inline: --content "new content here"
+```
+
+**Concurrent modification:**
+```
+❌ Error: Snippet was modified by another process.
+
+The snippet has changed since you loaded it. Retry the update.
+```
+
+**Empty pattern update:**
+```
+❌ Error: Pattern cannot be empty.
+
+Provide a valid regex pattern with at least one alternative.
+Example: --pattern "\b(docker|container)\b"
+```
+
+## Phase 6: Handle Result
 
 ### On Success
 
@@ -211,7 +254,7 @@ ${enabled_changed ? `Status:
 💡 Changes take effect immediately.
 ```
 
-## Phase 6: Verification Testing
+## Phase 7: Verification Testing
 
 After successful update, test that snippet still works:
 
@@ -239,7 +282,7 @@ if [ -n "$verification_hash" ]; then
 fi
 ```
 
-## Phase 7: Display Updated Snippet
+## Phase 8: Display & Verify Snippet
 
 After verification, show complete updated snippet:
 
