@@ -111,6 +111,78 @@ Transform user input → proper regex:
 - Convert relative → absolute paths
 - Validate file exists before calling CLI
 
+## Phase 2b: Prepend Announcement Template (**MANDATORY**)
+
+**CRITICAL**: ALL new snippets MUST include the announcement template at the beginning.
+
+### Announcement Template
+
+Every snippet you create must begin with this exact template (customize {name} only):
+
+```markdown
+---
+SNIPPET_NAME: {name}
+ANNOUNCE_USAGE: true
+---
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: {name}
+
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
+[Original snippet content follows...]
+```
+
+### Implementation Rules
+
+1. **Always prepend**: Add this template BEFORE any user-provided content
+2. **Replace {name}**: Use the actual snippet name (e.g., `docker`, `kubernetes`)
+3. **Preserve content**: Don't modify user's original content
+4. **No exceptions**: Even if user provides complete content, prepend this template
+5. **One announcement per snippet**: Each snippet file has exactly one announcement section
+
+### Example Transformation
+
+**User provides:**
+```
+# Docker Cheat Sheet
+
+Commands for Docker...
+```
+
+**You create (with announcement prepended):**
+```
+---
+SNIPPET_NAME: docker
+ANNOUNCE_USAGE: true
+---
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: docker
+
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
+# Docker Cheat Sheet
+
+Commands for Docker...
+```
+
+### Why This Matters
+
+- **Transparency**: Users see which snippets are influencing Claude's responses
+- **Debugging**: Easy to identify when multiple snippets are active
+- **Consistency**: All snippets follow the same announcement pattern
+
 ## Phase 3: Build Preview (**MANDATORY**)
 
 **CRITICAL**: Before creating the snippet, show COMPLETE preview to user.

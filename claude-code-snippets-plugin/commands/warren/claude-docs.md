@@ -1,3 +1,18 @@
+---
+SNIPPET_NAME: claude-docs
+ANNOUNCE_USAGE: true
+---
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: claude-docs
+
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
 # Claude Documentation Reference
 
 **VERIFICATION_HASH:** `e3034dc421039967`

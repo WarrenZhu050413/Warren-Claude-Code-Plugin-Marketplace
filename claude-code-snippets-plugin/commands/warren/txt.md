@@ -1,3 +1,18 @@
+---
+SNIPPET_NAME: txt
+ANNOUNCE_USAGE: true
+---
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: txt
+
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
 <txt>
 
 **VERIFICATION_HASH:** `44ce61b53e98c36a`

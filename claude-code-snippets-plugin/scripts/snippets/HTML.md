@@ -1,16 +1,25 @@
 <html_output>
 ---
 description: Write compact, information-dense HTML content using full width with minimal spacing
+SNIPPET_NAME: HTML
+ANNOUNCE_USAGE: true
 ---
 
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
 
+📎 **Active Context**: HTML
 
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
 
 When providing explanations, documentation, or informational content:
 
 ## Primary Purpose
 
-**VERIFICATION_HASH:** `8c73bf20e73d10f9`
+**VERIFICATION_HASH:** `f7a2e9d4c6b18503`
 
 The HTML output should prioritize **important information first** with **progressive disclosure** through:
 - Critical information prominently displayed and always visible
@@ -465,9 +474,41 @@ th {
 ## Content Formatting
 - Use proper list structures (ul, ol) for enumerated content
 - Apply emphasis with <strong> and <em> tags appropriately
-- Format code with <code> for inline code and <pre><code> for code blocks
+- **CRITICAL**: Format code with `<code>` for inline code and `<pre><code>` for code blocks (see detailed examples below)
 - Use <blockquote> for quotes and citations
 - Include <table> structures for tabular data when appropriate
+
+### Code Block HTML Structure (CRITICAL)
+
+**⚠️ ALWAYS wrap multiline code in `<pre><code>` tags to preserve formatting!**
+
+**✅ CORRECT - Multiline code block:**
+```html
+<pre><code>def hello_world():
+    print("Hello, World!")
+    return True</code></pre>
+```
+
+**❌ WRONG - Missing pre/code tags (newlines will collapse):**
+```html
+<div class="code-block">
+def hello_world():
+    print("Hello, World!")
+    return True
+</div>
+```
+
+**✅ CORRECT - Inline code:**
+```html
+<p>Use the <code>print()</code> function to output text.</p>
+```
+
+**Key Rules:**
+1. **Inline code** (within sentences): Use `<code>text</code>`
+2. **Multiline code blocks**: Use `<pre><code>text</code></pre>`
+3. **Never** put raw code directly in `<div>` without `<pre><code>` wrappers
+4. The `<pre>` tag preserves whitespace (newlines, indentation, spaces)
+5. The CSS `.code-block` class is for styling only, not structure
 
 ## Component Selection Guide
 

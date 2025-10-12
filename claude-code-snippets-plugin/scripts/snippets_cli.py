@@ -17,6 +17,27 @@ import shutil
 import hashlib
 
 
+# Announcement template for snippet usage transparency
+ANNOUNCEMENT_TEMPLATE = """---
+SNIPPET_NAME: {name}
+ANNOUNCE_USAGE: true
+---
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: {name}
+
+If multiple snippets are detected (multiple ANNOUNCE_USAGE: true directives in different snippets), combine them into a single announcement:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
+**VERIFICATION_HASH:** `{verification_hash}`
+
+"""
+
+
 class SnippetError(Exception):
     """Base exception for snippet operations"""
     def __init__(self, code: str, message: str, details: Dict[str, Any] = None):
@@ -174,7 +195,8 @@ class SnippetManager:
 
     def create(self, name: str, pattern: str, content: str = None,
                file_path: str = None, file_paths: List[str] = None,
-               separator: str = '\n', enabled: bool = True, force: bool = False) -> Dict:
+               separator: str = '\n', enabled: bool = True, force: bool = False,
+               announce: bool = True) -> Dict:
         """Create a new snippet"""
         # Validate inputs
         if not name:
@@ -241,13 +263,24 @@ class SnippetManager:
             # Create snippets directory if needed
             self.snippets_dir.mkdir(parents=True, exist_ok=True)
 
+            # Generate verification hash
+            verification_hash = self._generate_verification_hash(name)
+
+            # Prepend announcement template if requested
+            if announce:
+                announcement = ANNOUNCEMENT_TEMPLATE.format(
+                    name=name,
+                    verification_hash=verification_hash
+                )
+                content = announcement + content
+
             # Write snippet file
             with open(snippet_path, 'w') as f:
                 f.write(content)
 
-            # Add verification hash
-            verification_hash = self._generate_verification_hash(name)
-            self._add_verification_hash(snippet_path, verification_hash)
+            # Add verification hash (only if announcement not used, to avoid YAML conflicts)
+            if not announce:
+                self._add_verification_hash(snippet_path, verification_hash)
 
             snippet_files = [snippet_file]
             total_size = snippet_path.stat().st_size
@@ -627,6 +660,8 @@ def main():
                               help="Enable snippet (default: true)")
     create_parser.add_argument("--force", action="store_true",
                               help="Overwrite if exists")
+    create_parser.add_argument("--no-announce", action="store_true",
+                              help="Skip auto-injecting announcement template")
 
     # list
     list_parser = subparsers.add_parser("list", help="List snippets")
@@ -677,7 +712,8 @@ def main():
             data = manager.create(
                 args.name, args.pattern, args.content, args.file,
                 getattr(args, 'files', None), args.separator,
-                args.enabled, args.force
+                args.enabled, args.force,
+                announce=not args.no_announce
             )
             print(format_output(True, "create", data,
                               f"Snippet '{args.name}' created successfully",

@@ -221,6 +221,35 @@ Claude receives your prompt + HTML snippet
 - Can be multiple files combined with separators
 - Support verification hashes for testing
 
+### 4. Usage Announcements
+
+All snippets automatically announce when they're active, providing **transparency** into which context is being injected:
+
+**Format**:
+- Single snippet: `📎 **Active Context**: snippet-name`
+- Multiple snippets: `📎 **Active Contexts**: snippet1, snippet2, snippet3`
+
+**Example**:
+
+```
+You: "Help me with HTML and docker"
+
+Claude: 📎 **Active Contexts**: HTML, docker
+
+[Response continues with both HTML and docker context available...]
+```
+
+**Technical Implementation**:
+- All snippets include YAML frontmatter with `ANNOUNCE_USAGE: true`
+- Announcements appear at the very beginning of Claude's response
+- Automatically added to new snippets via `/create-snippet` command
+- Can be disabled for special cases using `--no-announce` flag in CLI
+
+**Benefits**:
+- **Transparency**: Always know which snippets are active
+- **Debugging**: Easily identify when multiple snippets trigger
+- **Consistency**: All snippets follow the same announcement pattern
+
 ## Directory Structure
 
 ```

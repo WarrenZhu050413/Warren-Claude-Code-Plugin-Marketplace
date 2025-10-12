@@ -78,6 +78,31 @@ This plugin uses a **hook** that listens to all your prompts and automatically i
 
 The magic happens through **regex pattern matching anywhere in your prompt** - not just slash commands at the start!
 
+## Snippet Usage Announcements
+
+All snippets now automatically announce when they're active! This provides **transparency** so you always know which context is being injected:
+
+- **Single snippet**: Claude announces `📎 **Active Context**: snippet-name`
+- **Multiple snippets**: Claude announces `📎 **Active Contexts**: snippet1, snippet2, snippet3`
+
+This announcement appears at the **very beginning** of Claude's response, before any other content.
+
+### Example
+
+When you type "HTML docker", both the HTML and docker snippets are injected, and Claude will start with:
+
+```
+📎 **Active Contexts**: HTML, docker
+
+[Claude's response continues here...]
+```
+
+### Technical Details
+
+- Announcements are automatically added to all snippets via YAML frontmatter (`ANNOUNCE_USAGE: true`)
+- New snippets created with `/create-snippet` automatically include announcement templates
+- Use `--no-announce` flag in CLI to disable for special cases: `python3 snippets_cli.py create name --pattern "..." --content "..." --no-announce`
+
 ## Advanced: Manual Configuration
 
 The plugin uses a **layered configuration system** in `scripts/`:
