@@ -140,6 +140,218 @@ Input: `$ARGUMENTS`
 
 ---
 
+## Snippet Files
+
+### Structure
+
+Snippets provide contextual instructions to Claude through the `UserPromptSubmit` hook. They follow a similar structure to commands but serve as continuous context rather than one-time actions.
+
+```markdown
+---
+description: Brief description of what this snippet provides
+SNIPPET_NAME: unique-identifier
+ANNOUNCE_USAGE: true
+---
+
+# Snippet Title
+
+**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
+
+📎 **Active Context**: snippet-name
+
+If multiple snippets are detected, combine them:
+
+📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+---
+
+**VERIFICATION_HASH:** `unique-hash-here`
+
+[Main instructions for Claude...]
+
+## Section 1: Core Instructions
+
+[Detailed instructions...]
+
+## Section 2: Additional Guidance
+
+[More instructions...]
+```
+
+**Key Points:**
+- **YAML frontmatter** with `description`, `SNIPPET_NAME`, and `ANNOUNCE_USAGE`
+- **Announcement block** at the top (tells Claude to announce active contexts)
+- **Verification hash** for content integrity tracking
+- **Clear section structure** for organization
+- **Instructions are directives** to Claude, not conversational
+
+---
+
+## Template Pattern for Complex Snippets
+
+For snippets that require external files (templates, examples), use this pattern:
+
+### Directory Structure
+
+```
+my-plugin/
+├── snippets/
+│   └── my-snippet.md          # Main snippet with instructions
+└── templates/
+    └── my-template/
+        ├── base-template.html  # Base template file
+        └── examples.md         # Usage examples
+```
+
+### Template-Based Snippet Structure
+
+```markdown
+---
+description: Snippet description
+SNIPPET_NAME: my-snippet
+ANNOUNCE_USAGE: true
+---
+
+# My Snippet Title
+
+**INSTRUCTION TO CLAUDE**: Announcement block...
+
+---
+
+**VERIFICATION_HASH:** `hash-here`
+
+## Primary Purpose
+
+Main instructions for Claude...
+
+## File Handling Instructions
+
+1. **ALWAYS** create output directory: `mkdir -p output/`
+2. Write to: `output/{description}.ext`
+3. Open file after writing
+
+## Template System
+
+**Base Template:** `${CLAUDE_PLUGIN_ROOT}/templates/my-template/base-template.html`
+- Contains all structure and styling
+- Ready to use - just add content
+- Includes feature X, Y, Z
+
+**Examples & Reference:** `${CLAUDE_PLUGIN_ROOT}/templates/my-template/examples.md`
+- Complete component examples
+- Usage patterns
+- Best practices
+
+**Workflow:**
+1. Read the base template: `${CLAUDE_PLUGIN_ROOT}/templates/my-template/base-template.html`
+2. Replace `{{PLACEHOLDER}}` with actual content
+3. Add custom content in designated section
+4. Reference examples.md for patterns if needed
+
+## Component Selection Guide
+
+Quick reference table for choosing the right patterns:
+
+| Use Case | Pattern | When to Use |
+|----------|---------|-------------|
+| Feature A | Pattern 1 | Scenario 1 |
+| Feature B | Pattern 2 | Scenario 2 |
+
+## Design Principles
+
+### Principle 1: Title
+- **Rule 1**: Description
+- **Rule 2**: Description
+
+### Principle 2: Title
+- **Rule 1**: Description
+- **Rule 2**: Description
+
+## Common Patterns
+
+### Pattern 1
+
+\```language
+# Example code
+\```
+
+### Pattern 2
+
+\```language
+# Example code
+\```
+
+## Best Practices
+
+1. **Practice 1**: Explanation
+2. **Practice 2**: Explanation
+```
+
+### Real-World Example: HTML Output Snippet
+
+The `claude-code-snippets-plugin/snippets/HTML.md` demonstrates this pattern:
+
+**Structure:**
+```
+claude-code-snippets-plugin/
+├── snippets/
+│   └── HTML.md                    # Main snippet with instructions
+└── templates/
+    └── html/
+        ├── base-template.html     # Complete HTML template
+        └── examples.md            # Component examples
+```
+
+**Key Features:**
+- **Base template** contains all CSS, JavaScript, and HTML structure
+- **Placeholders** like `{{TITLE}}` and `<!-- CONTENT GOES HERE -->`
+- **Examples file** shows complete usage patterns
+- **Workflow instructions** tell Claude to read template → replace placeholders → add content
+
+**Benefits:**
+1. **Separation of concerns** - Instructions separate from templates
+2. **Reusability** - Templates can be used independently
+3. **Maintainability** - Update template without changing snippet instructions
+4. **Discoverability** - Examples file serves as reference documentation
+
+### Template Pattern Best Practices
+
+**1. Use `${CLAUDE_PLUGIN_ROOT}` for paths:**
+
+✅ **Good:**
+```markdown
+**Base Template:** `${CLAUDE_PLUGIN_ROOT}/templates/html/base-template.html`
+```
+
+❌ **Bad:**
+```markdown
+**Base Template:** `./templates/html/base-template.html`
+```
+
+**2. Provide clear workflow steps:**
+
+```markdown
+**Workflow:**
+1. Read the base template: `${CLAUDE_PLUGIN_ROOT}/templates/...`
+2. Replace `{{PLACEHOLDER}}` with actual content
+3. Add content in designated section
+4. Reference examples.md for patterns
+```
+
+**3. Include quick reference tables:**
+
+Component selection guides help Claude choose the right patterns quickly.
+
+**4. Keep snippet focused on instructions:**
+
+The snippet file should contain instructions and references, not embed large templates inline.
+
+**5. Document placeholder format:**
+
+Clearly specify what placeholders exist and how to replace them.
+
+---
+
 ## Hooks
 
 **IMPORTANT:** When writing or configuring hooks, ALWAYS consult the **[Hooks Reference](https://docs.claude.com/en/docs/claude-code/hooks.md)** documentation for the correct structure and format.
@@ -503,5 +715,5 @@ In marketplace's `.claude-plugin/marketplace.json`:
 
 ---
 
-**Last Updated:** 2025-10-10
+**Last Updated:** 2025-10-12
 **Author:** Fucheng Warren Zhu
