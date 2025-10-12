@@ -99,9 +99,10 @@ When you type "HTML docker", both the HTML and docker snippets are injected, and
 
 ### Technical Details
 
-- Announcements are automatically added to all snippets via YAML frontmatter (`ANNOUNCE_USAGE: true`)
-- New snippets created with `/create-snippet` automatically include announcement templates
-- Use `--no-announce` flag in CLI to disable for special cases: `python3 snippets_cli.py create name --pattern "..." --content "..." --no-announce`
+- **Hook-level coordination**: The injection hook adds a meta-instruction that scans ALL snippets for `ANNOUNCE_USAGE: true` markers
+- **YAML frontmatter**: Each snippet includes `SNIPPET_NAME` and `ANNOUNCE_USAGE: true` fields
+- **Automatic in new snippets**: Created via `/create-snippet` command automatically includes announcement template
+- **CLI opt-out**: Use `--no-announce` flag to disable: `python3 snippets_cli.py create name --pattern "..." --content "..." --no-announce`
 
 ## Advanced: Manual Configuration
 

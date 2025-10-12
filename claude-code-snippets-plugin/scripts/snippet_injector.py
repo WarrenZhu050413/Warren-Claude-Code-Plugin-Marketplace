@@ -105,11 +105,30 @@ try:
                 additional_context.append(combined_content)
 
         if additional_context:
+            # Add global announcement instruction before all snippets
+            meta_instruction = """
+**CRITICAL INSTRUCTION - READ THIS FIRST**:
+
+Before responding to the user, you MUST:
+1. Scan the ENTIRE context below for ALL snippets that have `ANNOUNCE_USAGE: true` in their YAML frontmatter
+2. Extract ALL `SNIPPET_NAME` values from those snippets
+3. Announce them at the VERY BEGINNING of your response using this exact format:
+   - If ONE snippet is active: 📎 **Active Context**: snippet_name
+   - If MULTIPLE snippets are active: 📎 **Active Contexts**: snippet1, snippet2, snippet3
+
+This announcement MUST be the first thing in your response, before any other content.
+
+---
+
+"""
+            # Prepend meta-instruction to the combined context
+            full_context = meta_instruction + "\n".join(additional_context)
+
             # Return JSON with additional context
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "UserPromptSubmit",
-                    "additionalContext": "\n".join(additional_context)
+                    "additionalContext": full_context
                 }
             }
             print(json.dumps(output))
