@@ -12,12 +12,6 @@
       "source": "./claude-context-orchestrator"
     },
     {
-      "name": "gmail-gcal-mcp",
-      "version": "1.0.0",
-      "description": "Gmail and Google Calendar automation via MCP servers with smart context injection for email and calendar keywords",
-      "source": "./gmail-gcal-mcp-plugin"
-    },
-    {
       "name": "spending-tracker",
       "version": "1.0.0",
       "description": "Track Claude Code API spending with daily and hourly breakdowns",

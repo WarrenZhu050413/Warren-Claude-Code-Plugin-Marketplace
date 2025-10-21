@@ -1,6 +1,6 @@
 ---
 name: Building Artifacts
-description: Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
+description: Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Artifacts are automatically saved to ~/Desktop/Artifacts with category-based organization (apps, dashboards, visualizations, tools, games, demos, misc). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -49,9 +49,33 @@ VERY IMPORTANT: To avoid what is often referred to as "AI slop", avoid using exc
 Run the initialization script to create a new React project:
 
 ```bash
-bash scripts/init-artifact.sh <project-name>
-cd <project-name>
+bash scripts/init-artifact.sh <project-name> [category]
 ```
+
+**Default Location**: `~/Desktop/Artifacts/<category>/`
+
+**Available Categories**:
+- `apps` - Full applications
+- `dashboards` - Data dashboards and analytics
+- `visualizations` - Data visualizations and charts
+- `tools` - Utility tools and calculators
+- `games` - Interactive games
+- `demos` - Demos and prototypes
+- `misc` - Miscellaneous (default)
+
+**Examples**:
+```bash
+# Create a dashboard (saves to ~/Desktop/Artifacts/dashboards/sales-dashboard)
+bash scripts/init-artifact.sh sales-dashboard dashboards
+
+# Create a visualization (saves to ~/Desktop/Artifacts/visualizations/chart-app)
+bash scripts/init-artifact.sh chart-app visualizations
+
+# Use default category (saves to ~/Desktop/Artifacts/misc/my-app)
+bash scripts/init-artifact.sh my-app
+```
+
+**Fallback**: If the script cannot write to `~/Desktop/Artifacts`, it will use the current directory instead.
 
 This creates a fully configured project with:
 
@@ -62,18 +86,28 @@ This creates a fully configured project with:
 - ✅ All Radix UI dependencies included
 - ✅ Parcel configured for bundling (via .parcelrc)
 - ✅ Node 18+ compatibility (auto-detects and pins Vite version)
+- ✅ Organized in `~/Desktop/Artifacts/<category>/` directory
 
 ### Step 2: Develop Your Artifact
+
+Navigate to your project and start developing:
+
+```bash
+cd ~/Desktop/Artifacts/<category>/<project-name>
+# Or if you used the current directory fallback, just cd into the project-name
+```
 
 To build the artifact, edit the generated files. See **Common Development Tasks** below for guidance.
 
 ### Step 3: Bundle to Single HTML File
 
-To bundle the React app into a single HTML artifact:
+To bundle the React app into a single HTML artifact, the bundling script will automatically work from your project directory:
 
 ```bash
 bash scripts/bundle-artifact.sh
 ```
+
+**Note**: The script should be run from the artifact project directory (e.g., `~/Desktop/Artifacts/<category>/<project-name>`).
 
 This creates `bundle.html` - a self-contained artifact with all JavaScript, CSS, and dependencies inlined. This file can be directly shared in Claude conversations as an artifact.
 

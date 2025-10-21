@@ -38,13 +38,29 @@ fi
 
 # Check if project name is provided
 if [ -z "$1" ]; then
-  echo "❌ Usage: ./create-react-shadcn-complete.sh <project-name>"
+  echo "❌ Usage: ./init-artifact.sh <project-name> [category]"
+  echo "   Categories: apps, dashboards, visualizations, tools, games, demos, misc (default: misc)"
   exit 1
 fi
 
 PROJECT_NAME="$1"
+CATEGORY="${2:-misc}"  # Default category is 'misc'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPONENTS_TARBALL="$SCRIPT_DIR/shadcn-components.tar.gz"
+
+# Define base artifacts directory
+ARTIFACTS_BASE_DIR="$HOME/Desktop/Artifacts"
+ARTIFACTS_DIR="$ARTIFACTS_BASE_DIR/$CATEGORY"
+
+# Try to create artifacts directory, fallback to current directory if it fails
+if mkdir -p "$ARTIFACTS_DIR" 2>/dev/null; then
+  echo "📁 Artifacts will be saved to: $ARTIFACTS_DIR"
+  cd "$ARTIFACTS_DIR"
+else
+  echo "⚠️  Cannot write to $ARTIFACTS_DIR"
+  echo "📁 Using current directory instead: $(pwd)"
+  ARTIFACTS_DIR="$(pwd)"
+fi
 
 # Check if components tarball exists
 if [ ! -f "$COMPONENTS_TARBALL" ]; then
@@ -303,6 +319,9 @@ EOF
 
 echo "✅ Setup complete! You can now use Tailwind CSS and shadcn/ui in your project."
 echo ""
+echo "📁 Project location: $ARTIFACTS_DIR/$PROJECT_NAME"
+echo "📂 Category: $CATEGORY"
+echo ""
 echo "📦 Included components (40+ total):"
 echo "  - accordion, alert, aspect-ratio, avatar, badge, breadcrumb"
 echo "  - button, calendar, card, carousel, checkbox, collapsible"
@@ -313,7 +332,7 @@ echo "  - select, separator, sheet, skeleton, slider, sonner"
 echo "  - switch, table, tabs, textarea, toast, toggle, toggle-group, tooltip"
 echo ""
 echo "To start developing:"
-echo "  cd $PROJECT_NAME"
+echo "  cd $ARTIFACTS_DIR/$PROJECT_NAME"
 echo "  pnpm dev"
 echo ""
 echo "📚 Import components like:"

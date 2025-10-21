@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Minimalistic Example</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Chinese Color Palette - Light Mode */
+            --chinese-red: #8B0000;
+            --chinese-gold: #FFD700;
+            --jade-green: #00A86B;
+            --ink-black: #2B2B2B;
+            --paper-beige: #F5F5DC;
+            --light-cream: #FAFAF0;
+
+            /* Hierarchy Levels */
+            --level-1: #000;
+            --level-2: #333;
+            --level-3: #666;
+            --level-4: #999;
+
+            /* Component Variables */
+            --card-background: #FFFFFF;
+            --section-background: #FFFFFF;
+            --border-color-light: #ddd;
+            --border-color-medium: #ccc;
+            --code-background: #F8F8F8;
+            --code-border: rgba(139, 0, 0, 0.15);
+            --code-text: #1a1a1a;
+        }
+
+        [data-theme="dark"] {
+            /* Chinese Color Palette - Dark Mode */
+            --chinese-red: #DC143C;
+            --chinese-gold: #FFD700;
+            --jade-green: #10B981;
+            --ink-black: #E5E5DC;
+            --paper-beige: #1A1A1A;
+            --light-cream: #252525;
+
+            /* Hierarchy Levels - Dark Mode */
+            --level-1: #F5F5DC;
+            --level-2: #D4C4B0;
+            --level-3: #A89F91;
+            --level-4: #6B6B6B;
+
+            /* Component Variables - Dark Mode */
+            --card-background: #252525;
+            --section-background: #252525;
+            --border-color-light: #444;
+            --border-color-medium: #555;
+            --code-background: rgba(40, 40, 40, 0.8);
+            --code-border: #555;
+            --code-text: #e0e0e0;
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--paper-beige) 0%, var(--light-cream) 100%);
+            color: var(--ink-black);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .container {
+            width: 100%;
+            padding: 2px;
+            margin: 0;
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 4px 0;
+            padding: 6px 4px;
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 8px 0 4px 0;
+            padding: 4px;
+            border-left: 4px solid var(--chinese-red);
+            background: rgba(139, 0, 0, 0.03);
+            color: var(--level-1);
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 4px 0 2px 8px;
+            color: var(--level-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        h4 {
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px 0 1px 16px;
+            color: var(--level-3);
+        }
+
+        /* ===== LAYOUT SYSTEMS ===== */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* ===== SECTIONS & CONTAINERS ===== */
+        .important-always-visible {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--card-background));
+            border: 2px solid var(--chinese-gold);
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+
+        .important-always-visible h2 {
+            color: var(--chinese-red);
+            margin-top: 0;
+        }
+
+        /* ===== COLLAPSIBLES ===== */
+        .collapsible {
+            margin: 4px 0;
+            width: 100%;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            padding: 6px 8px;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.05), rgba(255, 215, 0, 0.02));
+            border-left: 3px solid var(--chinese-gold);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .collapsible-header:hover {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(255, 215, 0, 0.05));
+        }
+
+        .collapsible-header .arrow {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            color: var(--chinese-red);
+            font-size: 10px;
+        }
+
+        .collapsible.open .arrow {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 8px;
+            margin-left: 12px;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 5000px;
+            padding: 8px;
+        }
+
+        /* ===== LISTS ===== */
+        .dense-list {
+            list-style: none;
+            padding: 0;
+            margin-left: 8px;
+        }
+
+        .dense-list li {
+            padding: 2px 0 2px 12px;
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        .dense-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--chinese-red);
+            font-size: 10px;
+        }
+
+        .dense-list li strong {
+            color: var(--level-2);
+            font-weight: 600;
+        }
+
+        /* ===== CODE BLOCKS ===== */
+        code {
+            background: var(--code-background);
+            border: 1px solid var(--code-border);
+            padding: 2px 4px;
+            margin: 0 1px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.1;
+            border-radius: 2px;
+            color: var(--code-text);
+        }
+
+        pre {
+            background: var(--code-background);
+            border: 1px solid var(--code-border);
+            padding: 6px 8px;
+            margin: 4px 0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            border-radius: 3px;
+            color: var(--code-text);
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ===== TABLES ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 4px 0;
+            font-size: 12px;
+        }
+
+        th {
+            background: var(--chinese-red);
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 3px 6px;
+        }
+
+        td {
+            border: 1px solid var(--border-color-light);
+            padding: 3px 6px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0,0,0,0.02);
+        }
+
+        /* ===== BUTTONS ===== */
+        button {
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            color: white;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.2s ease;
+            padding: 2px 6px;
+            margin: 1px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 10000;
+            background: var(--chinese-gold);
+            color: var(--ink-black);
+            border: 2px solid var(--chinese-red);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .critical { color: var(--chinese-red); font-weight: 700; }
+        .success { color: var(--jade-green); font-weight: 600; }
+        .muted { color: var(--level-4); font-size: 11px; }
+
+        /* ===== DARK MODE OVERRIDES ===== */
+        [data-theme="dark"] tr:nth-child(even) td {
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        [data-theme="dark"] .important-always-visible {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 800px) {
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Dark</button>
+
+    <div class="container">
+        <h1>REST API Documentation</h1>
+
+        <!-- Quick Start -->
+        <div class="important-always-visible">
+            <h2>Quick Start</h2>
+            <p>Base URL: <code>https://api.example.com/v1</code></p>
+            <p>Authentication: Bearer token in <code>Authorization</code> header</p>
+        </div>
+
+        <!-- Endpoints in Two Columns -->
+        <div class="two-column-layout">
+            <!-- GET Endpoints -->
+            <div class="collapsible" data-collapsible="open">
+                <div class="collapsible-header">
+                    <span>GET Endpoints</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="collapsible-content">
+                    <h3>List Users</h3>
+                    <pre><code>GET /users</code></pre>
+                    <ul class="dense-list">
+                        <li><strong>Query:</strong> <code>?page=1&limit=10</code></li>
+                        <li><strong>Response:</strong> Array of user objects</li>
+                    </ul>
+
+                    <h3>Get User</h3>
+                    <pre><code>GET /users/{id}</code></pre>
+                    <ul class="dense-list">
+                        <li><strong>Params:</strong> <code>id</code> (integer)</li>
+                        <li><strong>Response:</strong> Single user object</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- POST Endpoints -->
+            <div class="collapsible" data-collapsible="open">
+                <div class="collapsible-header">
+                    <span>POST Endpoints</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="collapsible-content">
+                    <h3>Create User</h3>
+                    <pre><code>POST /users</code></pre>
+                    <ul class="dense-list">
+                        <li><strong>Body:</strong> JSON with name, email</li>
+                        <li><strong>Response:</strong> Created user with ID</li>
+                    </ul>
+
+                    <h3>Upload Avatar</h3>
+                    <pre><code>POST /users/{id}/avatar</code></pre>
+                    <ul class="dense-list">
+                        <li><strong>Body:</strong> multipart/form-data</li>
+                        <li><strong>Response:</strong> Avatar URL</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Codes -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>Response Codes</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Meaning</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="success">200</td>
+                            <td>OK</td>
+                            <td>Request successful</td>
+                        </tr>
+                        <tr>
+                            <td class="success">201</td>
+                            <td>Created</td>
+                            <td>Resource created</td>
+                        </tr>
+                        <tr>
+                            <td class="critical">400</td>
+                            <td>Bad Request</td>
+                            <td>Invalid request data</td>
+                        </tr>
+                        <tr>
+                            <td class="critical">401</td>
+                            <td>Unauthorized</td>
+                            <td>Missing or invalid token</td>
+                        </tr>
+                        <tr>
+                            <td class="critical">404</td>
+                            <td>Not Found</td>
+                            <td>Resource doesn't exist</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Example Request -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>Example Request</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <h3>JavaScript (Fetch)</h3>
+                <pre><code>const response = await fetch('https://api.example.com/v1/users', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  }
+});
+
+const users = await response.json();
+console.log(users);</code></pre>
+
+                <h3>Python (Requests)</h3>
+                <pre><code>import requests
+
+headers = {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+}
+
+response = requests.get(
+    'https://api.example.com/v1/users',
+    headers=headers
+)
+
+users = response.json()
+print(users)</code></pre>
+            </div>
+        </div>
+
+        <p class="muted" style="margin-top: 16px; text-align: center;">
+            Last updated: 2025-10-21 | Version 1.0
+        </p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dark mode
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                this.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            });
+
+            // Collapsibles
+            document.querySelectorAll('[data-collapsible]').forEach(function(section) {
+                const isOpen = section.getAttribute('data-collapsible') === 'open';
+                section.classList.add('collapsible');
+                if (isOpen) section.classList.add('open');
+            });
+
+            document.querySelectorAll('.collapsible-header').forEach(function(header) {
+                header.addEventListener('click', function() {
+                    this.closest('.collapsible').classList.toggle('open');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@ conversation-memory-plugin
 post-sender-plugin
 post-sender-plugin.backup
 skills-warren
+gmail-gcal-mcp-plugin
 .DS_Store
 buffer.txt
 conversation-memory-plugin-spec.html
