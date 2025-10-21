@@ -1,0 +1,1 @@
+../skills/managing-snippets/deleting.md

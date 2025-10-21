@@ -90,8 +90,16 @@ def get_hourly_key(dt=None):
     return dt.strftime("%Y-%m-%dT%H:00")
 
 
+def get_weekly_key(dt=None):
+    """Get weekly key in format YYYY-Www (ISO week format)"""
+    if dt is None:
+        dt = datetime.now()
+    year, week, _ = dt.isocalendar()
+    return f"{year}-W{week:02d}"
+
+
 def cleanup_old_data(data, days=30):
-    """Remove entries older than specified days"""
+    """Remove entries older than specified days (only for hourly data)"""
     if not CONFIG["enable_cleanup"]:
         return data
 
@@ -100,8 +108,13 @@ def cleanup_old_data(data, days=30):
 
     for key, value in data.items():
         try:
-            # Parse the key date (handles both YYYY-MM-DD and YYYY-MM-DDTHH:00)
-            key_date = datetime.fromisoformat(key.split('T')[0])
+            # Parse hourly key format: YYYY-MM-DDTHH:00
+            if 'T' in key:
+                key_date = datetime.fromisoformat(key.replace(':00', ':00:00'))
+            else:
+                # Legacy format: YYYY-MM-DD
+                key_date = datetime.fromisoformat(key)
+
             if key_date >= cutoff_date:
                 cleaned_data[key] = value
         except (ValueError, IndexError):
@@ -142,14 +155,14 @@ def cleanup_old_sessions(session_data, hours=24):
     return cleaned_data
 
 
-def add_cost_with_session(session_id, new_total_cost, period_type='both'):
+def add_cost_with_session(session_id, new_total_cost, period_type='all'):
     """
     Add cost to tracking with session-based delta calculation
 
     Args:
         session_id: Unique session identifier
         new_total_cost: Current cumulative cost for this session
-        period_type: 'daily', 'hourly', or 'both'
+        period_type: 'daily', 'hourly', 'weekly', or 'all'
 
     Returns:
         delta: Amount actually added (0 if no new spending)
@@ -198,94 +211,134 @@ def add_cost_with_session(session_id, new_total_cost, period_type='both'):
         return 0.0  # No change in cost
 
 
-def add_cost(cost_increment, period_type='both'):
+def add_cost(cost_increment, period_type='all'):
     """
-    Add cost to tracking files
+    Add cost to tracking (only updates hourly - canonical source).
 
     Args:
         cost_increment: Amount to add (in USD)
-        period_type: 'daily', 'hourly', or 'both'
+        period_type: Legacy parameter for backward compatibility (ignored, always updates hourly)
+
+    Note: Hourly data is the canonical source. Daily and weekly are computed on-demand.
     """
     data_dir = ensure_data_dir()
 
-    # Process daily tracking
-    if period_type in ['daily', 'both']:
-        daily_file = data_dir / 'daily.json'
-        with file_lock(str(daily_file)):
-            daily_data = read_json(daily_file)
-            daily_key = get_daily_key()
+    # Only update hourly data (canonical source)
+    hourly_file = data_dir / 'hourly.json'
+    with file_lock(str(hourly_file)):
+        hourly_data = read_json(hourly_file)
+        hourly_key = get_hourly_key()
 
-            if daily_key not in daily_data:
-                daily_data[daily_key] = {
-                    "total_cost": 0.0,
-                    "sessions": 0,
-                    "last_updated": datetime.now().isoformat()
-                }
+        if hourly_key not in hourly_data:
+            hourly_data[hourly_key] = {
+                "total_cost": 0.0,
+                "sessions": 0,
+                "last_updated": datetime.now().isoformat()
+            }
 
-            daily_data[daily_key]["total_cost"] += cost_increment
-            daily_data[daily_key]["sessions"] += 1
-            daily_data[daily_key]["last_updated"] = datetime.now().isoformat()
+        hourly_data[hourly_key]["total_cost"] += cost_increment
+        hourly_data[hourly_key]["sessions"] += 1
+        hourly_data[hourly_key]["last_updated"] = datetime.now().isoformat()
 
-            # Cleanup old data
-            daily_data = cleanup_old_data(daily_data, CONFIG["retention_days"])
+        # Cleanup old data
+        hourly_data = cleanup_old_data(hourly_data, CONFIG["retention_days"])
 
-            write_json(daily_file, daily_data)
-
-    # Process hourly tracking
-    if period_type in ['hourly', 'both']:
-        hourly_file = data_dir / 'hourly.json'
-        with file_lock(str(hourly_file)):
-            hourly_data = read_json(hourly_file)
-            hourly_key = get_hourly_key()
-
-            if hourly_key not in hourly_data:
-                hourly_data[hourly_key] = {
-                    "total_cost": 0.0,
-                    "sessions": 0,
-                    "last_updated": datetime.now().isoformat()
-                }
-
-            hourly_data[hourly_key]["total_cost"] += cost_increment
-            hourly_data[hourly_key]["sessions"] += 1
-            hourly_data[hourly_key]["last_updated"] = datetime.now().isoformat()
-
-            # Cleanup old data
-            hourly_data = cleanup_old_data(hourly_data, CONFIG["retention_days"])
-
-            write_json(hourly_file, hourly_data)
+        write_json(hourly_file, hourly_data)
 
 
 def get_totals():
-    """Get current daily and hourly totals"""
+    """
+    Get current daily, weekly, and hourly totals.
+
+    Hourly data is the canonical source of truth.
+    Daily and weekly totals are computed by aggregating hourly data.
+    """
     data_dir = ensure_data_dir()
-
-    # Get daily total
-    daily_file = data_dir / 'daily.json'
-    daily_total = 0.0
-    daily_date = get_daily_key()
-
-    with file_lock(str(daily_file)):
-        daily_data = read_json(daily_file)
-        if daily_date in daily_data:
-            daily_total = daily_data[daily_date].get("total_cost", 0.0)
-
-    # Get hourly total
     hourly_file = data_dir / 'hourly.json'
-    hourly_total = 0.0
+
+    daily_date = get_daily_key()
+    weekly_period = get_weekly_key()
     hourly_period = get_hourly_key()
 
+    # Read hourly data (canonical source)
     with file_lock(str(hourly_file)):
         hourly_data = read_json(hourly_file)
-        if hourly_period in hourly_data:
-            hourly_total = hourly_data[hourly_period].get("total_cost", 0.0)
+
+    # Compute current hour total
+    hourly_total = hourly_data.get(hourly_period, {}).get("total_cost", 0.0)
+
+    # Compute daily total by summing all hourly entries for today
+    daily_total = sum(
+        entry.get("total_cost", 0.0)
+        for key, entry in hourly_data.items()
+        if key.startswith(daily_date)
+    )
+
+    # Compute weekly total by summing all hourly entries for this week
+    weekly_total = 0.0
+    for key, entry in hourly_data.items():
+        try:
+            # Parse hourly key (format: YYYY-MM-DDTHH:00)
+            dt = datetime.fromisoformat(key.replace('T', ' ').replace(':00', ':00:00'))
+            year, week, _ = dt.isocalendar()
+            entry_week = f"{year}-W{week:02d}"
+            if entry_week == weekly_period:
+                weekly_total += entry.get("total_cost", 0.0)
+        except (ValueError, AttributeError):
+            # Skip entries with invalid keys
+            continue
 
     return {
         "daily_total": daily_total,
+        "weekly_total": weekly_total,
         "hourly_total": hourly_total,
         "daily_date": daily_date,
+        "weekly_period": weekly_period,
         "hourly_period": hourly_period,
         "success": True
     }
+
+
+def migrate_legacy_data():
+    """
+    Migrate legacy daily/weekly data to hourly format.
+
+    Reads existing daily.json and creates corresponding hourly entries.
+    This ensures no data loss when switching to aggregation-based approach.
+    """
+    data_dir = ensure_data_dir()
+    daily_file = data_dir / 'daily.json'
+    hourly_file = data_dir / 'hourly.json'
+
+    # Read legacy daily data
+    with file_lock(str(daily_file)):
+        daily_data = read_json(daily_file)
+
+    if not daily_data:
+        # No legacy data to migrate
+        return
+
+    # Read existing hourly data
+    with file_lock(str(hourly_file)):
+        hourly_data = read_json(hourly_file)
+
+        # For each day in legacy data, create an hourly entry
+        # We'll use noon (12:00) as a reasonable default hour
+        for day_key, day_entry in daily_data.items():
+            hourly_key = f"{day_key}T12:00"
+
+            # Only migrate if this hourly entry doesn't already exist
+            if hourly_key not in hourly_data:
+                hourly_data[hourly_key] = {
+                    "total_cost": day_entry.get("total_cost", 0.0),
+                    "sessions": day_entry.get("sessions", 0),
+                    "last_updated": day_entry.get("last_updated", datetime.now().isoformat()),
+                    "migrated_from_daily": True
+                }
+
+        write_json(hourly_file, hourly_data)
+
+    print(f"Migrated {len(daily_data)} daily entries to hourly format")
 
 
 def reset_data(confirm=False):
@@ -296,10 +349,14 @@ def reset_data(confirm=False):
 
     data_dir = ensure_data_dir()
     daily_file = data_dir / 'daily.json'
+    weekly_file = data_dir / 'weekly.json'
     hourly_file = data_dir / 'hourly.json'
 
     with file_lock(str(daily_file)):
         write_json(daily_file, {})
+
+    with file_lock(str(weekly_file)):
+        write_json(weekly_file, {})
 
     with file_lock(str(hourly_file)):
         write_json(hourly_file, {})
@@ -309,37 +366,72 @@ def reset_data(confirm=False):
 
 
 def show_stats():
-    """Display statistics about tracked spending"""
+    """Display statistics about tracked spending (computed from hourly data)"""
     data_dir = ensure_data_dir()
-
-    # Daily stats
-    daily_file = data_dir / 'daily.json'
-    with file_lock(str(daily_file)):
-        daily_data = read_json(daily_file)
-
-    # Hourly stats
     hourly_file = data_dir / 'hourly.json'
+
+    # Read hourly data (canonical source)
     with file_lock(str(hourly_file)):
         hourly_data = read_json(hourly_file)
 
-    print("=== Spending Statistics ===")
-    print(f"\nDaily Tracking:")
-    print(f"  Total days tracked: {len(daily_data)}")
-    if daily_data:
-        total_all_days = sum(d.get("total_cost", 0) for d in daily_data.values())
-        print(f"  Total across all days: ${total_all_days:.4f}")
-        print(f"  Average per day: ${total_all_days/len(daily_data):.4f}")
+    if not hourly_data:
+        print("No spending data tracked yet")
+        return
 
-    print(f"\nHourly Tracking:")
+    # Aggregate by day and week
+    daily_totals = {}
+    weekly_totals = {}
+
+    for key, entry in hourly_data.items():
+        try:
+            # Parse hourly key: YYYY-MM-DDTHH:00
+            dt = datetime.fromisoformat(key.replace('T', ' ').replace(':00', ':00:00'))
+            day_key = dt.strftime("%Y-%m-%d")
+            year, week, _ = dt.isocalendar()
+            week_key = f"{year}-W{week:02d}"
+
+            cost = entry.get("total_cost", 0.0)
+
+            # Aggregate by day
+            if day_key not in daily_totals:
+                daily_totals[day_key] = 0.0
+            daily_totals[day_key] += cost
+
+            # Aggregate by week
+            if week_key not in weekly_totals:
+                weekly_totals[week_key] = 0.0
+            weekly_totals[week_key] += cost
+
+        except (ValueError, AttributeError):
+            continue
+
+    # Calculate statistics
+    total_all_hours = sum(h.get("total_cost", 0) for h in hourly_data.values())
+
+    print("=== Spending Statistics ===")
+    print(f"\nHourly Tracking (Canonical):")
     print(f"  Total hours tracked: {len(hourly_data)}")
-    if hourly_data:
-        total_all_hours = sum(h.get("total_cost", 0) for h in hourly_data.values())
-        print(f"  Total across all hours: ${total_all_hours:.4f}")
-        print(f"  Average per hour: ${total_all_hours/len(hourly_data):.4f}")
+    print(f"  Total across all hours: ${total_all_hours:.4f}")
+    print(f"  Average per hour: ${total_all_hours/len(hourly_data):.4f}")
+
+    print(f"\nDaily Aggregation (from hourly):")
+    print(f"  Total days tracked: {len(daily_totals)}")
+    if daily_totals:
+        total_all_days = sum(daily_totals.values())
+        print(f"  Total across all days: ${total_all_days:.4f}")
+        print(f"  Average per day: ${total_all_days/len(daily_totals):.4f}")
+
+    print(f"\nWeekly Aggregation (from hourly):")
+    print(f"  Total weeks tracked: {len(weekly_totals)}")
+    if weekly_totals:
+        total_all_weeks = sum(weekly_totals.values())
+        print(f"  Total across all weeks: ${total_all_weeks:.4f}")
+        print(f"  Average per week: ${total_all_weeks/len(weekly_totals):.4f}")
 
     print(f"\nCurrent Period:")
     totals = get_totals()
     print(f"  Today ({totals['daily_date']}): ${totals['daily_total']:.4f}")
+    print(f"  This week ({totals['weekly_period']}): ${totals['weekly_total']:.4f}")
     print(f"  This hour ({totals['hourly_period']}): ${totals['hourly_total']:.4f}")
 
 
@@ -355,15 +447,15 @@ def main():
     # Add command (legacy - adds cost directly without session tracking)
     add_parser = subparsers.add_parser('add', help='Add cost to tracking')
     add_parser.add_argument('--cost', type=float, required=True, help='Cost to add in USD')
-    add_parser.add_argument('--period', choices=['daily', 'hourly', 'both'],
-                           default='both', help='Period to track')
+    add_parser.add_argument('--period', choices=['daily', 'hourly', 'weekly', 'both', 'all'],
+                           default='all', help='Period to track')
 
     # Add-session command (new - adds cost with session-based delta tracking)
     add_session_parser = subparsers.add_parser('add-session', help='Add cost with session tracking')
     add_session_parser.add_argument('--session-id', type=str, required=True, help='Session identifier')
     add_session_parser.add_argument('--cost', type=float, required=True, help='Current cumulative session cost in USD')
-    add_session_parser.add_argument('--period', choices=['daily', 'hourly', 'both'],
-                                    default='both', help='Period to track')
+    add_session_parser.add_argument('--period', choices=['daily', 'hourly', 'weekly', 'both', 'all'],
+                                    default='all', help='Period to track')
 
     # Get command
     get_parser = subparsers.add_parser('get', help='Get current totals')
@@ -408,6 +500,7 @@ def main():
                 print(json.dumps(totals))
             else:
                 print(f"Daily: ${totals['daily_total']:.4f}")
+                print(f"Weekly: ${totals['weekly_total']:.4f}")
                 print(f"Hourly: ${totals['hourly_total']:.4f}")
 
         elif args.command == 'reset':

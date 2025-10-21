@@ -6,10 +6,10 @@
   },
   "plugins": [
     {
-      "name": "claude-code-snippets",
-      "version": "1.0.0",
-      "description": "Inject context snippets into prompts via regex matching anywhere in your message - not just at the beginning!",
-      "source": "./claude-code-snippets-plugin"
+      "name": "claude-context-orchestrator",
+      "version": "3.0.0",
+      "description": "Hybrid context management combining Agent Skills (model-invoked) + deterministic snippets (pattern-based). Includes Anthropic skills and custom meta-skills.",
+      "source": "./claude-context-orchestrator"
     },
     {
       "name": "gmail-gcal-mcp",

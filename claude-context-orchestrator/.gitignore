@@ -1,0 +1,60 @@
+# Sensitive/personal files
+commands/warren/sensitive/
+tests/personal/
+snippets/local/documentation/downloading-pdfs/
+snippets/local/communication/posting-content/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup.*
+backups/
+
+# Test outputs
+test_results/
+*.log
+
+# Config overrides
+.env
+*.bak
+
+# git
+.annotations
+
+# claude code
+claude_html
+
+# Output and temporary files
+output/
+*.plan*.html
+.plan*.html
+
+# Archive directories
+commands/.archive/
+commands/backups/
+
+# Python cache (additional patterns)
+.pytest_cache/
+scripts/.annotations/
+scripts/.pytest_cache/
+

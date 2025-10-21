@@ -9,7 +9,7 @@ Display detailed statistics about your Claude Code API spending, including histo
 ## Instructions
 
 1. **Execute command**:
-   - Run: `python3 ~/.claude/track_spending.py stats`
+   - Run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/track_spending.py --data-dir ${CLAUDE_PLUGIN_ROOT}/spending_data stats`
    - Display the full statistics output
 
 2. **Show information**:

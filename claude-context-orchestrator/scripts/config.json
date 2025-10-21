@@ -1,0 +1,22 @@
+{
+  "mappings": [
+    {
+      "name": "HTML",
+      "pattern": "\\bHTML\\b|\\bhtml\\b",
+      "snippet": [
+        "../commands/HTML.md"
+      ],
+      "enabled": true,
+      "separator": "\n"
+    },
+    {
+      "name": "making-clearer",
+      "pattern": "\\b(CLEAR|CLARITY)\\b[.:;,]?",
+      "snippet": [
+        "../snippets/making-clearer.md"
+      ],
+      "enabled": true,
+      "separator": "\n"
+    }
+  ]
+}

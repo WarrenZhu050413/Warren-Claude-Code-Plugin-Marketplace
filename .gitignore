@@ -1,0 +1,12 @@
+claude_html
+conversation-memory-plugin
+post-sender-plugin
+post-sender-plugin.backup
+skills-warren
+.DS_Store
+buffer.txt
+conversation-memory-plugin-spec.html
+agent-sdk-tests
+.mcp.json
+.annotations
+.claude/settings.json

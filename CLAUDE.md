@@ -715,5 +715,30 @@ In marketplace's `.claude-plugin/marketplace.json`:
 
 ---
 
-**Last Updated:** 2025-10-12
+## Modification Log
+
+This section tracks modifications to this guide and the marketplace.
+
+### 2025-10-16
+- **Added**: `skills-warren` plugin to marketplace
+  - Created new plugin for custom Apache-licensed skills
+  - Includes Apache 2.0 compliance snippet
+  - Prepared for adaptation of Anthropic example-skills:
+    - mcp-builder
+    - skill-creator
+    - theme-factory
+    - webapp-testing
+    - artifacts-builder
+  - Full LICENSE and NOTICE files included
+  - Plugin structure: `.claude-plugin/plugin.json`, `snippets/`, `skills/`
+
+### 2025-10-12
+- Initial guide created
+- Documented plugin development best practices
+- Added template patterns for complex snippets
+- Included hooks reference and examples
+
+---
+
+**Last Updated:** 2025-10-16
 **Author:** Fucheng Warren Zhu

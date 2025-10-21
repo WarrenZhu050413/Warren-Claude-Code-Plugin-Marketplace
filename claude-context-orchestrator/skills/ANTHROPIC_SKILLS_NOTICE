@@ -1,0 +1,61 @@
+NOTICE: Attribution for Anthropic Agent Skills
+
+================================================================================
+
+This distribution includes Agent Skills originally developed by Anthropic, PBC.
+
+The following skills are derived from Anthropic's example-skills repository
+(https://github.com/anthropics/skills):
+
+  - artifacts-builder
+  - mcp-builder
+  - theme-factory
+  - webapp-testing
+  - managing-skills
+
+Copyright (c) 2024-2025 Anthropic, PBC
+
+These skills are licensed under the Apache License, Version 2.0 (the "License").
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+================================================================================
+
+Original Source Repository:
+https://github.com/anthropics/skills
+
+Original README Attribution:
+"The example skills in this repo are open source (Apache 2.0). We've also
+included the document creation & editing skills that power Claude's document
+capabilities under the hood in the document-skills/ folder. These are
+source-available, not open source, but we wanted to share these with developers
+as a reference for more complex skills that are actively used in a production
+AI application."
+
+================================================================================
+
+MODIFICATIONS:
+
+These skills have been integrated into the warren-claude-code-plugin-marketplace
+as part of the claude-code-skills-manager plugin to make them available through
+Claude Code's plugin system.
+
+Modifications made:
+- Skills copied from anthropics/skills repository
+- Integrated into Claude Code plugin structure
+- No modifications to skill functionality or instructions
+- Added this NOTICE file and LICENSE file for proper attribution
+
+Modified by: Fucheng Warren Zhu
+Date: October 2025
+
+================================================================================
+
+For the complete Apache License 2.0 text, see the ANTHROPIC_SKILLS_LICENSE
+file in this directory.
