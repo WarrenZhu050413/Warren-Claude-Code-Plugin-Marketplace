@@ -324,6 +324,41 @@ Create new Agent Skills with proper structure and descriptions.
 mkdir -p ~/.claude/skills/my-skill
 ```
 
+**⚠️ IMPORTANT: Always Create HTML Summary**
+
+After creating a skill, generate a high-density, minimalistic black HTML summary page and open it in the browser:
+
+```bash
+# Generate HTML summary (use template)
+cat > skill-summary.html << 'EOF'
+[HTML content with skill details]
+EOF
+
+# Open in browser
+open skill-summary.html
+```
+
+**HTML Summary Must Include:**
+- Skill name, description, triggers
+- Files created
+- What it does
+- Key features
+- Usage examples
+- Configuration details
+- Testing instructions
+- Related skills
+- Next steps
+- Verification commands
+- Completion summary
+
+**Style Requirements:**
+- Black background (#000)
+- High information density
+- Minimalistic design
+- Green/cyan accents (#0f0, #0ff)
+- Monospace fonts
+- Compact layout
+
 For complete guidance, see [creating.md](creating.md).
 
 ### Reading Skills
