@@ -1,136 +1,85 @@
 ---
 name: Building Artifacts
-description: Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Artifacts are automatically saved to ~/Desktop/Artifacts with category-based organization (apps, dashboards, visualizations, tools, games, demos, misc). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
+description: Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Artifacts are automatically saved to ~/Desktop/Artifacts directory. Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
 license: Complete terms in LICENSE.txt
 ---
 
 # Artifacts Builder
 
-To build powerful frontend claude.ai artifacts, follow these steps:
+**Stack**: React 18 + TypeScript + Vite + Parcel + Tailwind CSS + shadcn/ui
 
-1. Initialize the frontend repo using `scripts/init-artifact.sh`
-2. Develop your artifact by editing the generated code
-3. Bundle all code into a single HTML file using `scripts/bundle-artifact.sh`
-4. Display artifact to user
-5. (Optional) Test the artifact
+## Workflow
 
-**Stack**: React 18 + TypeScript + Vite + Parcel (bundling) + Tailwind CSS + shadcn/ui
+1. Initialize: `bash scripts/init-artifact.sh <project-name>`
+2. Develop in generated project
+3. Bundle: `bash scripts/bundle-artifact.sh` (run from project directory)
+4. Share bundled HTML with user
+5. Test only if needed (optional)
 
 ## Artifact Types
 
-### Type 1: Complex Interactive Applications (React/Tailwind)
-
-Elaborate multi-component applications with state management and routing. See **Quick Start** section below.
-
-**Stack**: React 18 + TypeScript + Vite + Parcel + Tailwind CSS + shadcn/ui
+### Type 1: Complex Interactive Applications
+Multi-component applications with state management and routing. Use React stack above.
 
 ### Type 2: Interactive Primary Source Artifacts
+Explorable visualizations of documentation, papers, books. Use HTML with collapsibles and structured navigation (no React).
 
-Create explorable visualizations of documentation, papers, books, and primary sources. Don't summarize—surface original content in digestible, interactive formats.
+**Reference**: `primary-sources-reference.md`
 
-**Approach**: Use HTML with collapsibles, concept maps, and structured navigation (no React required)
+**Use for**: Technical docs, research papers, books/textbooks, historical documents
 
-**Reference**: See `primary-sources-reference.md` for patterns and complete examples
+## Design Guidelines
 
-**When to use**:
-- Technical documentation that needs exploration
-- Research papers with multiple arguments
-- Books/textbooks with chapter navigation
-- Historical documents with timelines
+Avoid "AI slop": no excessive centered layouts, purple gradients, uniform rounded corners, or Inter font.
 
-## Design & Style Guidelines
-
-VERY IMPORTANT: To avoid what is often referred to as "AI slop", avoid using excessive centered layouts, purple gradients, uniform rounded corners, and Inter font.
-
-## Quick Start
-
-### Step 1: Initialize Project
-
-Run the initialization script to create a new React project:
+## Step 1: Initialize
 
 ```bash
-bash scripts/init-artifact.sh <project-name> [category]
+bash scripts/init-artifact.sh <project-name>
 ```
 
-**Default Location**: `~/Desktop/Artifacts/<category>/`
+**Location**: `~/Desktop/Artifacts/` (fallback: current directory)
 
-**Available Categories**:
-- `apps` - Full applications
-- `dashboards` - Data dashboards and analytics
-- `visualizations` - Data visualizations and charts
-- `tools` - Utility tools and calculators
-- `games` - Interactive games
-- `demos` - Demos and prototypes
-- `misc` - Miscellaneous (default)
+**Creates**:
+- React + TypeScript (Vite)
+- Tailwind CSS 3.4.1 + shadcn/ui theming
+- Path aliases (`@/`)
+- 40+ shadcn/ui components + Radix UI dependencies
+- Parcel configured (.parcelrc)
+- Node 18+ compatibility
 
-**Examples**:
-```bash
-# Create a dashboard (saves to ~/Desktop/Artifacts/dashboards/sales-dashboard)
-bash scripts/init-artifact.sh sales-dashboard dashboards
-
-# Create a visualization (saves to ~/Desktop/Artifacts/visualizations/chart-app)
-bash scripts/init-artifact.sh chart-app visualizations
-
-# Use default category (saves to ~/Desktop/Artifacts/misc/my-app)
-bash scripts/init-artifact.sh my-app
-```
-
-**Fallback**: If the script cannot write to `~/Desktop/Artifacts`, it will use the current directory instead.
-
-This creates a fully configured project with:
-
-- ✅ React + TypeScript (via Vite)
-- ✅ Tailwind CSS 3.4.1 with shadcn/ui theming system
-- ✅ Path aliases (`@/`) configured
-- ✅ 40+ shadcn/ui components pre-installed
-- ✅ All Radix UI dependencies included
-- ✅ Parcel configured for bundling (via .parcelrc)
-- ✅ Node 18+ compatibility (auto-detects and pins Vite version)
-- ✅ Organized in `~/Desktop/Artifacts/<category>/` directory
-
-### Step 2: Develop Your Artifact
-
-Navigate to your project and start developing:
+## Step 2: Develop
 
 ```bash
-cd ~/Desktop/Artifacts/<category>/<project-name>
-# Or if you used the current directory fallback, just cd into the project-name
+cd ~/Desktop/Artifacts/<project-name>
 ```
 
-To build the artifact, edit the generated files. See **Common Development Tasks** below for guidance.
+Edit generated files. See **Common Development Tasks** for guidance.
 
-### Step 3: Bundle to Single HTML File
-
-To bundle the React app into a single HTML artifact, the bundling script will automatically work from your project directory:
+## Step 3: Bundle
 
 ```bash
 bash scripts/bundle-artifact.sh
 ```
 
-**Note**: The script should be run from the artifact project directory (e.g., `~/Desktop/Artifacts/<category>/<project-name>`).
+**Requirement**: `index.html` in project root
 
-This creates `bundle.html` - a self-contained artifact with all JavaScript, CSS, and dependencies inlined. This file can be directly shared in Claude conversations as an artifact.
+**Output**: `bundle.html` - self-contained artifact with inlined JavaScript, CSS, dependencies
 
-**Requirements**: Your project must have an `index.html` in the root directory.
-
-**What the script does**:
-
-- Installs bundling dependencies (parcel, @parcel/config-default, parcel-resolver-tspaths, html-inline)
-- Creates `.parcelrc` config with path alias support
+**Process**:
+- Installs: parcel, @parcel/config-default, parcel-resolver-tspaths, html-inline
+- Creates `.parcelrc` with path alias support
 - Builds with Parcel (no source maps)
-- Inlines all assets into single HTML using html-inline
+- Inlines all assets
 
-### Step 4: Share Artifact with User
+## Step 4: Share
 
-Finally, share the bundled HTML file in conversation with the user so they can view it as an artifact.
+Share `bundle.html` in conversation for user to view as artifact.
 
-### Step 5: Testing/Visualizing the Artifact (Optional)
+## Step 5: Testing (Optional)
 
-Note: This is a completely optional step. Only perform if necessary or requested.
-
-To test/visualize the artifact, use available tools (including other Skills or built-in tools like Playwright or Puppeteer). In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.
+Test only if requested or issues arise. Use available tools (Playwright, Puppeteer). Avoid upfront testing—adds latency.
 
 ## Reference
 
-- **shadcn/ui components**: https://ui.shadcn.com/docs/components
-
+- shadcn/ui components: https://ui.shadcn.com/docs/components

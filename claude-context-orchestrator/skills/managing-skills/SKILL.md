@@ -393,9 +393,32 @@ Snippet entries are stored in `scripts/config.local.json` (gitignored) or `scrip
 
 **By default, add entries to `config.local.json`** for personal configurations.
 
-#### Manual Method
+#### ⚠️ CRITICAL: When to Use CLI vs Manual Editing
 
-Edit `scripts/config.local.json` directly:
+**Use `snippets_cli.py` CLI** (REQUIRED for snippet files in `commands/`):
+```bash
+# For creating NEW snippet files in commands/
+python3 scripts/snippets_cli.py --config scripts/config.local.json create my-snippet \
+  --pattern "\\b(MY_SNIPPET)[.,;:]?\\b" \
+  --description "Description" \
+  --content "Snippet content"
+```
+
+**Use manual editing** (for referencing existing skills):
+- When adding snippet entries that reference existing `SKILL.md` files
+- The CLI creates NEW files and doesn't support file references
+
+❌ **NEVER manually edit config files for snippet files** - always use the CLI to ensure:
+- Proper validation
+- Backup creation
+- Pattern format checking
+- File integrity
+
+✅ **Manual editing is OK for skill references** - the CLI doesn't support this use case
+
+#### Manual Method (For Skills Only)
+
+Edit `scripts/config.local.json` directly to reference existing SKILL.md files:
 
 ```json
 {

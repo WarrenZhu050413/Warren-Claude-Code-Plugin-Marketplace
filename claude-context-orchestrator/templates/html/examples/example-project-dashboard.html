@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Chinese Color Palette - Light Mode */
+            --chinese-red: #8B0000;
+            --chinese-gold: #FFD700;
+            --jade-green: #00A86B;
+            --ink-black: #2B2B2B;
+            --paper-beige: #F5F5DC;
+            --light-cream: #FAFAF0;
+
+            /* Hierarchy Levels */
+            --level-1: #000;
+            --level-2: #333;
+            --level-3: #666;
+            --level-4: #999;
+
+            /* Component Variables */
+            --card-background: #FFFFFF;
+            --section-background: #FFFFFF;
+            --border-color-light: #ddd;
+            --border-color-medium: #ccc;
+            --code-background: #F8F8F8;
+            --code-border: rgba(139, 0, 0, 0.15);
+            --code-text: #1a1a1a;
+        }
+
+        [data-theme="dark"] {
+            /* Chinese Color Palette - Dark Mode */
+            --chinese-red: #DC143C;
+            --chinese-gold: #FFD700;
+            --jade-green: #10B981;
+            --ink-black: #E5E5DC;
+            --paper-beige: #1A1A1A;
+            --light-cream: #252525;
+
+            /* Hierarchy Levels - Dark Mode */
+            --level-1: #F5F5DC;
+            --level-2: #D4C4B0;
+            --level-3: #A89F91;
+            --level-4: #6B6B6B;
+
+            /* Component Variables - Dark Mode */
+            --card-background: #252525;
+            --section-background: #252525;
+            --border-color-light: #444;
+            --border-color-medium: #555;
+            --code-background: rgba(40, 40, 40, 0.8);
+            --code-border: #555;
+            --code-text: #e0e0e0;
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--paper-beige) 0%, var(--light-cream) 100%);
+            color: var(--ink-black);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .container {
+            width: 100%;
+            padding: 2px;
+            margin: 0;
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 4px 0;
+            padding: 6px 4px;
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 8px 0 4px 0;
+            padding: 4px;
+            border-left: 4px solid var(--chinese-red);
+            background: rgba(139, 0, 0, 0.03);
+            color: var(--level-1);
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 4px 0 2px 8px;
+            color: var(--level-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== LAYOUT SYSTEMS ===== */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* ===== SECTIONS & CONTAINERS ===== */
+        .important-always-visible {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--card-background));
+            border: 2px solid var(--chinese-gold);
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+
+        .important-always-visible h2 {
+            color: var(--chinese-red);
+            margin-top: 0;
+        }
+
+        /* ===== LISTS ===== */
+        .dense-list {
+            list-style: none;
+            padding: 0;
+            margin-left: 8px;
+        }
+
+        .dense-list li {
+            padding: 2px 0 2px 12px;
+            position: relative;
+        }
+
+        .dense-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--chinese-red);
+            font-size: 10px;
+        }
+
+        .dense-list li strong {
+            color: var(--level-2);
+            font-weight: 600;
+        }
+
+        /* ===== TABLES ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 4px 0;
+            font-size: 12px;
+        }
+
+        th {
+            background: var(--chinese-red);
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 3px 6px;
+        }
+
+        td {
+            border: 1px solid var(--border-color-light);
+            padding: 3px 6px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0,0,0,0.02);
+        }
+
+        /* ===== BUTTONS ===== */
+        button {
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            color: white;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.2s ease;
+            padding: 2px 6px;
+            margin: 1px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 10000;
+            background: var(--chinese-gold);
+            color: var(--ink-black);
+            border: 2px solid var(--chinese-red);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .metric {
+            display: inline-block;
+            background: var(--card-background);
+            border: 1px solid var(--chinese-gold);
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .metric.important {
+            background: var(--chinese-gold);
+            color: white;
+            font-weight: 700;
+        }
+
+        .critical { color: var(--chinese-red); font-weight: 700; }
+        .success { color: var(--jade-green); font-weight: 600; }
+        .warning { color: var(--chinese-gold); font-weight: 600; }
+        .muted { color: var(--level-4); font-size: 11px; }
+
+        /* ===== DARK MODE OVERRIDES ===== */
+        [data-theme="dark"] tr:nth-child(even) td {
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        [data-theme="dark"] .important-always-visible {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        /* ===== MERMAID DIAGRAM STYLING ===== */
+        .diagram-container {
+            background: var(--card-background);
+            border: 1px solid var(--border-color-light);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .mermaid {
+            background: var(--card-background);
+            padding: 20px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid var(--border-color-light);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .mermaid {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 800px) {
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 20px; }
+            h2 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Dark</button>
+
+    <div class="container">
+        <h1>Project Dashboard - Q1 2025</h1>
+
+        <div class="important-always-visible">
+            <h2>Project Status</h2>
+            <div>
+                <span class="metric important">75%</span>
+                <span class="metric">On Track</span>
+                <span class="success">Sprint 3 of 4</span>
+            </div>
+        </div>
+
+        <h2>Key Metrics</h2>
+        <div class="two-column-layout">
+            <div>
+                <ul class="dense-list">
+                    <li><strong>Completed:</strong> 24 tasks</li>
+                    <li><strong>In Progress:</strong> 8 tasks</li>
+                    <li><strong>Remaining:</strong> 4 tasks</li>
+                </ul>
+            </div>
+            <div>
+                <ul class="dense-list">
+                    <li><strong>Team:</strong> 5 members</li>
+                    <li><strong>Due Date:</strong> Jan 31, 2025</li>
+                    <li><strong>Budget:</strong> <span class="success">On track</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Timeline</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+gantt
+    title Sprint 3 Timeline
+    dateFormat YYYY-MM-DD
+
+    section Backend
+    Auth System      :done, 2025-01-01, 5d
+    API Endpoints    :active, 2025-01-06, 4d
+    Database Schema  :2025-01-10, 3d
+
+    section Frontend
+    Login Page       :done, 2025-01-03, 3d
+    Dashboard UI     :active, 2025-01-06, 5d
+    Integration      :2025-01-11, 4d
+
+    section Testing
+    Unit Tests       :2025-01-13, 3d
+    Integration Test :2025-01-16, 2d
+    Deploy to Staging:crit, 2025-01-18, 1d
+            </div>
+        </div>
+
+        <h2>Team Assignments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Due</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Alice</td>
+                    <td>API Endpoints</td>
+                    <td class="warning">In Progress</td>
+                    <td>Jan 10</td>
+                </tr>
+                <tr>
+                    <td>Bob</td>
+                    <td>Dashboard UI</td>
+                    <td class="warning">In Progress</td>
+                    <td>Jan 11</td>
+                </tr>
+                <tr>
+                    <td>Carol</td>
+                    <td>Database Schema</td>
+                    <td class="muted">Pending</td>
+                    <td>Jan 13</td>
+                </tr>
+                <tr>
+                    <td>Dave</td>
+                    <td>Login Page</td>
+                    <td class="success">Complete</td>
+                    <td>Jan 6</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Upcoming Milestones</h2>
+        <ul class="dense-list">
+            <li><strong>Jan 13:</strong> Backend feature complete</li>
+            <li><strong>Jan 15:</strong> Frontend feature complete</li>
+            <li><strong>Jan 18:</strong> <span class="critical">Staging deployment</span></li>
+            <li><strong>Jan 31:</strong> <span class="critical">Production release</span></li>
+        </ul>
+
+        <p class="muted" style="margin-top: 16px; text-align: center;">
+            Last updated: 2025-01-07
+        </p>
+    </div>
+
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== DARK MODE SETUP =====
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    this.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+                });
+            }
+
+            // ===== MERMAID SETUP =====
+            const currentTheme = localStorage.getItem('theme') || 'light';
+
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'base',
+                themeVariables: currentTheme === 'dark' ? {
+                    background: '#1e1e1e',
+                    primaryColor: '#bb86fc',
+                    primaryTextColor: '#e0e0e0',
+                    primaryBorderColor: '#bb86fc',
+                    lineColor: '#888',
+                    secondaryColor: '#03dac6',
+                    tertiaryColor: '#cf6679',
+                    mainBkg: '#2a2a2a',
+                    textColor: '#e0e0e0',
+                    nodeBorder: '#888',
+                    taskTextColor: '#e0e0e0',
+                    taskTextLightColor: '#e0e0e0',
+                    taskTextOutsideColor: '#e0e0e0',
+                    sectionBkgColor: '#3a3a3a',
+                    altSectionBkgColor: '#2a2a2a',
+                    gridColor: '#555',
+                    todayLineColor: '#bb86fc'
+                } : {
+                    background: '#FFFFFF',
+                    primaryColor: '#8B0000',
+                    primaryTextColor: '#1a1a1a',
+                    primaryBorderColor: '#6B4423',
+                    lineColor: '#4A5568',
+                    secondaryColor: '#1B3A57',
+                    mainBkg: '#FAFAFA',
+                    textColor: '#1a1a1a',
+                    nodeBorder: '#6B4423',
+                    taskTextColor: '#1a1a1a',
+                    taskTextLightColor: '#1a1a1a',
+                    taskTextOutsideColor: '#1a1a1a',
+                    sectionBkgColor: '#f9f9f9',
+                    altSectionBkgColor: '#f0f0f0',
+                    gridColor: '#ccc',
+                    todayLineColor: '#8B0000'
+                },
+                gantt: {
+                    useMaxWidth: true,
+                    fontSize: 11
+                }
+            });
+        });
+    </script>
+</body>
+</html>

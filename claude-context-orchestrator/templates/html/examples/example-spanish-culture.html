@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultura Española | Spanish Culture</title>
+    <style>
+        :root {
+            --spanish-red: #c60b1e;
+            --spanish-yellow: #ffc400;
+            --bg: 0 0% 100%;
+            --fg: 0 0% 3.9%;
+            --card: 0 0% 98%;
+            --border: 0 0% 89.8%;
+            --muted: 0 0% 96.1%;
+        }
+
+        [data-theme="dark"] {
+            --bg: 0 0% 7%;
+            --fg: 0 0% 98%;
+            --card: 0 0% 10%;
+            --border: 0 0% 20%;
+            --muted: 0 0% 15%;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: hsl(var(--bg));
+            color: hsl(var(--fg));
+            line-height: 1.7;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--spanish-red) 0%, #8b0000 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 4px solid var(--spanish-yellow);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--spanish-yellow);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: hsl(var(--card));
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--spanish-yellow);
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: var(--spanish-red);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .audio-btn {
+            padding: 0.5rem 1rem;
+            background: var(--spanish-red);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .audio-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(198, 11, 30, 0.3);
+        }
+
+        .image-container {
+            width: 100%;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-caption {
+            padding: 0.75rem;
+            background: hsl(var(--muted));
+            font-size: 0.85rem;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .bilingual {
+            margin: 1rem 0;
+        }
+
+        .spanish {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.8;
+        }
+
+        .english {
+            color: hsl(var(--fg) / 0.7);
+            font-size: 0.95rem;
+            font-style: italic;
+            padding-left: 1rem;
+            border-left: 3px solid var(--spanish-yellow);
+        }
+
+        .vocab-box {
+            background: hsl(45 100% 95%);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 4px solid var(--spanish-yellow);
+        }
+
+        [data-theme="dark"] .vocab-box {
+            background: hsl(45 30% 15%);
+        }
+
+        .vocab-box strong {
+            color: var(--spanish-red);
+        }
+
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        .fun-fact {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 6px solid var(--spanish-red);
+        }
+
+        [data-theme="dark"] .fun-fact {
+            background: linear-gradient(135deg, hsl(30 30% 15%) 0%, hsl(30 30% 12%) 100%);
+        }
+
+        .fun-fact::before {
+            content: "💡 ";
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Modo Oscuro</button>
+
+    <header>
+        <h1>🇪🇸 Cultura Española</h1>
+        <p class="subtitle">Spanish Culture: A Journey Through History, Art, and Tradition</p>
+    </header>
+
+    <div class="container">
+        <!-- La Sagrada Familia -->
+        <section class="section">
+            <div class="section-header">
+                <h2>🏛️ La Sagrada Familia</h2>
+                <button class="audio-btn" onclick="playAudio('sagrada')">🔊 Escuchar</button>
+            </div>
+
+            <div class="image-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/2008_Sagrada_Familia_11.JPG"
+                     alt="La Sagrada Familia en Barcelona">
+                <div class="image-caption">
+                    La Sagrada Familia, Barcelona (Photo: Wikimedia Commons, CC BY-SA 2.5)
+                </div>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    La Sagrada Familia es la obra maestra de Antoni Gaudí en Barcelona. Esta basílica impresionante comenzó su construcción en 1882 y todavía no está terminada.
+                </p>
+                <p class="english">
+                    [The Sagrada Familia is Antoni Gaudí's masterpiece in Barcelona. This impressive basilica began construction in 1882 and is still not finished.]
+                </p>
+            </div>
+
+            <div class="vocab-box">
+                <strong>Vocabulario:</strong>
+                <ul>
+                    <li><strong>obra maestra</strong> (f) - masterpiece</li>
+                    <li><strong>basílica</strong> (f) - basilica, large church</li>
+                    <li><strong>impresionante</strong> - impressive, stunning</li>
+                    <li><strong>construcción</strong> (f) - construction</li>
+                    <li><strong>todavía</strong> - still, yet</li>
+                </ul>
+            </div>
+
+            <div class="fun-fact">
+                <strong>Dato Curioso | Fun Fact:</strong> ¡Se espera que la construcción termine en 2026, 144 años después de comenzar! [The construction is expected to finish in 2026, 144 years after it started!]
+            </div>
+        </section>
+
+        <!-- La Paella -->
+        <section class="section">
+            <div class="section-header">
+                <h2>🥘 La Paella Valenciana</h2>
+                <button class="audio-btn" onclick="playAudio('paella')">🔊 Escuchar</button>
+            </div>
+
+            <div class="image-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/ed/01_Paella_Valenciana_original.jpg"
+                     alt="Paella valenciana tradicional">
+                <div class="image-caption">
+                    Paella Valenciana original (Photo: Wikimedia Commons, CC BY-SA 2.0)
+                </div>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    La paella es el plato más famoso de España, originario de Valencia. Se prepara con arroz, azafrán, y tradicionalmente lleva pollo, conejo, y judías verdes.
+                </p>
+                <p class="english">
+                    [Paella is Spain's most famous dish, originally from Valencia. It's prepared with rice, saffron, and traditionally includes chicken, rabbit, and green beans.]
+                </p>
+            </div>
+
+            <div class="vocab-box">
+                <strong>Vocabulario de Cocina | Cooking Vocabulary:</strong>
+                <ul>
+                    <li><strong>plato</strong> (m) - dish (food)</li>
+                    <li><strong>arroz</strong> (m) - rice</li>
+                    <li><strong>azafrán</strong> (m) - saffron</li>
+                    <li><strong>pollo</strong> (m) - chicken</li>
+                    <li><strong>conejo</strong> (m) - rabbit</li>
+                    <li><strong>judías verdes</strong> (f pl) - green beans</li>
+                </ul>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    Hay muchas variaciones: paella de marisco (con mariscos), paella mixta (carne y marisco), y paella vegetariana.
+                </p>
+                <p class="english">
+                    [There are many variations: seafood paella (with seafood), mixed paella (meat and seafood), and vegetarian paella.]
+                </p>
+            </div>
+        </section>
+
+        <!-- El Flamenco -->
+        <section class="section">
+            <div class="section-header">
+                <h2>💃 El Flamenco</h2>
+                <button class="audio-btn" onclick="playAudio('flamenco')">🔊 Escuchar</button>
+            </div>
+
+            <div class="image-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Flamenco_dancer_3467.jpg"
+                     alt="Bailaora de flamenco">
+                <div class="image-caption">
+                    Bailaora de flamenco (Photo: Flavio~ via Wikimedia Commons, CC BY 2.0)
+                </div>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    El flamenco es un arte andaluz que combina cante (canto), baile, y toque (guitarra). Es una expresión profunda de emoción y pasión.
+                </p>
+                <p class="english">
+                    [Flamenco is an Andalusian art form that combines singing, dance, and guitar playing. It's a deep expression of emotion and passion.]
+                </p>
+            </div>
+
+            <div class="vocab-box">
+                <strong>Elementos del Flamenco | Elements of Flamenco:</strong>
+                <ul>
+                    <li><strong>cante</strong> (m) - singing</li>
+                    <li><strong>baile</strong> (m) - dance</li>
+                    <li><strong>toque</strong> (m) - guitar playing</li>
+                    <li><strong>bailaor/bailaora</strong> - flamenco dancer (m/f)</li>
+                    <li><strong>palmas</strong> (f pl) - hand clapping</li>
+                    <li><strong>zapateado</strong> (m) - footwork</li>
+                </ul>
+            </div>
+
+            <div class="fun-fact">
+                <strong>Patrimonio Cultural:</strong> En 2010, la UNESCO declaró el flamenco Patrimonio Cultural Inmaterial de la Humanidad. [In 2010, UNESCO declared flamenco an Intangible Cultural Heritage of Humanity.]
+            </div>
+        </section>
+
+        <!-- La Alhambra -->
+        <section class="section">
+            <div class="section-header">
+                <h2>🕌 La Alhambra de Granada</h2>
+                <button class="audio-btn" onclick="playAudio('alhambra')">🔊 Escuchar</button>
+            </div>
+
+            <div class="image-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/85/Myrtenhof_Patio_de_los_Arrayanes_Nasridenpalast_Alhambra_Granada.JPG"
+                     alt="Patio de los Arrayanes, La Alhambra">
+                <div class="image-caption">
+                    Patio de los Arrayanes, La Alhambra (Photo: Wikimedia Commons, CC BY-SA 3.0)
+                </div>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    La Alhambra es un palacio y fortaleza en Granada, construido durante el período de Al-Ándalus. Es un ejemplo magnífico de la arquitectura islámica en España.
+                </p>
+                <p class="english">
+                    [The Alhambra is a palace and fortress in Granada, built during the Al-Andalus period. It's a magnificent example of Islamic architecture in Spain.]
+                </p>
+            </div>
+
+            <div class="vocab-box">
+                <strong>Vocabulario Histórico | Historical Vocabulary:</strong>
+                <ul>
+                    <li><strong>palacio</strong> (m) - palace</li>
+                    <li><strong>fortaleza</strong> (f) - fortress</li>
+                    <li><strong>arquitectura</strong> (f) - architecture</li>
+                    <li><strong>mosaico</strong> (m) - mosaic</li>
+                    <li><strong>jardín</strong> (m) - garden</li>
+                    <li><strong>fuente</strong> (f) - fountain</li>
+                </ul>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    Los Palacios Nazaríes son famosos por sus patios con fuentes, sus mosaicos intrincados, y sus jardines hermosos como el Generalife.
+                </p>
+                <p class="english">
+                    [The Nasrid Palaces are famous for their courtyards with fountains, intricate mosaics, and beautiful gardens like the Generalife.]
+                </p>
+            </div>
+        </section>
+
+        <!-- Fiestas Españolas -->
+        <section class="section">
+            <div class="section-header">
+                <h2>🎉 Fiestas y Tradiciones</h2>
+                <button class="audio-btn" onclick="playAudio('fiestas')">🔊 Escuchar</button>
+            </div>
+
+            <div class="image-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/La_Tomatina_%2825.08.2010%29_-_Spain%2C_Bu%C3%B1ol_13.jpg"
+                     alt="La Tomatina festival">
+                <div class="image-caption">
+                    La Tomatina en Buñol, Valencia (Photo: flydime via Wikimedia Commons, CC BY-SA 2.0)
+                </div>
+            </div>
+
+            <div class="bilingual">
+                <p class="spanish">
+                    España es famosa por sus festivales únicos y coloridos:
+                </p>
+                <p class="english">
+                    [Spain is famous for its unique and colorful festivals:]
+                </p>
+            </div>
+
+            <ul class="spanish">
+                <li><strong>La Tomatina</strong> (Buñol) - Una batalla gigante de tomates cada agosto [A giant tomato fight every August]</li>
+                <li><strong>San Fermín</strong> (Pamplona) - El encierro de los toros en julio [The running of the bulls in July]</li>
+                <li><strong>La Feria de Abril</strong> (Sevilla) - Una semana de baile, música y celebración [A week of dancing, music and celebration]</li>
+                <li><strong>Las Fallas</strong> (Valencia) - Esculturas enormes que se queman en marzo [Enormous sculptures that are burned in March]</li>
+            </ul>
+
+            <div class="vocab-box">
+                <strong>Palabras de Fiesta | Party Words:</strong>
+                <ul>
+                    <li><strong>fiesta</strong> (f) - party, festival</li>
+                    <li><strong>celebración</strong> (f) - celebration</li>
+                    <li><strong>tradición</strong> (f) - tradition</li>
+                    <li><strong>festival</strong> (m) - festival</li>
+                    <li><strong>baile</strong> (m) - dance</li>
+                    <li><strong>música</strong> (f) - music</li>
+                </ul>
+            </div>
+
+            <div class="fun-fact">
+                <strong>¿Sabías que...?</strong> Cada región de España tiene sus propias fiestas locales. ¡Hay más de 3,000 fiestas celebradas en España cada año! [Did you know...? Each region of Spain has its own local festivals. There are more than 3,000 festivals celebrated in Spain each year!]
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Theme toggle
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        const toggle = document.getElementById('theme-toggle');
+        toggle.textContent = theme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+
+        toggle.onclick = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            toggle.textContent = next === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+        };
+
+        // Audio placeholders - will add TTS files
+        const audioFiles = {
+            sagrada: './audio/sagrada-familia.wav',
+            paella: './audio/paella.wav',
+            flamenco: './audio/flamenco.wav',
+            alhambra: './audio/alhambra.wav',
+            fiestas: './audio/fiestas.wav'
+        };
+
+        function playAudio(section) {
+            const audioFile = audioFiles[section];
+            const audio = new Audio(audioFile);
+            audio.play().catch(err => {
+                console.log('Audio file not found:', audioFile);
+                alert('🎤 Audio file pending. TTS files will be generated next!');
+            });
+        }
+    </script>
+</body>
+</html>

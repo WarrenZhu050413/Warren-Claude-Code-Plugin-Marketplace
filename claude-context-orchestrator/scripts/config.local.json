@@ -65,7 +65,7 @@
     },
     {
       "name": "download-pdf",
-      "pattern": "\\b(DOWNLOAD|PDF)\\b[.:;,]?",
+      "pattern": "\\bDOWNLOAD\\b[.:;,]?",
       "snippet": [
         "../snippets/local/documentation/downloading-pdfs/SKILL.md"
       ],
@@ -302,6 +302,15 @@
       "pattern": "\\b(REFLECT)[.,;:]?\\b",
       "snippet": [
         "../commands/local/reflecting-learnings.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "using-clis",
+      "pattern": "\\b(CLI|USECLI)[.,;:]?\\b",
+      "snippet": [
+        "../skills/using-clis/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true

@@ -37,32 +37,47 @@ A systematic approach to transforming verbose, redundant, or disorganized files 
 
 ## Workflow
 
-### Step 1: Analyze Current State
+### Step 1: Create Backup
+```bash
+cp original.md original.md.backup
+```
+
+### Step 2: Analyze Current State
 1. Read the entire file
 2. Identify the file's core purpose
 3. List essential information categories
 4. Note redundant sections, fluff, and organizational issues
 
-### Step 2: Create Clarity Plan
+### Step 3: Create Clarity Plan
 Before editing, outline:
 - What to keep (essential information)
 - What to remove (redundancy, fluff)
 - How to reorganize (new structure)
 - Where examples add value
 
-### Step 3: Execute Transformation
+### Step 4: Execute Transformation
 Apply changes systematically:
 1. **Remove**: Delete redundant and unnecessary content
 2. **Reorganize**: Restructure for logical flow
 3. **Clarify**: Rewrite unclear sections concisely
 4. **Validate**: Ensure no essential information lost
 
-### Step 4: Quality Check
-- [ ] File serves its purpose clearly
-- [ ] No redundant information remains
-- [ ] Organization is logical and scannable
-- [ ] Examples enhance (not inflate) understanding
-- [ ] No essential information was lost
+### Step 5: Present Changes for Review
+Show the user:
+- Summary of what changed
+- Before/after comparison
+- Ask for confirmation
+
+### Step 6: Finalize
+After user confirms:
+```bash
+rm original.md.backup
+```
+
+If user rejects changes:
+```bash
+mv original.md.backup original.md
+```
 
 ## Common Clarity Anti-Patterns
 

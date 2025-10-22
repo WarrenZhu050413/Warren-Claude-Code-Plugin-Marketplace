@@ -2,20 +2,110 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL: Apache 2.0 License Compliance - READ BEFORE ANY COMMIT
+
+**MANDATORY PRE-COMMIT WORKFLOW** for ANY modifications to Anthropic-derived skills:
+
+### Step 1: Identify if Your Changes Affect Apache 2.0 Licensed Skills
+
+**Anthropic-derived skills** (Apache 2.0 licensed):
+- `skills/building-artifacts/`
+- `skills/building-mcp/`
+- `skills/testing-webapps/`
+- `skills/theming-artifacts/`
+- `skills/managing-skills/` (derived from Anthropic documentation)
+
+**If you modified ANY of these**, proceed to Step 2. Otherwise, standard MIT license applies.
+
+### Step 2: Update the NOTICE File
+
+**BEFORE committing**, edit `skills/ANTHROPIC_SKILLS_NOTICE`:
+
+1. **Locate the "MODIFICATIONS:" section** (around line 43)
+2. **Add your modification** following this format:
+
+```
+MODIFICATIONS:
+
+[Previous modifications...]
+
+Modified by: Fucheng Warren Zhu
+Date: [YYYY-MM-DD]
+
+Changes made to [skill-name]:
+- [Specific change 1]
+- [Specific change 2]
+- [Brief description of why the change was needed]
+
+---
+```
+
+**Example entry**:
+```
+Modified by: Fucheng Warren Zhu
+Date: 2025-10-21
+
+Changes made to building-artifacts:
+- Updated React version in examples from 18.2 to 18.3
+- Added TypeScript strict mode examples
+- Enhanced template to include Vite configuration
+
+Reason: Updated to current React best practices and added type safety guidance
+
+---
+```
+
+### Step 3: Verify License Files Are Present
+
+Ensure these files exist and are unmodified:
+- `skills/ANTHROPIC_SKILLS_LICENSE` - Full Apache 2.0 license text
+- `skills/ANTHROPIC_SKILLS_NOTICE` - Attribution and modifications tracking
+- `LICENSE` - Main MIT license with Apache 2.0 notice
+
+### Step 4: Commit with Proper Attribution
+
+Use commit messages that reference the license:
+
+```bash
+git commit -m "Update building-artifacts skill with React 18.3 examples
+
+Modified Apache 2.0 licensed skill from Anthropic example-skills.
+See skills/ANTHROPIC_SKILLS_NOTICE for modification details.
+"
+```
+
+### Quick Reference: What Requires NOTICE Updates?
+
+✅ **YES - Update NOTICE**:
+- Modifying skill instructions or content
+- Adding/removing examples in Anthropic skills
+- Changing skill structure or organization
+- Updating references or documentation
+- Any functional changes to skill behavior
+
+❌ **NO - No NOTICE update needed**:
+- Changes to MIT-licensed skills (using-codex, using-claude, etc.)
+- Changes to snippets system (scripts/, snippets/, hooks/)
+- Changes to templates (unless in Anthropic skills)
+- Documentation updates outside skills directory
+- Test file modifications
+
+---
+
 ## Project Overview
 
 **Plugin Name**: `claude-context-orchestrator` (formerly `claude-code-skills-manager`, originally `claude-code-snippets-plugin`)
 **Version**: 3.0.0
 **Type**: Claude Code plugin with hybrid context management (Agent Skills + deterministic snippets)
+**License**: Dual-licensed (MIT + Apache 2.0 for Anthropic skills)
 
 This plugin orchestrates two complementary context injection systems:
 
 1. **Agent Skills** - Model-invoked capabilities including:
-   - Custom meta-skills for skill/snippet management
-   - Anthropic example-skills (building-artifacts, building-mcp, testing-webapps, theming-artifacts)
-   - Warren's custom skills (using-codex, using-claude, searching-deeply, making-clearer)
+   - **Anthropic example-skills** (Apache 2.0): building-artifacts, building-mcp, testing-webapps, theming-artifacts, managing-skills
+   - **Warren's custom skills** (MIT): using-codex, using-claude, searching-deeply, making-clearer, managing-snippets
 
-2. **Deterministic Snippets** - Hook-based pattern matching for reliable, always-on context injection via UserPromptSubmit hook
+2. **Deterministic Snippets** (MIT) - Hook-based pattern matching for reliable, always-on context injection via UserPromptSubmit hook
 
 This hybrid architecture provides both intelligent, on-demand context (skills) and predictable, rule-based context (snippets) working seamlessly together.
 
@@ -50,12 +140,152 @@ This hybrid architecture provides both intelligent, on-demand context (skills) a
 **Layered Configuration**:
 - `config.json`: Base configuration (committed to git)
 - `config.local.json`: User-specific overrides (gitignored, takes precedence)
+- Config merging priority: base → local → project-specific
 
 **Snippet Injection Hook** (`hooks/hooks.json`):
 - Listens to `UserPromptSubmit` events
 - Matches patterns against user prompts using regex
 - Injects snippet content via `additionalContext`
 - Supports multi-file snippets with custom separators
+
+## Common Development Commands
+
+### Testing the Plugin Locally
+
+```bash
+# Install plugin locally for testing
+/plugin marketplace add file:///Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace
+/plugin install claude-context-orchestrator@warren-claude-code-plugin-marketplace
+
+# Verify installation
+/help | grep -A5 "claude-context-orchestrator"
+```
+
+### Managing Snippets via CLI
+
+```bash
+# Navigate to plugin directory
+cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator
+
+# List all snippets with statistics
+python3 scripts/snippets_cli.py --config scripts/config.json list --show-stats
+
+# Create a new snippet
+python3 scripts/snippets_cli.py --config scripts/config.json create my-snippet \
+  --pattern "pattern-regex" --content "snippet content"
+
+# Update a snippet
+python3 scripts/snippets_cli.py --config scripts/config.json update my-snippet \
+  --pattern "new-pattern-regex"
+
+# Delete a snippet (with backup)
+python3 scripts/snippets_cli.py --config scripts/config.json delete my-snippet --backup
+
+# Validate snippet configurations
+python3 scripts/snippets_cli.py --config scripts/config.json validate
+```
+
+### Working with Skills
+
+**List all skills**:
+```bash
+find skills -name "SKILL.md" | sort
+```
+
+**View a skill**:
+```bash
+cat skills/managing-skills/SKILL.md
+```
+
+**Create a new skill**:
+```bash
+mkdir -p skills/my-skill
+cat > skills/my-skill/SKILL.md << 'EOF'
+---
+name: My Skill Name
+description: What it does and when to use it (include trigger keywords)
+---
+
+# My Skill Name
+
+[Instructions for Claude]
+EOF
+```
+
+**Test skill activation**: Ask Claude a question that matches the skill's description keywords
+
+### Running Tests
+
+```bash
+# Run all tests
+python3 -m pytest tests/
+
+# Run unit tests only
+python3 -m pytest tests/unit/
+
+# Run integration tests
+python3 -m pytest tests/integration/
+
+# Run validation tests
+python3 -m pytest tests/validation/
+
+# Run specific test file
+python3 -m pytest tests/unit/test_snippet_injector.py -v
+```
+
+### Git Workflow with Apache 2.0 Compliance
+
+**Standard workflow** (for MIT-licensed code):
+```bash
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+**Apache 2.0 workflow** (for Anthropic-derived skills):
+```bash
+# 1. Make your changes to an Anthropic skill
+vim skills/building-artifacts/SKILL.md
+
+# 2. Update the NOTICE file (CRITICAL!)
+vim skills/ANTHROPIC_SKILLS_NOTICE
+# Add your modification entry in the MODIFICATIONS section
+
+# 3. Verify license files are present
+ls -la skills/ANTHROPIC_SKILLS_LICENSE skills/ANTHROPIC_SKILLS_NOTICE
+
+# 4. Commit with proper attribution
+git add skills/building-artifacts/SKILL.md skills/ANTHROPIC_SKILLS_NOTICE
+git commit -m "Update building-artifacts skill with [description]
+
+Modified Apache 2.0 licensed skill from Anthropic example-skills.
+See skills/ANTHROPIC_SKILLS_NOTICE for modification details.
+"
+git push
+```
+
+### Version Management
+
+```bash
+# Update plugin version in manifest
+vim .claude-plugin/plugin.json
+# Change "version" field
+
+# Update marketplace version
+cd ..
+vim .claude-plugin/marketplace.json
+# Change "version" field for claude-context-orchestrator entry
+
+# Update CHANGELOG
+vim CHANGELOG.md
+# Add new version entry
+
+# Commit version bump
+git add .claude-plugin/plugin.json ../.claude-plugin/marketplace.json CHANGELOG.md
+git commit -m "Bump version to X.Y.Z"
+git tag vX.Y.Z
+git push && git push --tags
+```
 
 ## Development Workflows
 

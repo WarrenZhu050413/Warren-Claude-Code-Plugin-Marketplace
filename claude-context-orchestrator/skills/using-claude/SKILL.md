@@ -1224,13 +1224,11 @@ INJECTED SNIPPETS IN CONTEXT:
 
 ⚠️ snippet-name - Missing hash
 
-
 ALL SNIPPETS IN CLI:
 
 • snippet-name: hash (pattern: regex)
 
 • snippet-name: hash (pattern: regex)
-
 
 SUMMARY:
 

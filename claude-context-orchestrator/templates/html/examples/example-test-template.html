@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Template - All Features</title>
+    <style>
+        /* ===== MODERN MINIMAL DESIGN ===== */
+        :root {
+            /* Clean HSL color system */
+            --bg: 0 0% 100%;
+            --fg: 0 0% 3.9%;
+            --card: 0 0% 98%;
+            --border: 0 0% 89.8%;
+            --primary: 0 0% 9%;
+            --muted: 0 0% 96.1%;
+            --accent: 220 100% 50%;
+            --success: 142 76% 36%;
+            --warning: 38 92% 50%;
+        }
+
+        [data-theme="dark"] {
+            --bg: 0 0% 7%;
+            --fg: 0 0% 98%;
+            --card: 0 0% 10%;
+            --border: 0 0% 20%;
+            --primary: 0 0% 98%;
+            --muted: 0 0% 15%;
+            --accent: 220 100% 65%;
+            --success: 142 76% 50%;
+            --warning: 38 92% 65%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: hsl(var(--bg));
+            color: hsl(var(--fg));
+            font-size: 16px;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: hsl(var(--primary));
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Code Blocks - Multi-line support */
+        pre {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: hsl(var(--muted));
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Lists - Multi-line support */
+        ul, ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.75rem;
+            line-height: 1.8;
+        }
+
+        li p {
+            margin: 0.5rem 0;
+        }
+
+        /* Images */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] img {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .image-caption {
+            text-align: center;
+            color: hsl(var(--fg) / 0.6);
+            font-size: 0.875rem;
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Audio Player */
+        audio {
+            width: 100%;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+
+        .audio-container {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .audio-label {
+            font-size: 0.875rem;
+            color: hsl(var(--fg) / 0.7);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        /* Cards/Sections */
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .note {
+            background: hsl(var(--accent) / 0.1);
+            border-left: 4px solid hsl(var(--accent));
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: hsl(var(--success) / 0.1);
+            border-left: 4px solid hsl(var(--success));
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background: hsl(var(--warning) / 0.1);
+            border-left: 4px solid hsl(var(--warning));
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        /* Theme Toggle */
+        #theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        th {
+            background: hsl(var(--muted));
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: hsl(var(--muted) / 0.5);
+        }
+
+        /* Mermaid */
+        .mermaid {
+            background: hsl(var(--card));
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            border: 1px solid hsl(var(--border));
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Dark Mode</button>
+
+    <div class="container">
+        <h1>Test Template - All Features</h1>
+
+        <div class="note">
+            <strong>About this template:</strong> This demonstrates all supported features including multi-line code, multi-line lists, images, audio (TTS), and Mermaid diagrams.
+        </div>
+
+        <!-- Multi-line Code Examples -->
+        <h2>Multi-line Code Samples</h2>
+
+        <p>Code blocks support proper multi-line formatting with syntax preservation:</p>
+
+        <h3>Python Example</h3>
+        <pre><code>def fibonacci(n):
+    """
+    Calculate Fibonacci sequence up to n terms.
+
+    Args:
+        n (int): Number of terms to generate
+
+    Returns:
+        list: Fibonacci sequence
+    """
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+
+    sequence = [0, 1]
+    while len(sequence) < n:
+        next_num = sequence[-1] + sequence[-2]
+        sequence.append(next_num)
+
+    return sequence
+
+# Example usage
+result = fibonacci(10)
+print(f"First 10 Fibonacci numbers: {result}")
+# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]</code></pre>
+
+        <h3>JavaScript Example</h3>
+        <pre><code>// Async data fetching with error handling
+async function fetchUserData(userId) {
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            success: true,
+            user: data
+        };
+
+    } catch (error) {
+        console.error('Failed to fetch user:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Usage
+const result = await fetchUserData(123);
+if (result.success) {
+    console.log('User:', result.user);
+}</code></pre>
+
+        <!-- Multi-line Lists -->
+        <h2>Multi-line Lists</h2>
+
+        <p>Lists support multi-line items with proper formatting:</p>
+
+        <h3>Ordered List Example</h3>
+        <ol>
+            <li>
+                <strong>Initialize the project</strong>
+                <p>Create a new directory and initialize with npm. Make sure you have Node.js v18+ installed. Run the following commands:</p>
+                <pre><code>mkdir my-project && cd my-project
+npm init -y
+npm install express dotenv</code></pre>
+            </li>
+            <li>
+                <strong>Configure environment variables</strong>
+                <p>Create a <code>.env</code> file in your project root with the following variables:</p>
+                <ul>
+                    <li><code>PORT</code>: Server port (default: 3000)</li>
+                    <li><code>DATABASE_URL</code>: Connection string for your database</li>
+                    <li><code>JWT_SECRET</code>: Secret key for JWT tokens</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Set up the server</strong>
+                <p>Create an <code>index.js</code> file and configure Express with middleware for JSON parsing, CORS, and error handling. Don't forget to add rate limiting for production.</p>
+            </li>
+        </ol>
+
+        <h3>Unordered List Example</h3>
+        <ul>
+            <li>
+                <strong>Frontend Technologies</strong>
+                <p>Modern frameworks and libraries for building user interfaces:</p>
+                <ul>
+                    <li>React 18+ with hooks and suspense</li>
+                    <li>Vue 3 with composition API</li>
+                    <li>Svelte for minimal bundle sizes</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Backend Technologies</strong>
+                <p>Server-side frameworks and tools:</p>
+                <ul>
+                    <li>Node.js with Express or Fastify</li>
+                    <li>Python with Django or FastAPI</li>
+                    <li>Go for high-performance services</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Database Options</strong>
+                <p>Choose based on your data model and scaling needs:</p>
+                <ul>
+                    <li>PostgreSQL for relational data with JSONB support</li>
+                    <li>MongoDB for document-based storage</li>
+                    <li>Redis for caching and real-time features</li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Image Embedding -->
+        <h2>Image Embedding</h2>
+
+        <p>Images can be embedded with captions and proper styling:</p>
+
+        <h3>Example: Architecture Diagram</h3>
+        <img src="https://via.placeholder.com/800x400/6366f1/ffffff?text=System+Architecture" alt="System Architecture Diagram">
+        <p class="image-caption">Figure 1: High-level system architecture</p>
+
+        <h3>Example: UI Screenshot</h3>
+        <img src="https://via.placeholder.com/800x500/10b981/ffffff?text=Dashboard+UI" alt="Dashboard UI">
+        <p class="image-caption">Figure 2: Main dashboard interface</p>
+
+        <!-- Audio Embedding with TTS -->
+        <h2>Audio Embedding (TTS)</h2>
+
+        <div class="success">
+            <strong>TTS Integration:</strong> Use the <code>/tts</code> command to generate audio files, then embed them like this:
+        </div>
+
+        <h3>Example: Welcome Message</h3>
+        <div class="audio-container">
+            <span class="audio-label">🔊 Audio: Welcome Message (English)</span>
+            <audio controls>
+                <source src="./audio/welcome.mp3" type="audio/mpeg">
+                Your browser does not support audio playback.
+            </audio>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: hsl(var(--fg) / 0.6);">
+                <strong>Transcript:</strong> "Welcome to our application. This audio was generated using the TTS command."
+            </p>
+        </div>
+
+        <h3>Example: Instructions (Multiple Languages)</h3>
+        <div class="audio-container">
+            <span class="audio-label">🔊 Audio: Installation Instructions</span>
+            <audio controls>
+                <source src="./audio/instructions.mp3" type="audio/mpeg">
+                Your browser does not support audio playback.
+            </audio>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: hsl(var(--fg) / 0.6);">
+                <strong>Transcript:</strong> "To install the package, run: npm install my-package. Then import it in your code."
+            </p>
+        </div>
+
+        <div class="warning">
+            <strong>TTS Workflow:</strong>
+            <ol style="margin-top: 0.75rem;">
+                <li>Use <code>/tts "Your text here"</code> to generate audio</li>
+                <li>Save the generated file to an <code>audio/</code> directory</li>
+                <li>Reference it in the <code>src</code> attribute above</li>
+                <li>Include a transcript for accessibility</li>
+            </ol>
+        </div>
+
+        <!-- Mermaid Diagram -->
+        <h2>Mermaid Diagrams</h2>
+
+        <h3>Example: TTS Audio Generation Flow</h3>
+        <div class="mermaid">
+flowchart LR
+    A[Text Input] --> B[/tts Command]
+    B --> C{Language?}
+    C -->|English| D[English Voice]
+    C -->|Spanish| E[Spanish Voice]
+    C -->|Other| F[Selected Voice]
+    D --> G[Generate Audio]
+    E --> G
+    F --> G
+    G --> H[Save MP3 File]
+    H --> I[Embed in HTML]
+        </div>
+
+        <!-- Table Example -->
+        <h2>Supported Features Table</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Supported</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Multi-line code</td>
+                    <td>✅ Yes</td>
+                    <td>Full syntax preservation</td>
+                </tr>
+                <tr>
+                    <td>Multi-line lists</td>
+                    <td>✅ Yes</td>
+                    <td>Nested lists supported</td>
+                </tr>
+                <tr>
+                    <td>Image embedding</td>
+                    <td>✅ Yes</td>
+                    <td>With captions</td>
+                </tr>
+                <tr>
+                    <td>Audio (TTS)</td>
+                    <td>✅ Yes</td>
+                    <td>Use /tts command</td>
+                </tr>
+                <tr>
+                    <td>Mermaid diagrams</td>
+                    <td>✅ Yes</td>
+                    <td>Full dark mode support</td>
+                </tr>
+                <tr>
+                    <td>Dark mode</td>
+                    <td>✅ Yes</td>
+                    <td>Toggle in top-right</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Card Example -->
+        <div class="card">
+            <h3 style="margin-top: 0;">Quick Reference</h3>
+            <p><strong>Code blocks:</strong> Use <code>&lt;pre>&lt;code>...&lt;/code>&lt;/pre></code></p>
+            <p><strong>Lists:</strong> Use <code>&lt;ol></code> or <code>&lt;ul></code> with <code>&lt;li></code></p>
+            <p><strong>Images:</strong> Use <code>&lt;img src="..." alt="..."></code></p>
+            <p><strong>Audio:</strong> Use <code>&lt;audio controls>&lt;source src="...">&lt;/audio></code></p>
+            <p style="margin-bottom: 0;"><strong>TTS:</strong> Run <code>/tts "text"</code> then embed the MP3</p>
+        </div>
+
+    </div>
+
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+    <script>
+        // Dark mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        // Mermaid
+        const currentTheme = localStorage.getItem('theme') || 'light';
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: currentTheme === 'dark' ? 'dark' : 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>

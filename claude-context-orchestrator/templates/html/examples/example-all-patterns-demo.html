@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Hierarchical Patterns - Interactive Demo</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --bg: 0 0% 100%;
+            --fg: 0 0% 3.9%;
+            --card: 0 0% 98%;
+            --border: 0 0% 89.8%;
+            --primary: 0 0% 9%;
+            --muted: 0 0% 96.1%;
+            --accent: 220 100% 50%;
+            --success: 142 76% 36%;
+            --warning: 38 92% 50%;
+            --danger: 0 84% 60%;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="dark"] {
+            --bg: 0 0% 7%;
+            --fg: 0 0% 98%;
+            --card: 0 0% 10%;
+            --border: 0 0% 20%;
+            --primary: 0 0% 98%;
+            --muted: 0 0% 15%;
+            --accent: 220 100% 65%;
+            --success: 142 76% 50%;
+            --warning: 38 92% 65%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: hsl(var(--bg));
+            color: hsl(var(--fg));
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* ===== PATTERN 1: SIDEBAR NAVIGATION ===== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: hsl(var(--card));
+            border-right: 1px solid hsl(var(--border));
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: hsl(var(--accent));
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: hsl(var(--fg) / 0.5);
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: hsl(var(--fg) / 0.7);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: hsl(var(--muted));
+            color: hsl(var(--fg));
+        }
+
+        .nav-link.active {
+            background: hsl(var(--accent) / 0.1);
+            color: hsl(var(--accent));
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            max-width: 1200px;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--primary));
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: hsl(var(--fg) / 0.6);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid hsl(var(--border));
+            scroll-margin-top: 2rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 0.75rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .pattern-intro {
+            background: hsl(var(--accent) / 0.1);
+            border-left: 4px solid hsl(var(--accent));
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .demo-box {
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        /* ===== PATTERN 2: COLLAPSIBLE SECTIONS ===== */
+        .collapsible {
+            margin: 1.5rem 0;
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            background: hsl(var(--muted));
+        }
+
+        .collapsible-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: hsl(var(--fg));
+        }
+
+        .collapsible-icon {
+            font-size: 1.2rem;
+            color: hsl(var(--accent));
+            transition: transform 0.3s;
+        }
+
+        .collapsible.open .collapsible-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 3000px;
+            padding: 1.5rem;
+        }
+
+        /* ===== PATTERN 3: MULTI-TAB INTERFACE ===== */
+        .tabs-container {
+            margin: 2rem 0;
+        }
+
+        .tab-list {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid hsl(var(--border));
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: hsl(var(--fg) / 0.6);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: hsl(var(--fg));
+            background: hsl(var(--muted) / 0.5);
+        }
+
+        .tab-button.active {
+            color: hsl(var(--accent));
+            border-bottom-color: hsl(var(--accent));
+            font-weight: 600;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ===== PATTERN 4: FLOATING TOC ===== */
+        .floating-toc {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            width: 220px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 1.5rem;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .floating-toc.visible {
+            opacity: 1;
+        }
+
+        .toc-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--primary));
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.35rem 0.5rem;
+            color: hsl(var(--fg) / 0.6);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .toc-link:hover {
+            color: hsl(var(--accent));
+            background: hsl(var(--muted));
+        }
+
+        .toc-link.active {
+            color: hsl(var(--accent));
+            font-weight: 600;
+        }
+
+        .toc-list .indent {
+            margin-left: 1rem;
+        }
+
+        .reading-progress {
+            margin-top: 1rem;
+            height: 4px;
+            background: hsl(var(--muted));
+            border-radius: 2px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: hsl(var(--accent));
+            transition: width 0.2s;
+            border-radius: 2px;
+        }
+
+        /* ===== PATTERN 5: SPLIT-PANE LAYOUT ===== */
+        .split-pane-container {
+            display: flex;
+            height: 500px;
+            gap: 0;
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .pane {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            background: hsl(var(--card));
+        }
+
+        .pane-left {
+            border-right: 1px solid hsl(var(--border));
+        }
+
+        .divider {
+            width: 4px;
+            background: hsl(var(--border));
+            cursor: col-resize;
+            transition: background 0.2s;
+        }
+
+        .divider:hover {
+            background: hsl(var(--accent));
+        }
+
+        /* ===== PATTERN 6: CARD GRID WITH FILTERING ===== */
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: hsl(var(--fg) / 0.7);
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: hsl(var(--muted));
+            color: hsl(var(--fg));
+        }
+
+        .filter-btn.active {
+            background: hsl(var(--accent));
+            color: white;
+            border-color: hsl(var(--accent));
+        }
+
+        .search-box {
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            background: hsl(var(--card));
+            color: hsl(var(--fg));
+            font-size: 0.95rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: hsl(var(--accent));
+        }
+
+        .card.hidden {
+            display: none;
+        }
+
+        .card-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: hsl(var(--accent) / 0.1);
+            color: hsl(var(--accent));
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--primary));
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: hsl(var(--fg) / 0.7);
+            line-height: 1.5;
+        }
+
+        /* ===== PATTERN 7: TIMELINE/STEPPER ===== */
+        .timeline-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            overflow-x: auto;
+            padding: 1rem 0;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .step-marker {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: hsl(var(--muted));
+            border: 3px solid hsl(var(--border));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            color: hsl(var(--fg) / 0.5);
+        }
+
+        .timeline-step.active .step-marker {
+            background: hsl(var(--accent));
+            color: white;
+            border-color: hsl(var(--accent));
+            transform: scale(1.15);
+        }
+
+        .timeline-step.completed .step-marker {
+            background: hsl(var(--success));
+            border-color: hsl(var(--success));
+            color: white;
+        }
+
+        .timeline-step.completed .step-marker::after {
+            content: '✓';
+            font-size: 1.4rem;
+        }
+
+        .step-label {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: hsl(var(--fg) / 0.6);
+            text-align: center;
+        }
+
+        .timeline-step.active .step-label {
+            color: hsl(var(--accent));
+            font-weight: 600;
+        }
+
+        .timeline-connector {
+            width: 80px;
+            height: 3px;
+            background: hsl(var(--border));
+            margin-bottom: 2rem;
+            transition: background 0.3s;
+        }
+
+        .timeline-connector.active {
+            background: hsl(var(--success));
+        }
+
+        .step-content {
+            display: none;
+            padding: 2rem;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        .step-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: hsl(var(--accent));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background: hsl(var(--card));
+            color: hsl(var(--fg));
+            border: 1px solid hsl(var(--border));
+        }
+
+        .btn-secondary:hover {
+            background: hsl(var(--muted));
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== PATTERN 8: MODAL SYSTEM ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.open {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: hsl(var(--bg));
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            padding: 2.5rem;
+            z-index: 1;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: hsl(var(--muted));
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: hsl(var(--danger));
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* ===== UTILITIES ===== */
+        #theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            z-index: 10000;
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 1001;
+        }
+
+        #scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: hsl(var(--accent));
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.2s;
+            z-index: 999;
+        }
+
+        #scroll-to-top.visible {
+            opacity: 1;
+        }
+
+        #scroll-to-top:hover {
+            transform: translateY(-3px);
+        }
+
+        code {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            background: hsl(var(--muted));
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1400px) {
+            .floating-toc {
+                display: none;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1.5rem;
+            }
+
+            #mobile-menu-toggle {
+                display: block;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+
+            .split-pane-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .pane-left {
+                border-right: none;
+                border-bottom: 1px solid hsl(var(--border));
+            }
+
+            .divider {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-menu-toggle">☰</button>
+    <button id="theme-toggle">🌙 Dark Mode</button>
+    <button id="scroll-to-top">↑</button>
+
+    <!-- Floating TOC -->
+    <nav class="floating-toc" id="floating-toc">
+        <div class="toc-title">Quick Navigation</div>
+        <ul class="toc-list">
+            <li><a href="#pattern1" class="toc-link">1. Sidebar Nav</a></li>
+            <li><a href="#pattern2" class="toc-link">2. Collapsible</a></li>
+            <li><a href="#pattern3" class="toc-link">3. Multi-Tab</a></li>
+            <li><a href="#pattern4" class="toc-link">4. Floating TOC</a></li>
+            <li><a href="#pattern5" class="toc-link">5. Split-Pane</a></li>
+            <li><a href="#pattern6" class="toc-link">6. Card Grid</a></li>
+            <li><a href="#pattern7" class="toc-link">7. Timeline</a></li>
+            <li><a href="#pattern8" class="toc-link">8. Modal</a></li>
+        </ul>
+        <div class="reading-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">Pattern Library</div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Navigation Patterns</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link" data-section="pattern1">1. Sidebar Navigation</a></li>
+                    <li><a class="nav-link" data-section="pattern2">2. Collapsible Sections</a></li>
+                    <li><a class="nav-link" data-section="pattern3">3. Multi-Tab Interface</a></li>
+                    <li><a class="nav-link" data-section="pattern4">4. Floating TOC</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Layout Patterns</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link" data-section="pattern5">5. Split-Pane Layout</a></li>
+                    <li><a class="nav-link" data-section="pattern6">6. Card Grid + Filter</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Interactive Patterns</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link" data-section="pattern7">7. Timeline/Stepper</a></li>
+                    <li><a class="nav-link" data-section="pattern8">8. Modal System</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Hierarchical Organization Patterns</h1>
+            <p class="subtitle">Interactive demonstrations of 8 content organization patterns</p>
+
+            <div class="pattern-intro">
+                <strong>About this demo:</strong> This page demonstrates all 8 hierarchical patterns for organizing large amounts of information. Each pattern is interactive and includes working code examples. Try interacting with each component to see how it works!
+            </div>
+
+            <!-- PATTERN 1: SIDEBAR NAVIGATION -->
+            <section id="pattern1">
+                <h2>Pattern 1: Sidebar Navigation</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Long-form content with clear sections and subsections<br>
+                    <strong>You're experiencing it now!</strong> The left sidebar provides hierarchical navigation with smooth scrolling and active section highlighting.
+                </div>
+
+                <h3>Features Demonstrated:</h3>
+                <ul>
+                    <li>Fixed sidebar (280px) with organized sections</li>
+                    <li>Active section highlighting based on scroll position</li>
+                    <li>Smooth scroll to clicked sections</li>
+                    <li>Mobile responsive with hamburger menu (try resizing window)</li>
+                    <li>Visual hierarchy with section grouping</li>
+                </ul>
+
+                <h3>Key Implementation:</h3>
+                <pre><code>// Navigation click handler
+navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const section = document.getElementById(this.dataset.section);
+        section.scrollIntoView({ behavior: 'smooth' });
+    });
+});
+
+// Intersection Observer for active highlighting
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            updateActiveNavLink(entry.target.id);
+        }
+    });
+}, { rootMargin: '-20% 0px -70% 0px' });</code></pre>
+            </section>
+
+            <!-- PATTERN 2: COLLAPSIBLE SECTIONS -->
+            <section id="pattern2">
+                <h2>Pattern 2: Collapsible Sections</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Dense information users may want to selectively explore<br>
+                    <strong>Click the headers below</strong> to expand or collapse content.
+                </div>
+
+                <div class="demo-box">
+                    <div class="collapsible open">
+                        <div class="collapsible-header">
+                            <div class="collapsible-title">🎨 Example 1: Design Principles</div>
+                            <div class="collapsible-icon">▼</div>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <h4>Progressive Disclosure</h4>
+                                <p>Show only essential information by default, revealing details on demand. This reduces cognitive load and helps users focus on what's relevant.</p>
+
+                                <h4>Visual Hierarchy</h4>
+                                <p>Use size, color, spacing, and typography to indicate the relative importance of information. More important elements should be larger and more prominent.</p>
+
+                                <h4>Consistency</h4>
+                                <p>Maintain consistent patterns across your interface. Similar actions should look and behave similarly throughout the application.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header">
+                            <div class="collapsible-title">💻 Example 2: Code Example</div>
+                            <div class="collapsible-icon">▼</div>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <pre><code>// Simple collapsible implementation
+document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', function() {
+        const collapsible = this.parentElement;
+        collapsible.classList.toggle('open');
+    });
+});</code></pre>
+                                <p>The CSS uses <code>max-height</code> transitions for smooth animations. When closed, <code>max-height: 0</code>; when open, <code>max-height: 3000px</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header">
+                            <div class="collapsible-title">📊 Example 3: Performance Tips</div>
+                            <div class="collapsible-icon">▼</div>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li><strong>Use max-height carefully:</strong> Set it to a value larger than your content will ever be</li>
+                                    <li><strong>Consider display: none:</strong> For very tall content, consider using display instead of max-height</li>
+                                    <li><strong>Add will-change:</strong> For smoother animations, add <code>will-change: max-height</code></li>
+                                    <li><strong>Debounce resize:</strong> If you need to recalculate heights, debounce the resize handler</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PATTERN 3: MULTI-TAB INTERFACE -->
+            <section id="pattern3">
+                <h2>Pattern 3: Multi-Tab Interface</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Categorizing information into distinct, parallel topics<br>
+                    <strong>Click tabs below</strong> to switch between different content panels.
+                </div>
+
+                <div class="demo-box">
+                    <div class="tabs-container" data-tabs="demo1">
+                        <div class="tab-list" role="tablist">
+                            <button class="tab-button active" role="tab" data-tab="html">HTML</button>
+                            <button class="tab-button" role="tab" data-tab="css">CSS</button>
+                            <button class="tab-button" role="tab" data-tab="js">JavaScript</button>
+                            <button class="tab-button" role="tab" data-tab="tips">Best Practices</button>
+                        </div>
+
+                        <div class="tab-panel active" id="html" role="tabpanel">
+                            <h4>HTML Structure</h4>
+                            <pre><code>&lt;div class="tabs-container" data-tabs&gt;
+    &lt;div class="tab-list" role="tablist"&gt;
+        &lt;button class="tab-button active" data-tab="tab1"&gt;Tab 1&lt;/button&gt;
+        &lt;button class="tab-button" data-tab="tab2"&gt;Tab 2&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class="tab-panel active" id="tab1"&gt;Content 1&lt;/div&gt;
+    &lt;div class="tab-panel" id="tab2"&gt;Content 2&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                            <p>Use ARIA roles (<code>tablist</code>, <code>tab</code>, <code>tabpanel</code>) for accessibility.</p>
+                        </div>
+
+                        <div class="tab-panel" id="css" role="tabpanel">
+                            <h4>CSS Styling</h4>
+                            <pre><code>.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.tab-button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}</code></pre>
+                            <p>Simple show/hide using display property. For animations, use opacity and transform instead.</p>
+                        </div>
+
+                        <div class="tab-panel" id="js" role="tabpanel">
+                            <h4>JavaScript Logic</h4>
+                            <pre><code>buttons.forEach(button => {
+    button.addEventListener('click', () => {
+        const targetId = button.dataset.tab;
+
+        // Update buttons
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        // Update panels
+        panels.forEach(panel => panel.classList.remove('active'));
+        container.querySelector(\`#\${targetId}\`).classList.add('active');
+    });
+});</code></pre>
+                        </div>
+
+                        <div class="tab-panel" id="tips" role="tabpanel">
+                            <h4>Best Practices</h4>
+                            <ul>
+                                <li><strong>Limit tab count:</strong> 3-7 tabs is ideal; more becomes overwhelming</li>
+                                <li><strong>Keyboard navigation:</strong> Support arrow keys to move between tabs</li>
+                                <li><strong>Mobile responsiveness:</strong> Make tabs scrollable horizontally on mobile</li>
+                                <li><strong>State persistence:</strong> Consider storing active tab in localStorage or URL</li>
+                                <li><strong>Loading states:</strong> Show loading indicator if tab content loads asynchronously</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Nested Tabs Example</h3>
+                <p>Tabs can be nested for hierarchical content organization:</p>
+
+                <div class="demo-box">
+                    <div class="tabs-container" data-tabs="nested-parent">
+                        <div class="tab-list">
+                            <button class="tab-button active" data-tab="frontend">Frontend</button>
+                            <button class="tab-button" data-tab="backend">Backend</button>
+                        </div>
+
+                        <div class="tab-panel active" id="frontend">
+                            <h4>Frontend Technologies</h4>
+
+                            <!-- Nested tabs -->
+                            <div class="tabs-container" data-tabs="nested-frontend" style="margin-top: 1rem;">
+                                <div class="tab-list">
+                                    <button class="tab-button active" data-tab="react">React</button>
+                                    <button class="tab-button" data-tab="vue">Vue</button>
+                                    <button class="tab-button" data-tab="angular">Angular</button>
+                                </div>
+
+                                <div class="tab-panel active" id="react">
+                                    <p><strong>React:</strong> A JavaScript library for building user interfaces. Component-based architecture with hooks for state management.</p>
+                                </div>
+
+                                <div class="tab-panel" id="vue">
+                                    <p><strong>Vue:</strong> Progressive framework for building UIs. Easy to learn, excellent documentation, great for single-page applications.</p>
+                                </div>
+
+                                <div class="tab-panel" id="angular">
+                                    <p><strong>Angular:</strong> Complete framework with TypeScript. Comprehensive solution with built-in routing, forms, and HTTP client.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-panel" id="backend">
+                            <h4>Backend Technologies</h4>
+
+                            <div class="tabs-container" data-tabs="nested-backend" style="margin-top: 1rem;">
+                                <div class="tab-list">
+                                    <button class="tab-button active" data-tab="node">Node.js</button>
+                                    <button class="tab-button" data-tab="python">Python</button>
+                                    <button class="tab-button" data-tab="go">Go</button>
+                                </div>
+
+                                <div class="tab-panel active" id="node">
+                                    <p><strong>Node.js:</strong> JavaScript runtime built on Chrome's V8 engine. Perfect for building scalable network applications.</p>
+                                </div>
+
+                                <div class="tab-panel" id="python">
+                                    <p><strong>Python:</strong> Versatile language with frameworks like Django and Flask. Great for web apps, APIs, and data processing.</p>
+                                </div>
+
+                                <div class="tab-panel" id="go">
+                                    <p><strong>Go:</strong> Compiled language designed for simplicity and performance. Excellent for microservices and concurrent operations.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PATTERN 4: FLOATING TOC -->
+            <section id="pattern4">
+                <h2>Pattern 4: Floating Table of Contents</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Academic or documentation-style content<br>
+                    <strong>Look to the right</strong> (on desktop) to see the floating TOC with reading progress indicator!
+                </div>
+
+                <h3>Features:</h3>
+                <ul>
+                    <li><strong>Fixed position:</strong> TOC stays visible as you scroll</li>
+                    <li><strong>Active highlighting:</strong> Shows current section</li>
+                    <li><strong>Reading progress:</strong> Progress bar at bottom shows % completion</li>
+                    <li><strong>Click to jump:</strong> Quick navigation to any section</li>
+                    <li><strong>Responsive:</strong> Hidden on tablets/mobile to save space</li>
+                </ul>
+
+                <h3>Implementation:</h3>
+                <pre><code>// Update progress based on scroll
+window.addEventListener('scroll', () => {
+    const winScroll = document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight -
+                   document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    progressBar.style.width = scrolled + '%';
+});
+
+// Update active TOC link
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocLinks.forEach(link => link.classList.remove('active'));
+            document.querySelector(\`.toc-link[href="#\${id}"]\`)
+                    .classList.add('active');
+        }
+    });
+}, { rootMargin: '-20% 0px -70% 0px' });</code></pre>
+            </section>
+
+            <!-- PATTERN 5: SPLIT-PANE LAYOUT -->
+            <section id="pattern5">
+                <h2>Pattern 5: Split-Pane Layout</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Code examples, API docs, side-by-side comparisons<br>
+                    <strong>Try hovering over the divider</strong> to see the resize indicator (resize functionality can be added with dragging).
+                </div>
+
+                <div class="split-pane-container">
+                    <div class="pane pane-left">
+                        <h4>Documentation</h4>
+                        <p>The split-pane layout is perfect for showing code alongside its explanation or output.</p>
+
+                        <h4>Key Concepts:</h4>
+                        <ul>
+                            <li><strong>Flexbox layout:</strong> Each pane gets <code>flex: 1</code> for equal width</li>
+                            <li><strong>Independent scrolling:</strong> Each pane scrolls separately</li>
+                            <li><strong>Resizable divider:</strong> Users can drag to adjust pane widths</li>
+                            <li><strong>Synchronized scrolling:</strong> Optional feature to scroll both panes together</li>
+                        </ul>
+
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Code editor with live preview</li>
+                            <li>API documentation with examples</li>
+                            <li>Before/after comparisons</li>
+                            <li>Source code with compiled output</li>
+                            <li>Markdown editor with rendered view</li>
+                        </ul>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="pane pane-right">
+                        <h4>Code Example</h4>
+                        <pre><code>// Split-pane with resizing
+const divider = document.querySelector('.divider');
+const leftPane = document.querySelector('.pane-left');
+let isDragging = false;
+
+divider.addEventListener('mousedown', () => {
+    isDragging = true;
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+
+    const container =
+        document.querySelector('.split-pane-container');
+    const containerWidth = container.offsetWidth;
+    const leftWidth = (e.clientX / containerWidth) * 100;
+
+    // Constrain between 20% and 80%
+    if (leftWidth > 20 && leftWidth < 80) {
+        leftPane.style.flex = \`0 0 \${leftWidth}%\`;
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+});</code></pre>
+
+                        <h4>CSS Structure:</h4>
+                        <pre><code>.split-pane-container {
+    display: flex;
+    height: 500px;
+}
+
+.pane {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.divider {
+    width: 4px;
+    cursor: col-resize;
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PATTERN 6: CARD GRID WITH FILTERING -->
+            <section id="pattern6">
+                <h2>Pattern 6: Card Grid with Filtering</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Portfolio, gallery, resource collections<br>
+                    <strong>Try the filter buttons and search</strong> to see dynamic filtering in action!
+                </div>
+
+                <div class="demo-box">
+                    <div class="search-box">
+                        <input type="text" id="card-search" class="search-input" placeholder="Search philosophers...">
+                    </div>
+
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">All (12)</button>
+                        <button class="filter-btn" data-filter="ancient">Ancient (4)</button>
+                        <button class="filter-btn" data-filter="medieval">Medieval (2)</button>
+                        <button class="filter-btn" data-filter="enlightenment">Enlightenment (2)</button>
+                        <button class="filter-btn" data-filter="modern">Modern (2)</button>
+                        <button class="filter-btn" data-filter="contemporary">Contemporary (2)</button>
+                    </div>
+
+                    <div class="card-grid">
+                        <div class="card" data-category="ancient" data-name="Aristotle">
+                            <div class="card-category">Ancient</div>
+                            <div class="card-title">Aristotle</div>
+                            <div class="card-description">384-322 BCE. Developer of eudaimonia concept - happiness through virtue and contemplation.</div>
+                        </div>
+
+                        <div class="card" data-category="ancient" data-name="Epicurus">
+                            <div class="card-category">Ancient</div>
+                            <div class="card-title">Epicurus</div>
+                            <div class="card-description">341-270 BCE. Argued for ataraxia - tranquil pleasure through simple living.</div>
+                        </div>
+
+                        <div class="card" data-category="ancient" data-name="Epictetus">
+                            <div class="card-category">Ancient</div>
+                            <div class="card-title">Epictetus</div>
+                            <div class="card-description">50-135 CE. Stoic philosopher teaching happiness through acceptance and virtue.</div>
+                        </div>
+
+                        <div class="card" data-category="ancient" data-name="Marcus Aurelius">
+                            <div class="card-category">Ancient</div>
+                            <div class="card-title">Marcus Aurelius</div>
+                            <div class="card-description">121-180 CE. Roman emperor and Stoic, author of Meditations.</div>
+                        </div>
+
+                        <div class="card" data-category="medieval" data-name="Augustine">
+                            <div class="card-category">Medieval</div>
+                            <div class="card-title">Augustine of Hippo</div>
+                            <div class="card-description">354-430 CE. Transformed happiness into Christian beatitude - union with God.</div>
+                        </div>
+
+                        <div class="card" data-category="medieval" data-name="Aquinas">
+                            <div class="card-category">Medieval</div>
+                            <div class="card-title">Thomas Aquinas</div>
+                            <div class="card-description">1225-1274. Synthesized Aristotle with Christianity - natural and supernatural happiness.</div>
+                        </div>
+
+                        <div class="card" data-category="enlightenment" data-name="Bentham">
+                            <div class="card-category">Enlightenment</div>
+                            <div class="card-title">Jeremy Bentham</div>
+                            <div class="card-description">1748-1832. Developed utilitarianism and the hedonic calculus.</div>
+                        </div>
+
+                        <div class="card" data-category="enlightenment" data-name="Mill">
+                            <div class="card-category">Enlightenment</div>
+                            <div class="card-title">John Stuart Mill</div>
+                            <div class="card-description">1806-1873. Refined utilitarianism with qualitative pleasure distinctions.</div>
+                        </div>
+
+                        <div class="card" data-category="modern" data-name="Nietzsche">
+                            <div class="card-category">Modern</div>
+                            <div class="card-title">Friedrich Nietzsche</div>
+                            <div class="card-description">1844-1900. Happiness through self-overcoming and life-affirmation.</div>
+                        </div>
+
+                        <div class="card" data-category="modern" data-name="Russell">
+                            <div class="card-category">Modern</div>
+                            <div class="card-title">Bertrand Russell</div>
+                            <div class="card-description">1872-1970. Practical happiness through zest, affection, and work.</div>
+                        </div>
+
+                        <div class="card" data-category="contemporary" data-name="Seligman">
+                            <div class="card-category">Contemporary</div>
+                            <div class="card-title">Martin Seligman</div>
+                            <div class="card-description">1942-present. Founded positive psychology, developed PERMA model.</div>
+                        </div>
+
+                        <div class="card" data-category="contemporary" data-name="Csikszentmihalyi">
+                            <div class="card-category">Contemporary</div>
+                            <div class="card-title">Mihaly Csikszentmihalyi</div>
+                            <div class="card-description">1934-2021. Discovered flow - optimal experience when challenge matches skill.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PATTERN 7: TIMELINE/STEPPER -->
+            <section id="pattern7">
+                <h2>Pattern 7: Timeline/Stepper Navigation</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Historical content, tutorials, step-by-step guides<br>
+                    <strong>Click steps or use navigation buttons</strong> to progress through the timeline.
+                </div>
+
+                <div class="demo-box">
+                    <div class="timeline-nav" id="timeline-nav">
+                        <div class="timeline-step completed" data-step="1">
+                            <div class="step-marker"></div>
+                            <div class="step-label">Ancient</div>
+                        </div>
+                        <div class="timeline-connector active"></div>
+                        <div class="timeline-step active" data-step="2">
+                            <div class="step-marker">2</div>
+                            <div class="step-label">Medieval</div>
+                        </div>
+                        <div class="timeline-connector"></div>
+                        <div class="timeline-step" data-step="3">
+                            <div class="step-marker">3</div>
+                            <div class="step-label">Enlightenment</div>
+                        </div>
+                        <div class="timeline-connector"></div>
+                        <div class="timeline-step" data-step="4">
+                            <div class="step-marker">4</div>
+                            <div class="step-label">Modern</div>
+                        </div>
+                        <div class="timeline-connector"></div>
+                        <div class="timeline-step" data-step="5">
+                            <div class="step-marker">5</div>
+                            <div class="step-label">Contemporary</div>
+                        </div>
+                    </div>
+
+                    <div id="timeline-content">
+                        <div class="step-content" data-step="1">
+                            <h3>Ancient Philosophy (600 BCE - 400 CE)</h3>
+                            <p>The ancient Greeks and Romans developed the foundational concepts of happiness in Western philosophy. Aristotle's eudaimonia, Epicurus's ataraxia, and Stoic virtue ethics all offered different paths to the good life.</p>
+                            <ul>
+                                <li><strong>Aristotle:</strong> Happiness as flourishing through virtue</li>
+                                <li><strong>Epicurus:</strong> Tranquil pleasure through simple living</li>
+                                <li><strong>Stoics:</strong> Virtue alone is sufficient for happiness</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-content active" data-step="2">
+                            <h3>Medieval Philosophy (400-1400 CE)</h3>
+                            <p>Christian thinkers transformed Greek philosophy to align with theological doctrine. Happiness became beatitude - the blessed life found in union with God.</p>
+                            <ul>
+                                <li><strong>Augustine:</strong> Restless hearts find rest only in God</li>
+                                <li><strong>Aquinas:</strong> Natural happiness exists but is incomplete without divine beatitude</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-content" data-step="3">
+                            <h3>Enlightenment (1650-1800)</h3>
+                            <p>The Enlightenment brought secular, scientific approaches to happiness. Utilitarians argued happiness is measurable pleasure that can be calculated.</p>
+                            <ul>
+                                <li><strong>Bentham:</strong> Greatest happiness for greatest number</li>
+                                <li><strong>Mill:</strong> Higher pleasures are qualitatively superior</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-content" data-step="4">
+                            <h3>Modern Era (1800-1950)</h3>
+                            <p>Modern philosophers questioned traditional happiness entirely. Nietzsche rejected passive contentment; Russell offered practical wisdom for daily life.</p>
+                            <ul>
+                                <li><strong>Nietzsche:</strong> Joy through self-overcoming and amor fati</li>
+                                <li><strong>Russell:</strong> Zest, affection, work, and impersonal interests</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-content" data-step="5">
+                            <h3>Contemporary (1950-Present)</h3>
+                            <p>Positive psychology applies scientific methods to study well-being. Research validates ancient insights while discovering new dimensions like flow states.</p>
+                            <ul>
+                                <li><strong>Seligman:</strong> PERMA model of flourishing</li>
+                                <li><strong>Csikszentmihalyi:</strong> Flow as optimal experience</li>
+                                <li><strong>Nussbaum:</strong> Capabilities approach to well-being</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-controls">
+                        <button class="btn btn-secondary" id="prev-step">← Previous</button>
+                        <button class="btn btn-primary" id="next-step">Next →</button>
+                    </div>
+                </div>
+
+                <h3>Key Features:</h3>
+                <ul>
+                    <li><strong>Visual progress:</strong> Shows completed, current, and upcoming steps</li>
+                    <li><strong>Clickable steps:</strong> Jump to any step by clicking the marker</li>
+                    <li><strong>Navigation buttons:</strong> Previous/Next for linear progression</li>
+                    <li><strong>State indicators:</strong> Completed steps show checkmark, active step is highlighted</li>
+                    <li><strong>Responsive:</strong> Scrolls horizontally on mobile devices</li>
+                </ul>
+            </section>
+
+            <!-- PATTERN 8: MODAL SYSTEM -->
+            <section id="pattern8">
+                <h2>Pattern 8: Modal/Drawer System</h2>
+
+                <div class="pattern-intro">
+                    <strong>Best for:</strong> Detailed information that doesn't fit inline<br>
+                    <strong>Click buttons below</strong> to open different types of modals.
+                </div>
+
+                <div class="demo-box">
+                    <h3>Modal Examples:</h3>
+
+                    <button class="btn btn-primary open-modal" data-modal="modal-info">
+                        📄 Open Information Modal
+                    </button>
+
+                    <button class="btn btn-primary open-modal" data-modal="modal-code" style="margin-left: 1rem;">
+                        💻 Open Code Example Modal
+                    </button>
+
+                    <button class="btn btn-primary open-modal" data-modal="modal-form" style="margin-left: 1rem;">
+                        ✏️ Open Form Modal
+                    </button>
+                </div>
+
+                <h3>Features:</h3>
+                <ul>
+                    <li><strong>Overlay backdrop:</strong> Dims background and prevents interaction</li>
+                    <li><strong>Smooth animations:</strong> Fade in overlay, slide up modal</li>
+                    <li><strong>Multiple close methods:</strong> Close button, overlay click, ESC key</li>
+                    <li><strong>Focus trap:</strong> Keeps keyboard navigation within modal</li>
+                    <li><strong>Scroll lock:</strong> Prevents body scroll when modal is open</li>
+                    <li><strong>Accessibility:</strong> Proper ARIA attributes and focus management</li>
+                </ul>
+
+                <h3>Implementation:</h3>
+                <pre><code>// Open modal
+document.querySelectorAll('.open-modal').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const modalId = this.dataset.modal;
+        const modal = document.getElementById(modalId);
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+    });
+});
+
+// Close modal
+function closeModal(modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = ''; // Restore scroll
+}
+
+// Close on overlay or close button
+document.querySelectorAll('.modal-overlay, .modal-close').forEach(el => {
+    el.addEventListener('click', function() {
+        closeModal(this.closest('.modal'));
+    });
+});
+
+// Close on ESC key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.open').forEach(closeModal);
+    }
+});</code></pre>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal" id="modal-info">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Modal System Information</h2>
+            <p>Modals are overlay windows that appear on top of the main content. They're perfect for:</p>
+            <ul>
+                <li><strong>Focused tasks:</strong> Forms, confirmations, settings</li>
+                <li><strong>Detailed information:</strong> Full documentation, examples</li>
+                <li><strong>Media display:</strong> Images, videos, galleries</li>
+                <li><strong>Workflow steps:</strong> Multi-step processes</li>
+            </ul>
+
+            <h3>Design Best Practices</h3>
+            <ul>
+                <li>Make it obvious how to close (X button, ESC key, overlay click)</li>
+                <li>Don't nest modals - use multi-step forms instead</li>
+                <li>Limit size to 90% viewport height for scrollability</li>
+                <li>Use for focused interactions, not for extensive content</li>
+                <li>Ensure mobile responsiveness (full screen on small devices)</li>
+            </ul>
+
+            <h3>Accessibility Considerations</h3>
+            <ul>
+                <li>Set <code>aria-modal="true"</code> on modal container</li>
+                <li>Move focus to modal when opened</li>
+                <li>Trap focus within modal (prevent tabbing outside)</li>
+                <li>Return focus to trigger element when closed</li>
+                <li>Announce modal to screen readers</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-code">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Complete Modal Code Example</h2>
+
+            <h3>HTML:</h3>
+            <pre><code>&lt;div class="modal" id="my-modal"&gt;
+    &lt;div class="modal-overlay"&gt;&lt;/div&gt;
+    &lt;div class="modal-content"&gt;
+        &lt;button class="modal-close"&gt;&times;&lt;/button&gt;
+        &lt;h2&gt;Modal Title&lt;/h2&gt;
+        &lt;p&gt;Modal content...&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <h3>CSS:</h3>
+            <pre><code>.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.modal.open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s;
+}
+
+.modal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 2.5rem;
+    z-index: 1;
+    animation: slideUp 0.3s;
+}</code></pre>
+
+            <h3>Advanced Features:</h3>
+            <ul>
+                <li><strong>Stacking:</strong> Use z-index management for multiple modals</li>
+                <li><strong>Confirmation modals:</strong> Small, centered dialogs for yes/no questions</li>
+                <li><strong>Full-screen modals:</strong> For image galleries or complex forms</li>
+                <li><strong>Drawer modals:</strong> Slide in from side instead of center</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-form">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Example Form Modal</h2>
+            <p>Forms work great in modals for focused data entry.</p>
+
+            <div style="margin-top: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Name:</label>
+                <input type="text" style="width: 100%; padding: 0.75rem; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--card)); color: hsl(var(--fg));" placeholder="Enter your name">
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email:</label>
+                <input type="email" style="width: 100%; padding: 0.75rem; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--card)); color: hsl(var(--fg));" placeholder="Enter your email">
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Message:</label>
+                <textarea style="width: 100%; padding: 0.75rem; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--card)); color: hsl(var(--fg)); min-height: 120px; font-family: inherit;" placeholder="Enter your message"></textarea>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button class="btn btn-primary">Submit</button>
+                <button class="btn btn-secondary modal-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== THEME MANAGEMENT =====
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        // ===== SIDEBAR NAVIGATION =====
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.dataset.section;
+                const targetSection = document.getElementById(sectionId);
+
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+        });
+
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 1024) {
+                if (!sidebar.contains(e.target) && e.target !== mobileMenuToggle) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        // Intersection Observer for active section
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -70% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    const activeLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+
+                    // Update TOC active link
+                    const tocLinks = document.querySelectorAll('.toc-link');
+                    tocLinks.forEach(l => l.classList.remove('active'));
+                    const activeTocLink = document.querySelector(`.toc-link[href="#${sectionId}"]`);
+                    if (activeTocLink) {
+                        activeTocLink.classList.add('active');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+
+        // ===== COLLAPSIBLE SECTIONS =====
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.parentElement.classList.toggle('open');
+            });
+        });
+
+        // ===== TABS =====
+        document.querySelectorAll('[data-tabs]').forEach(container => {
+            const buttons = container.querySelectorAll('.tab-button');
+            const panels = container.querySelectorAll('.tab-panel');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.tab;
+
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    panels.forEach(panel => panel.classList.remove('active'));
+                    const targetPanel = document.getElementById(targetId);
+                    if (targetPanel) {
+                        targetPanel.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // ===== FLOATING TOC =====
+        const floatingToc = document.getElementById('floating-toc');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Show TOC after scrolling a bit
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                floatingToc.classList.add('visible');
+            } else {
+                floatingToc.classList.remove('visible');
+            }
+
+            // Update reading progress
+            const winScroll = document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            progressBar.style.width = scrolled + '%';
+        });
+
+        // TOC click handlers
+        document.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // ===== CARD FILTERING =====
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.card');
+        const searchInput = document.getElementById('card-search');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                cards.forEach(card => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const category = card.dataset.category;
+                const matchesSearch = name.includes(searchTerm);
+                const matchesFilter = activeFilter === 'all' || category === activeFilter;
+
+                if (matchesSearch && matchesFilter) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+
+        // ===== TIMELINE/STEPPER =====
+        const timelineSteps = document.querySelectorAll('.timeline-step');
+        const stepContents = document.querySelectorAll('.step-content');
+        const timelineConnectors = document.querySelectorAll('.timeline-connector');
+        const prevBtn = document.getElementById('prev-step');
+        const nextBtn = document.getElementById('next-step');
+        let currentStep = 2;
+
+        function updateTimeline(stepNum) {
+            currentStep = stepNum;
+
+            // Update steps
+            timelineSteps.forEach((step, index) => {
+                const num = index + 1;
+                step.classList.remove('active', 'completed');
+
+                if (num < currentStep) {
+                    step.classList.add('completed');
+                } else if (num === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Update connectors
+            timelineConnectors.forEach((connector, index) => {
+                if (index + 1 < currentStep) {
+                    connector.classList.add('active');
+                } else {
+                    connector.classList.remove('active');
+                }
+            });
+
+            // Update content
+            stepContents.forEach(content => {
+                content.classList.remove('active');
+                if (parseInt(content.dataset.step) === currentStep) {
+                    content.classList.add('active');
+                }
+            });
+
+            // Update buttons
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === timelineSteps.length;
+        }
+
+        timelineSteps.forEach((step, index) => {
+            step.addEventListener('click', () => {
+                updateTimeline(index + 1);
+            });
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                updateTimeline(currentStep - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < timelineSteps.length) {
+                updateTimeline(currentStep + 1);
+            }
+        });
+
+        // ===== MODALS =====
+        document.querySelectorAll('.open-modal').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modalId = this.dataset.modal;
+                const modal = document.getElementById(modalId);
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        function closeModal(modal) {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.modal-overlay, .modal-close').forEach(el => {
+            el.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(this.closest('.modal'));
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.open').forEach(modal => {
+                    closeModal(modal);
+                });
+            }
+        });
+
+        // ===== SCROLL TO TOP =====
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Initialize timeline
+        updateTimeline(currentStep);
+    </script>
+</body>
+</html>

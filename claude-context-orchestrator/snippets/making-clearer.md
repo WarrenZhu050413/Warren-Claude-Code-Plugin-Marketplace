@@ -1,18 +1,10 @@
 ---
 description: Make files clearer by removing redundancy and organizing content
 SNIPPET_NAME: making-clearer
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Making Files Clearer
-
-**INSTRUCTION TO CLAUDE**: At the very beginning of your response, before any other content, you MUST announce which snippet(s) are active using this exact format:
-
-📎 **Active Context**: making-clearer
-
-If multiple snippets are detected, combine them:
-
-📎 **Active Contexts**: making-clearer, other-snippet
 
 ---
 

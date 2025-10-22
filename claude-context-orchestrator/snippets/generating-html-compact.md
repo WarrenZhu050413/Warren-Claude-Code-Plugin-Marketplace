@@ -2,7 +2,7 @@
 ---
 description: Write compact, information-dense HTML content using full width with minimal spacing
 SNIPPET_NAME: generating-html-compact
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 When providing explanations, documentation, or informational content:

@@ -51,4 +51,7 @@ echo "✅ Bundle complete!"
 echo "📄 Output: bundle.html ($FILE_SIZE)"
 echo ""
 echo "You can now use this single HTML file as an artifact in Claude conversations."
-echo "To test locally: open bundle.html in your browser"
+echo "🌐 Opening bundle.html in your default browser..."
+
+# Open the bundled HTML file in the default browser
+open bundle.html

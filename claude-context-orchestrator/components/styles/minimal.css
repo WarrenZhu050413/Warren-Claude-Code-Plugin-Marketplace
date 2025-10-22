@@ -1,0 +1,166 @@
+/* Minimal Style System - Clean and Simple */
+
+:root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --border: #cccccc;
+    --accent: #0066cc;
+}
+
+[data-theme="dark"] {
+    --bg: #1a1a1a;
+    --fg: #ffffff;
+    --border: #444444;
+    --accent: #66aaff;
+}
+
+/* Global */
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: var(--fg);
+    background: var(--bg);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.container {
+    width: 100%;
+}
+
+/* Collapsible Component */
+[data-component="collapsible"] {
+    border-left: 3px solid var(--accent);
+    margin: 1rem 0;
+}
+
+[data-role="trigger"] {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+[data-role="trigger"]:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-role="title"] {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+[data-role="icon"] {
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+[data-component="collapsible"][data-state="open"] [data-role="icon"] {
+    transform: rotate(180deg);
+}
+
+[data-role="content"] {
+    display: none;
+    padding: 1rem;
+}
+
+[data-component="collapsible"][data-state="open"] [data-role="content"] {
+    display: block;
+}
+
+/* Card Component */
+[data-component="card"] {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+[data-component="card"] [data-role="header"] {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+[data-component="card"] [data-role="title"] {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+[data-component="card"] [data-role="body"] {
+    padding: 1rem;
+}
+
+[data-component="card"] [data-role="footer"] {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--fg);
+    opacity: 0.7;
+}
+
+/* Tabs Component */
+[data-component="tabs"] {
+    margin: 1rem 0;
+}
+
+[data-role="tab-list"] {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+[data-role="tab"] {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--fg);
+    opacity: 0.6;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+[data-role="tab"]:hover {
+    opacity: 0.8;
+}
+
+[data-role="tab"][data-active="true"] {
+    opacity: 1;
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+
+[data-role="panels"] {
+    margin-top: 1rem;
+}
+
+[data-role="panel"] {
+    display: none;
+}
+
+[data-role="panel"][data-active="true"] {
+    display: block;
+}
+
+/* Diagram Component */
+[data-component="diagram"] {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+[data-role="diagram-content"] {
+    padding: 1rem;
+    background: var(--bg);
+}
+
+[data-role="caption"] {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--fg);
+    opacity: 0.7;
+    font-style: italic;
+}

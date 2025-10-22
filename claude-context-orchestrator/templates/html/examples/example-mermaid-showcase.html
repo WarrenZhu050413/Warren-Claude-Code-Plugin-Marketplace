@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Diagram Showcase</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Chinese Color Palette - Light Mode */
+            --chinese-red: #8B0000;
+            --chinese-gold: #FFD700;
+            --jade-green: #00A86B;
+            --ink-black: #2B2B2B;
+            --paper-beige: #F5F5DC;
+            --light-cream: #FAFAF0;
+
+            /* Hierarchy Levels */
+            --level-1: #000;
+            --level-2: #333;
+            --level-3: #666;
+            --level-4: #999;
+
+            /* Component Variables */
+            --card-background: #FFFFFF;
+            --section-background: #FFFFFF;
+            --border-color-light: #ddd;
+            --border-color-medium: #ccc;
+            --code-background: #F8F8F8;
+            --code-border: rgba(139, 0, 0, 0.15);
+            --code-text: #1a1a1a;
+        }
+
+        [data-theme="dark"] {
+            /* Chinese Color Palette - Dark Mode */
+            --chinese-red: #DC143C;
+            --chinese-gold: #FFD700;
+            --jade-green: #10B981;
+            --ink-black: #E5E5DC;
+            --paper-beige: #1A1A1A;
+            --light-cream: #252525;
+
+            /* Hierarchy Levels - Dark Mode */
+            --level-1: #F5F5DC;
+            --level-2: #D4C4B0;
+            --level-3: #A89F91;
+            --level-4: #6B6B6B;
+
+            /* Component Variables - Dark Mode */
+            --card-background: #252525;
+            --section-background: #252525;
+            --border-color-light: #444;
+            --border-color-medium: #555;
+            --code-background: rgba(40, 40, 40, 0.8);
+            --code-border: #555;
+            --code-text: #e0e0e0;
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--paper-beige) 0%, var(--light-cream) 100%);
+            color: var(--ink-black);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .container {
+            width: 100%;
+            padding: 2px;
+            margin: 0;
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 4px 0;
+            padding: 6px 4px;
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 8px 0 4px 0;
+            padding: 4px;
+            border-left: 4px solid var(--chinese-red);
+            background: rgba(139, 0, 0, 0.03);
+            color: var(--level-1);
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 4px 0 2px 8px;
+            color: var(--level-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== SECTIONS & CONTAINERS ===== */
+        .important-always-visible {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--card-background));
+            border: 2px solid var(--chinese-gold);
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+
+        .important-always-visible h2 {
+            color: var(--chinese-red);
+            margin-top: 0;
+        }
+
+        /* ===== COLLAPSIBLES ===== */
+        .collapsible {
+            margin: 4px 0;
+            width: 100%;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            padding: 6px 8px;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.05), rgba(255, 215, 0, 0.02));
+            border-left: 3px solid var(--chinese-gold);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .collapsible-header:hover {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(255, 215, 0, 0.05));
+        }
+
+        .collapsible-header .arrow {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            color: var(--chinese-red);
+            font-size: 10px;
+        }
+
+        .collapsible.open .arrow {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 8px;
+            margin-left: 12px;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 5000px;
+            padding: 8px;
+        }
+
+        /* ===== BUTTONS ===== */
+        button {
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            color: white;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.2s ease;
+            padding: 2px 6px;
+            margin: 1px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 10000;
+            background: var(--chinese-gold);
+            color: var(--ink-black);
+            border: 2px solid var(--chinese-red);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .muted { color: var(--level-4); font-size: 11px; }
+
+        /* ===== DARK MODE OVERRIDES ===== */
+        [data-theme="dark"] .important-always-visible {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        /* ===== MERMAID DIAGRAM STYLING ===== */
+        .diagram-container {
+            background: var(--card-background);
+            border: 1px solid var(--border-color-light);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .mermaid {
+            background: var(--card-background);
+            padding: 20px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid var(--border-color-light);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .mermaid {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 800px) {
+            h1 { font-size: 20px; }
+            h2 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Dark</button>
+
+    <div class="container">
+        <h1>Mermaid Diagram Showcase</h1>
+
+        <div class="important-always-visible">
+            <h2>About This Showcase</h2>
+            <p>Toggle dark mode (top-right) to see how all diagrams adapt automatically.</p>
+        </div>
+
+        <!-- Flowchart -->
+        <div class="collapsible" data-collapsible="open">
+            <div class="collapsible-header">
+                <span>Flowchart - Process Flow</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: Algorithms, decision trees, workflows</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    Start([Start]) --> Check{Has Account?}
+    Check -->|Yes| Login[Login]
+    Check -->|No| Signup[Sign Up]
+    Signup --> Verify[Verify Email]
+    Verify --> Login
+    Login --> Dashboard[Dashboard]
+    Dashboard --> End([End])
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sequence Diagram -->
+        <div class="collapsible" data-collapsible="open">
+            <div class="collapsible-header">
+                <span>Sequence Diagram - API Flow</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: API interactions, message flows</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant API
+    participant DB
+
+    User->>API: POST /login
+    API->>DB: Query credentials
+    DB-->>API: User data
+    API-->>User: JWT token
+    Note over User,DB: Auth complete
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Diagram -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>State Diagram - Order States</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: Workflow states, status transitions</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Processing: Confirm
+    Processing --> Shipped: Ship
+    Shipped --> Delivered: Deliver
+    Processing --> Cancelled: Cancel
+    Delivered --> [*]
+    Cancelled --> [*]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gantt Chart -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>Gantt Chart - Project Timeline</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: Project planning, timelines</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+gantt
+    title Sprint Timeline
+    dateFormat YYYY-MM-DD
+
+    section Planning
+    Requirements :done, 2025-01-01, 3d
+    Design      :done, 2025-01-04, 2d
+
+    section Development
+    Backend     :active, 2025-01-06, 5d
+    Frontend    :2025-01-11, 4d
+
+    section Testing
+    QA Testing  :2025-01-15, 3d
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Class Diagram -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>Class Diagram - Object Model</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: Object-oriented design, data models</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+classDiagram
+    class User {
+        +int id
+        +string email
+        +login()
+    }
+
+    class Post {
+        +int id
+        +string title
+        +publish()
+    }
+
+    User "1" --> "*" Post : creates
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ER Diagram -->
+        <div class="collapsible" data-collapsible="closed">
+            <div class="collapsible-header">
+                <span>ER Diagram - Database Schema</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="collapsible-content">
+                <p class="muted">Use for: Database design, relationships</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+erDiagram
+    USER ||--o{ ORDER : places
+    USER {
+        int id PK
+        string email UK
+        string name
+    }
+
+    ORDER {
+        int id PK
+        int user_id FK
+        decimal total
+    }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="muted" style="margin-top: 16px; text-align: center;">
+            Mermaid diagrams with full dark mode support
+        </p>
+    </div>
+
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== DARK MODE SETUP =====
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    this.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+                });
+            }
+
+            // ===== MERMAID SETUP =====
+            const currentTheme = localStorage.getItem('theme') || 'light';
+
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'base',
+                themeVariables: currentTheme === 'dark' ? {
+                    background: '#1e1e1e',
+                    primaryColor: '#bb86fc',
+                    primaryTextColor: '#e0e0e0',
+                    primaryBorderColor: '#bb86fc',
+                    lineColor: '#888',
+                    secondaryColor: '#03dac6',
+                    tertiaryColor: '#cf6679',
+                    mainBkg: '#2a2a2a',
+                    textColor: '#e0e0e0',
+                    nodeBorder: '#888',
+                    actorBkg: '#2a2a2a',
+                    actorBorder: '#bb86fc',
+                    actorTextColor: '#e0e0e0',
+                    actorLineColor: '#888',
+                    signalColor: '#e0e0e0',
+                    signalTextColor: '#e0e0e0',
+                    labelBoxBkgColor: '#bb86fc',
+                    labelTextColor: '#1a1a1a',
+                    noteBkgColor: '#2a2a2a',
+                    noteTextColor: '#e0e0e0',
+                    noteBorderColor: '#bb86fc',
+                    taskTextColor: '#e0e0e0',
+                    taskTextLightColor: '#e0e0e0',
+                    taskTextOutsideColor: '#e0e0e0',
+                    sectionBkgColor: '#3a3a3a',
+                    altSectionBkgColor: '#2a2a2a',
+                    gridColor: '#555',
+                    todayLineColor: '#bb86fc'
+                } : {
+                    background: '#FFFFFF',
+                    primaryColor: '#8B0000',
+                    primaryTextColor: '#1a1a1a',
+                    primaryBorderColor: '#6B4423',
+                    lineColor: '#4A5568',
+                    secondaryColor: '#1B3A57',
+                    tertiaryColor: '#2D5016',
+                    mainBkg: '#FAFAFA',
+                    textColor: '#1a1a1a',
+                    nodeBorder: '#6B4423',
+                    actorBkg: '#F0F0F0',
+                    actorBorder: '#6B4423',
+                    actorTextColor: '#1a1a1a',
+                    actorLineColor: '#6B4423',
+                    signalColor: '#1a1a1a',
+                    signalTextColor: '#1a1a1a',
+                    labelBoxBkgColor: '#8B0000',
+                    labelTextColor: '#fff',
+                    noteBkgColor: '#FFFBEB',
+                    noteTextColor: '#6B4423',
+                    noteBorderColor: '#D97706',
+                    taskTextColor: '#1a1a1a',
+                    taskTextLightColor: '#1a1a1a',
+                    taskTextOutsideColor: '#1a1a1a',
+                    sectionBkgColor: '#f9f9f9',
+                    altSectionBkgColor: '#f0f0f0',
+                    gridColor: '#ccc',
+                    todayLineColor: '#8B0000'
+                },
+                flowchart: {
+                    curve: 'basis',
+                    padding: 20,
+                    useMaxWidth: true,
+                    htmlLabels: true
+                },
+                sequence: {
+                    actorMargin: 50,
+                    useMaxWidth: true
+                },
+                gantt: {
+                    useMaxWidth: true,
+                    fontSize: 11
+                }
+            });
+
+            // ===== COLLAPSIBLES SETUP =====
+            document.querySelectorAll('[data-collapsible]').forEach(function(section) {
+                const isOpen = section.getAttribute('data-collapsible') === 'open';
+                section.classList.add('collapsible');
+                if (isOpen) section.classList.add('open');
+            });
+
+            document.querySelectorAll('.collapsible-header').forEach(function(header) {
+                header.addEventListener('click', function() {
+                    this.closest('.collapsible').classList.toggle('open');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

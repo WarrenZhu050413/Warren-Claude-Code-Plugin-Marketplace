@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Sections with File System Access</title>
+    <style>
+        :root {
+            --bg: 0 0% 100%;
+            --fg: 0 0% 3.9%;
+            --card: 0 0% 98%;
+            --border: 0 0% 89.8%;
+            --primary: 0 0% 9%;
+            --muted: 0 0% 96.1%;
+            --accent: 220 100% 50%;
+            --success: 142 76% 36%;
+            --warning: 45 100% 50%;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="dark"] {
+            --bg: 0 0% 7%;
+            --fg: 0 0% 98%;
+            --card: 0 0% 10%;
+            --border: 0 0% 20%;
+            --primary: 0 0% 98%;
+            --muted: 0 0% 15%;
+            --accent: 220 100% 65%;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: hsl(var(--bg));
+            color: hsl(var(--fg));
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: hsl(var(--card));
+            border-right: 1px solid hsl(var(--border));
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: hsl(var(--accent));
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: hsl(var(--fg) / 0.7);
+            margin: 0.25rem 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: hsl(var(--muted));
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            max-width: 1200px;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+        h2 { font-size: 1.75rem; margin: 2rem 0 1rem; }
+        p { margin-bottom: 1rem; }
+
+        /* Collapsible Sections */
+        .collapsible {
+            margin: 1rem 0;
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border));
+            border-radius: 8px;
+            transition: border-color 0.2s ease;
+        }
+
+        .collapsible:hover {
+            border-color: hsl(var(--accent) / 0.3);
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+        }
+
+        .collapsible-title {
+            font-weight: 600;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .collapsible-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.35rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .save-btn {
+            background: hsl(var(--success));
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px hsl(var(--success) / 0.3);
+        }
+
+        .split-btn {
+            background: hsl(var(--accent));
+            color: white;
+        }
+
+        .split-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px hsl(var(--accent) / 0.3);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 2000px;
+            padding: 1.5rem;
+        }
+
+        /* Split Container */
+        .split-container {
+            display: none;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .split-container.active {
+            display: flex;
+        }
+
+        .split-pane {
+            flex: 1;
+            padding: 2rem;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            position: relative;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pane-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: red;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .pane-close:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px hsl(var(--primary) / 0.3);
+        }
+
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            background: hsl(var(--accent));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px hsl(var(--accent) / 0.3);
+        }
+
+        .setup-container {
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-indicator.success {
+            background: hsl(var(--success) / 0.1);
+            color: hsl(var(--success));
+        }
+
+        .status-indicator.warning {
+            background: hsl(var(--warning) / 0.1);
+            color: hsl(var(--warning) / 1.5);
+        }
+
+        [data-theme="dark"] .status-indicator.warning {
+            color: hsl(var(--warning));
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">🌙 Dark</button>
+
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">Sections Demo</div>
+            <div class="nav-link" onclick="setupDirectory()">📂 Setup Save Folder</div>
+            <div class="nav-link" onclick="saveAll()">💾 Save All Sections</div>
+            <div class="nav-link" onclick="location.reload()">🔄 Reset</div>
+            <div id="status" style="margin-top: 1rem; font-size: 0.875rem; color: hsl(var(--fg) / 0.6);"></div>
+        </nav>
+
+        <main class="main-content">
+            <h1>Collapsible Sections</h1>
+            <p>💾 Click-to-expand sections with File System Access API for direct folder saving</p>
+
+            <div class="setup-container">
+                <h3>📂 File System Access Setup</h3>
+                <p>Save files directly to your chosen folder using the modern <strong>File System Access API</strong>.</p>
+
+                <div id="setup-status" class="status-indicator warning">
+                    <span>⚠️</span>
+                    <span>Not configured - Click "Setup Save Folder" to begin</span>
+                </div>
+
+                <button class="btn-primary" onclick="setupDirectory()" style="margin-top: 1rem;">
+                    📂 Choose Save Folder
+                </button>
+
+                <p style="margin-top: 1rem; font-size: 0.875rem; color: hsl(var(--fg) / 0.6);">
+                    <strong>Browser Support:</strong> Chrome 86+, Edge 86+, Safari 15.2+
+                </p>
+            </div>
+
+            <h2>Sections</h2>
+            <p>Click headers to expand/collapse. Use buttons to save or view in split pane.</p>
+
+            <div id="sections">
+                <div class="collapsible open" data-id="design">
+                    <div class="collapsible-header" onclick="toggle(this)">
+                        <div class="collapsible-title">
+                            <span>🎨 Design Principles</span>
+                        </div>
+                        <div class="collapsible-actions">
+                            <button class="action-btn split-btn" onclick="addToSplit('design', event)">👁️ View</button>
+                            <button class="action-btn save-btn" onclick="save('design', event)">💾 Save</button>
+                        </div>
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>Progressive Disclosure</h4>
+                        <p>Show essential information first, reveal details on demand.</p>
+                        <h4>Visual Hierarchy</h4>
+                        <p>Use size, color, spacing to indicate importance.</p>
+                        <h4>Animation Best Practices</h4>
+                        <p>CSS transitions are interruptable - better than keyframe animations for smooth interactions.</p>
+                    </div>
+                </div>
+
+                <div class="collapsible" data-id="code">
+                    <div class="collapsible-header" onclick="toggle(this)">
+                        <div class="collapsible-title">
+                            <span>💻 Code Examples</span>
+                        </div>
+                        <div class="collapsible-actions">
+                            <button class="action-btn split-btn" onclick="addToSplit('code', event)">👁️ View</button>
+                            <button class="action-btn save-btn" onclick="save('code', event)">💾 Save</button>
+                        </div>
+                    </div>
+                    <div class="collapsible-content">
+                        <pre>// CSS transitions example
+.element {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+                box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.element:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}</pre>
+                    </div>
+                </div>
+
+                <div class="collapsible" data-id="philosophy">
+                    <div class="collapsible-header" onclick="toggle(this)">
+                        <div class="collapsible-title">
+                            <span>📚 Philosophy Notes</span>
+                        </div>
+                        <div class="collapsible-actions">
+                            <button class="action-btn split-btn" onclick="addToSplit('philosophy', event)">👁️ View</button>
+                            <button class="action-btn save-btn" onclick="save('philosophy', event)">💾 Save</button>
+                        </div>
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>Aristotle's Eudaimonia</h4>
+                        <p>Happiness as flourishing through virtue and rational activity.</p>
+                        <ul>
+                            <li>Happiness is an activity, not a state</li>
+                            <li>Requires complete life of virtuous action</li>
+                            <li>Golden mean: virtue between extremes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="collapsible" data-id="tech">
+                    <div class="collapsible-header" onclick="toggle(this)">
+                        <div class="collapsible-title">
+                            <span>🔧 File System Access API</span>
+                        </div>
+                        <div class="collapsible-actions">
+                            <button class="action-btn split-btn" onclick="addToSplit('tech', event)">👁️ View</button>
+                            <button class="action-btn save-btn" onclick="save('tech', event)">💾 Save</button>
+                        </div>
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>Modern Browser API</h4>
+                        <p>The File System Access API allows web apps to read and write files with user permission.</p>
+                        <h4>Browser Support</h4>
+                        <ul>
+                            <li>Chrome/Edge 86+ ✅</li>
+                            <li>Safari 15.2+ ✅</li>
+                            <li>Firefox - Not yet supported ❌</li>
+                        </ul>
+                        <h4>Key Features</h4>
+                        <ul>
+                            <li>User grants permission once per session</li>
+                            <li>Direct folder access without downloads folder</li>
+                            <li>Can create, read, write files</li>
+                            <li>Browser remembers choice during session</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Split View</h2>
+            <p>Click the 👁️ View button on any section to display it in split view below:</p>
+            <div class="split-container" id="split-container"></div>
+        </main>
+    </div>
+
+    <script>
+        let directoryHandle = null;
+
+        // Theme
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        document.getElementById('theme-toggle').onclick = () => {
+            const t = document.documentElement.getAttribute('data-theme');
+            const newT = t === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newT);
+            localStorage.setItem('theme', newT);
+            document.getElementById('theme-toggle').textContent = newT === 'dark' ? '☀️' : '🌙';
+        };
+
+        // File System Access API setup
+        async function setupDirectory() {
+            try {
+                if (!('showDirectoryPicker' in window)) {
+                    alert('❌ File System Access API not supported in your browser.\n\nPlease use:\n- Chrome/Edge 86+\n- Safari 15.2+\n\nFiles will download to your default downloads folder instead.');
+                    return;
+                }
+
+                alert('📂 Please navigate to:\n\n~/Desktop/Artifacts/Notes\n\n(Create the folder if it doesn\'t exist)\n\nThe browser will now open at Desktop.');
+
+                directoryHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite',
+                    startIn: 'desktop'
+                });
+
+                const statusEl = document.getElementById('setup-status');
+                statusEl.className = 'status-indicator success';
+                statusEl.innerHTML = '<span>✅</span><span>Folder configured: ' + directoryHandle.name + '</span>';
+
+                document.getElementById('status').textContent = '✅ Ready to save';
+
+                alert('✅ Save folder configured!\n\nFolder: ' + directoryHandle.name + '\n\nYou can now save sections directly to this folder.');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Error setting up directory:', err);
+                    alert('❌ Error: ' + err.message);
+                }
+            }
+        }
+
+        // Toggle collapsible
+        function toggle(header) {
+            if (event.target.closest('.action-btn')) return;
+            header.parentElement.classList.toggle('open');
+        }
+
+        // Add to split view
+        function addToSplit(id, event) {
+            event.stopPropagation();
+
+            const el = document.querySelector(`[data-id="${id}"]`);
+            const title = el.querySelector('.collapsible-title span').textContent;
+            const content = el.querySelector('.collapsible-content').cloneNode(true);
+            content.style.maxHeight = 'none';
+            content.style.padding = '0';
+
+            const splitContainer = document.getElementById('split-container');
+
+            const pane = document.createElement('div');
+            pane.className = 'split-pane';
+            pane.innerHTML = `<button class="pane-close" onclick="this.parentElement.remove(); checkSplit()">×</button>
+                              <h3>${title}</h3>`;
+            pane.appendChild(content);
+
+            splitContainer.appendChild(pane);
+            splitContainer.classList.add('active');
+        }
+
+        function checkSplit() {
+            const splitContainer = document.getElementById('split-container');
+            if (splitContainer.children.length === 0) {
+                splitContainer.classList.remove('active');
+            }
+        }
+
+        // Save functions with File System Access API
+        async function save(id, event) {
+            if (event) event.stopPropagation();
+
+            const el = document.querySelector(`[data-id="${id}"]`);
+            const title = el.querySelector('.collapsible-title span').textContent;
+            const content = el.querySelector('.collapsible-content').innerHTML;
+
+            const html = makeHTML(title, content);
+            const filename = `${id}-${Date.now()}.html`;
+
+            // Try File System Access API first
+            if (directoryHandle) {
+                try {
+                    await saveToDirectory(filename, html);
+                    alert(`✅ Saved: ${filename}\n\nLocation: ${directoryHandle.name}/`);
+                    return;
+                } catch (err) {
+                    console.error('File System API error:', err);
+                    alert(`⚠️ Could not save to folder: ${err.message}\n\nFalling back to downloads folder...`);
+                }
+            }
+
+            // Fallback to download
+            download(filename, html);
+            alert(`✅ Saved: ${filename}\n\nLocation: Browser downloads folder\n\n💡 Tip: Click "Setup Save Folder" to save directly to a specific folder.`);
+        }
+
+        async function saveAll() {
+            const sections = document.querySelectorAll('.collapsible');
+            let saved = 0;
+            const savedFiles = [];
+
+            for (const el of sections) {
+                const id = el.dataset.id;
+                const title = el.querySelector('.collapsible-title span').textContent;
+                const content = el.querySelector('.collapsible-content').innerHTML;
+
+                const html = makeHTML(title, content);
+                const filename = `${id}-${Date.now()}.html`;
+
+                if (directoryHandle) {
+                    try {
+                        await saveToDirectory(filename, html);
+                        savedFiles.push(filename);
+                        saved++;
+                    } catch (err) {
+                        console.error('Error saving', filename, err);
+                    }
+                } else {
+                    setTimeout(() => download(filename, html), saved * 100);
+                    savedFiles.push(filename);
+                    saved++;
+                }
+            }
+
+            if (directoryHandle) {
+                alert(`✅ Saved ${saved} sections!\n\nLocation: ${directoryHandle.name}/\n\nFiles:\n${savedFiles.join('\n')}`);
+            } else {
+                alert(`✅ Saved ${saved} sections!\n\nLocation: Browser downloads folder\n\n💡 Tip: Click "Setup Save Folder" to save directly to a specific folder.`);
+            }
+        }
+
+        async function saveToDirectory(filename, content) {
+            const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(content);
+            await writable.close();
+        }
+
+        function makeHTML(title, content) {
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+        body { font-family: system-ui; max-width: 800px; margin: 2rem auto; padding: 2rem; }
+        h3, h4 { margin-top: 1.5rem; }
+        p { line-height: 1.6; }
+        pre { background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        ul { padding-left: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>${title}</h1>
+    <p style="color: #666;">Saved on ${new Date().toLocaleString()}</p>
+    ${content}
+</body>
+</html>`;
+        }
+
+        function download(filename, content) {
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

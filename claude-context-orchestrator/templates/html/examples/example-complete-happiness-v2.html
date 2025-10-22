@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happiness in Western Thought - Enhanced</title>
+    <style>
+        /* ===== MODERN MINIMAL DESIGN ===== */
+        :root {
+            --bg: 0 0% 100%;
+            --fg: 0 0% 3.9%;
+            --card: 0 0% 98%;
+            --border: 0 0% 89.8%;
+            --primary: 0 0% 9%;
+            --muted: 0 0% 96.1%;
+            --accent: 220 100% 50%;
+            --success: 142 76% 36%;
+            --warning: 38 92% 50%;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="dark"] {
+            --bg: 0 0% 7%;
+            --fg: 0 0% 98%;
+            --card: 0 0% 10%;
+            --border: 0 0% 20%;
+            --primary: 0 0% 98%;
+            --muted: 0 0% 15%;
+            --accent: 220 100% 65%;
+            --success: 142 76% 50%;
+            --warning: 38 92% 65%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: hsl(var(--bg));
+            color: hsl(var(--fg));
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Layout: Sidebar + Main Content */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: hsl(var(--card));
+            border-right: 1px solid hsl(var(--border));
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: hsl(var(--accent));
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: hsl(var(--fg) / 0.5);
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: hsl(var(--fg) / 0.7);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: hsl(var(--muted));
+            color: hsl(var(--fg));
+        }
+
+        .nav-link.active {
+            background: hsl(var(--accent) / 0.1);
+            color: hsl(var(--accent));
+            font-weight: 600;
+        }
+
+        .nav-sub-links {
+            list-style: none;
+            margin-left: 1rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .nav-link.active + .nav-sub-links {
+            display: block;
+        }
+
+        .nav-sub-link {
+            display: block;
+            padding: 0.35rem 0.75rem;
+            color: hsl(var(--fg) / 0.6);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-sub-link:hover {
+            color: hsl(var(--accent));
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            max-width: 900px;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--primary));
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: hsl(var(--fg) / 0.6);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            scroll-margin-top: 2rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 0.75rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Collapsible Sections */
+        .collapsible {
+            margin: 1.5rem 0;
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            background: hsl(var(--muted));
+        }
+
+        .collapsible-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: hsl(var(--fg));
+        }
+
+        .collapsible-icon {
+            font-size: 1.2rem;
+            color: hsl(var(--accent));
+            transition: transform 0.3s;
+        }
+
+        .collapsible.open .collapsible-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 5000px;
+            padding: 1.5rem;
+        }
+
+        .collapsible-inner {
+            padding: 0.5rem 0;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'SF Mono', Monaco, monospace;
+            background: hsl(var(--muted));
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.75rem;
+            line-height: 1.8;
+        }
+
+        /* Audio Player - ENHANCED */
+        .audio-container {
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--accent) / 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .audio-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: hsl(var(--accent));
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .audio-label::before {
+            content: '🔊';
+            font-size: 1.2rem;
+        }
+
+        audio {
+            width: 100%;
+            margin: 0.75rem 0;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        /* Ensure audio controls are visible */
+        audio::-webkit-media-controls-panel {
+            background: hsl(var(--muted));
+        }
+
+        .audio-transcript {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: hsl(var(--fg) / 0.7);
+            padding-top: 1rem;
+            border-top: 1px solid hsl(var(--border));
+            line-height: 1.6;
+        }
+
+        .audio-note {
+            font-size: 0.8rem;
+            color: hsl(var(--fg) / 0.5);
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        /* Cards/Sections */
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .note {
+            background: hsl(var(--accent) / 0.1);
+            border-left: 4px solid hsl(var(--accent));
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .quote {
+            background: hsl(var(--muted));
+            border-left: 4px solid hsl(var(--primary));
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            border-radius: 4px;
+        }
+
+        .quote-author {
+            font-style: normal;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            color: hsl(var(--fg) / 0.7);
+        }
+
+        /* Theme Toggle */
+        #theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Mobile Menu Toggle */
+        #mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: hsl(var(--primary));
+            color: hsl(var(--bg));
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 1001;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        th {
+            background: hsl(var(--muted));
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: hsl(var(--muted) / 0.5);
+        }
+
+        /* Mermaid - Enhanced to prevent flash */
+        .mermaid {
+            background: hsl(var(--card));
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            border: 1px solid hsl(var(--border));
+            min-height: 100px;
+        }
+
+        /* Loading state for Mermaid */
+        .mermaid[data-processed="false"]::before {
+            content: 'Loading diagram...';
+            display: block;
+            text-align: center;
+            color: hsl(var(--fg) / 0.5);
+            font-size: 0.9rem;
+        }
+
+        .diagram-caption {
+            text-align: center;
+            color: hsl(var(--fg) / 0.6);
+            font-size: 0.875rem;
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 2rem 0;
+            padding-left: 2rem;
+            border-left: 2px solid hsl(var(--accent));
+        }
+
+        .timeline-item {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.25rem;
+            width: 1rem;
+            height: 1rem;
+            background: hsl(var(--accent));
+            border-radius: 50%;
+            border: 3px solid hsl(var(--bg));
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            color: hsl(var(--accent));
+            font-size: 0.875rem;
+        }
+
+        /* Scroll to top button */
+        #scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: hsl(var(--accent));
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.2s;
+            z-index: 999;
+        }
+
+        #scroll-to-top.visible {
+            opacity: 1;
+        }
+
+        #scroll-to-top:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1.5rem;
+            }
+
+            #mobile-menu-toggle {
+                display: block;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1.5rem 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-menu-toggle">☰</button>
+    <button id="theme-toggle">🌙 Dark Mode</button>
+    <button id="scroll-to-top">↑</button>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">Navigation</div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link" data-section="introduction">Introduction</a></li>
+                    <li><a class="nav-link" data-section="overview">Conceptual Overview</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Philosophical Periods</div>
+                <ul class="nav-links">
+                    <li>
+                        <a class="nav-link" data-section="ancient">Ancient Philosophy</a>
+                        <ul class="nav-sub-links">
+                            <li><a class="nav-sub-link" data-section="aristotle">Aristotle's Eudaimonia</a></li>
+                            <li><a class="nav-sub-link" data-section="epicurus">Epicurean Happiness</a></li>
+                            <li><a class="nav-sub-link" data-section="stoics">Stoic Philosophy</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-section="medieval">Medieval Period</a>
+                        <ul class="nav-sub-links">
+                            <li><a class="nav-sub-link" data-section="augustine">Augustine's Beatitude</a></li>
+                            <li><a class="nav-sub-link" data-section="aquinas">Aquinas's Synthesis</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-section="enlightenment">Enlightenment</a>
+                        <ul class="nav-sub-links">
+                            <li><a class="nav-sub-link" data-section="bentham">Bentham's Utilitarianism</a></li>
+                            <li><a class="nav-sub-link" data-section="mill">Mill's Qualitative View</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-section="modern">Modern Era</a>
+                        <ul class="nav-sub-links">
+                            <li><a class="nav-sub-link" data-section="nietzsche">Nietzsche</a></li>
+                            <li><a class="nav-sub-link" data-section="russell">Russell</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-section="contemporary">Contemporary</a>
+                        <ul class="nav-sub-links">
+                            <li><a class="nav-sub-link" data-section="seligman">Positive Psychology</a></li>
+                            <li><a class="nav-sub-link" data-section="flow">Flow Theory</a></li>
+                            <li><a class="nav-sub-link" data-section="nussbaum">Capabilities Approach</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Analysis</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link" data-section="synthesis">Synthesis</a></li>
+                    <li><a class="nav-link" data-section="timeline">Timeline</a></li>
+                    <li><a class="nav-link" data-section="conclusion">Conclusion</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Happiness in Western Thought</h1>
+            <p class="subtitle">A Comprehensive Exploration of Eudaimonia, Pleasure, and the Good Life</p>
+
+            <!-- Introduction -->
+            <section id="introduction">
+                <div class="note">
+                    <strong>About this document:</strong> This comprehensive guide explores the concept of happiness across 2,500 years of Western philosophy, from Ancient Greece to contemporary positive psychology. Navigate using the sidebar for easy access to specific topics.
+                </div>
+
+                <!-- Audio: Introduction -->
+                <div class="audio-container">
+                    <div class="audio-label">Introduction to Western Happiness</div>
+                    <audio controls>
+                        <source src="./audio/happiness-intro.wav" type="audio/wav">
+                        <source src="./audio/happiness-intro.mp3" type="audio/mpeg">
+                        Your browser does not support audio playback.
+                    </audio>
+                    <div class="audio-transcript">
+                        <strong>Transcript:</strong> "The question of what constitutes human happiness has been central to Western philosophy since ancient times. From Aristotle's eudaimonia to Mill's utilitarianism, philosophers have debated whether happiness is found in virtue, pleasure, or something else entirely."
+                    </div>
+                    <div class="audio-note">Note: Audio files would be generated using /tts command</div>
+                </div>
+            </section>
+
+            <!-- Overview Diagram -->
+            <section id="overview">
+                <h2>Conceptual Overview</h2>
+
+                <div class="mermaid">
+mindmap
+  root((Happiness in
+    Western Thought))
+    Ancient Philosophy
+      Greek Eudaimonia
+        Aristotle
+        Plato
+        Epicurus
+        Stoics
+      Roman Philosophy
+        Seneca
+        Marcus Aurelius
+    Medieval Philosophy
+      Christian Happiness
+        Augustine
+        Aquinas
+      Beatitude
+    Modern Philosophy
+      Enlightenment
+        Locke
+        Hume
+      Utilitarianism
+        Bentham
+        Mill
+    Contemporary
+      Existentialism
+        Sartre
+        Camus
+      Positive Psychology
+        Seligman
+        Csikszentmihalyi
+                </div>
+                <p class="diagram-caption">Figure 1: Major traditions in the Western conception of happiness</p>
+            </section>
+
+            <!-- Ancient Philosophy -->
+            <section id="ancient">
+                <h2>Ancient Greek & Roman Philosophy (600 BCE - 400 CE)</h2>
+
+                <div class="quote">
+                    "Happiness is the meaning and the purpose of life, the whole aim and end of human existence."
+                    <div class="quote-author">— Aristotle, Nicomachean Ethics</div>
+                </div>
+
+                <!-- Aristotle Collapsible -->
+                <div class="collapsible open" id="aristotle">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Aristotle's Eudaimonia (384-322 BCE)</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p><strong>Eudaimonia</strong> (Greek: εὐδαιμονία) is often translated as "happiness" but more accurately means "human flourishing" or "living well." For Aristotle, it represents the highest human good and the ultimate goal of human life.</p>
+
+                            <div class="audio-container">
+                                <div class="audio-label">Pronunciation: Eudaimonia</div>
+                                <audio controls>
+                                    <source src="./audio/eudaimonia.wav" type="audio/wav">
+                                    <source src="./audio/eudaimonia.mp3" type="audio/mpeg">
+                                </audio>
+                                <div class="audio-transcript">
+                                    <strong>Pronunciation:</strong> yoo-dy-MOH-nee-uh
+                                </div>
+                                <div class="audio-note">Generate using: /tts "yoo-dy-MOH-nee-uh"</div>
+                            </div>
+
+                            <h4>Key Principles:</h4>
+
+                            <ul>
+                                <li><strong>Activity of the Soul:</strong> Happiness is not a state but an activity—the active exercise of the soul's faculties in accordance with virtue.</li>
+                                <li><strong>Rational Excellence:</strong> Humans achieve eudaimonia through the cultivation of both intellectual virtues (sophia, phronesis) and moral virtues (courage, temperance, justice).</li>
+                                <li><strong>The Golden Mean:</strong> Virtue lies in finding the mean between extremes (e.g., courage between cowardice and recklessness).</li>
+                                <li><strong>Complete Life:</strong> True happiness requires a complete life—"one swallow does not make a spring"—sustained virtuous activity over time.</li>
+                                <li><strong>External Goods:</strong> While virtue is primary, Aristotle acknowledged that external goods (health, wealth, friends) contribute to happiness.</li>
+                            </ul>
+
+                            <div class="mermaid">
+flowchart TD
+    A[Human Nature] --> B[Rational Soul]
+    B --> C{Faculties}
+    C --> D[Theoretical Reason]
+    C --> E[Practical Reason]
+    D --> F[Intellectual Virtues]
+    E --> G[Moral Virtues]
+    F --> H[Contemplation]
+    G --> I[Ethical Action]
+    H --> J[Eudaimonia]
+    I --> J
+    J --> K[Human Flourishing]
+                            </div>
+                            <p class="diagram-caption">Figure 2: Aristotle's path to eudaimonia</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Epicurus Collapsible -->
+                <div class="collapsible open" id="epicurus">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Epicurean Happiness: Ataraxia</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Epicurus (341-270 BCE) argued that happiness consists in <strong>ataraxia</strong> (tranquility) and the absence of pain (aponia). Unlike popular misconceptions, Epicureanism advocated for moderate, intellectual pleasures over sensual indulgence.</p>
+
+                            <h4>Epicurean Principles:</h4>
+
+                            <ul>
+                                <li><strong>Pleasure as the Good:</strong> Pleasure (hedone) is the beginning and end of the blessed life</li>
+                                <li><strong>Prudent Hedonism:</strong> Choose pleasures wisely; some pleasures lead to greater pains</li>
+                                <li><strong>Simple Living:</strong> Simple pleasures are more reliable and sustainable</li>
+                                <li><strong>Freedom from Fear:</strong> Eliminate fear of death and divine punishment through rational understanding</li>
+                                <li><strong>Friendship:</strong> Deep friendships are essential to the happy life</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stoics Collapsible -->
+                <div class="collapsible open" id="stoics">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Stoic Philosophy: Living According to Nature</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>The Stoics (Zeno, Epictetus, Marcus Aurelius) argued that happiness comes from living according to nature and reason, accepting what is beyond our control, and focusing on virtue as the sole good.</p>
+
+                            <div class="mermaid">
+graph LR
+    A[External Events] --> B{Our Control?}
+    B -->|No| C[Accept with Equanimity]
+    B -->|Yes| D[Act Virtuously]
+    C --> E[Apatheia - Freedom from Passion]
+    D --> E
+    E --> F[Ataraxia - Tranquility]
+    F --> G[Eudaimonia]
+                            </div>
+                            <p class="diagram-caption">Figure 3: Stoic decision-making and tranquility</p>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>School</th>
+                                        <th>Key Figure</th>
+                                        <th>Happiness Is...</th>
+                                        <th>Primary Focus</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Aristotelian</td>
+                                        <td>Aristotle</td>
+                                        <td>Eudaimonia (flourishing)</td>
+                                        <td>Virtue & contemplation</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Epicurean</td>
+                                        <td>Epicurus</td>
+                                        <td>Ataraxia (tranquility)</td>
+                                        <td>Pleasure & absence of pain</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Stoic</td>
+                                        <td>Epictetus</td>
+                                        <td>Living according to nature</td>
+                                        <td>Virtue alone is good</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cynic</td>
+                                        <td>Diogenes</td>
+                                        <td>Self-sufficiency (autarkeia)</td>
+                                        <td>Rejecting convention</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Medieval Period -->
+            <section id="medieval">
+                <h2>Medieval Christian Philosophy (400-1400 CE)</h2>
+
+                <div class="quote">
+                    "You have made us for yourself, O Lord, and our hearts are restless until they rest in you."
+                    <div class="quote-author">— Augustine of Hippo, Confessions</div>
+                </div>
+
+                <!-- Augustine -->
+                <div class="collapsible open" id="augustine">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Augustine's Beatitude</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Augustine (354-430 CE) transformed Greek eudaimonia into Christian beatitude, arguing that true happiness can only be found in union with God. Earthly pleasures are fleeting; only divine love brings lasting joy.</p>
+
+                            <h4>Key Concepts:</h4>
+
+                            <ul>
+                                <li><strong>Ordered Love (Ordo Amoris):</strong> Happiness requires loving things in their proper order—God first, then others, then self</li>
+                                <li><strong>The Two Cities:</strong> The earthly city seeks temporal happiness; the heavenly city seeks eternal beatitude</li>
+                                <li><strong>Grace and Will:</strong> Human will alone is insufficient; divine grace is necessary for true happiness</li>
+                                <li><strong>Restless Heart:</strong> Human longing points toward God as the only adequate object of desire</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aquinas -->
+                <div class="collapsible open" id="aquinas">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Aquinas: Synthesis of Aristotle and Christianity</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Thomas Aquinas (1225-1274) integrated Aristotelian philosophy with Christian theology, arguing that natural happiness through virtue is real but incomplete without supernatural beatitude.</p>
+
+                            <div class="mermaid">
+graph TD
+    A[Human Nature] --> B[Natural End]
+    A --> C[Supernatural End]
+    B --> D[Imperfect Happiness]
+    C --> E[Perfect Happiness]
+    D --> F[Virtue & Reason]
+    D --> G[Earthly Goods]
+    E --> H[Beatific Vision]
+    E --> I[Union with God]
+    F --> J[Temporal Fulfillment]
+    G --> J
+    H --> K[Eternal Beatitude]
+    I --> K
+                            </div>
+                            <p class="diagram-caption">Figure 4: Aquinas's two-fold conception of happiness</p>
+
+                            <h4>Aquinas's Hierarchy of Happiness:</h4>
+
+                            <ol>
+                                <li><strong>Imperfect Happiness (In Via):</strong> Earthly happiness through virtue, knowledge, and friendship—real but incomplete</li>
+                                <li><strong>Perfect Happiness (In Patria):</strong> Eternal beatitude in the beatific vision of God—complete and final</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enlightenment -->
+            <section id="enlightenment">
+                <h2>Enlightenment Philosophy (1650-1800)</h2>
+
+                <div class="quote">
+                    "The greatest happiness of the greatest number is the foundation of morals and legislation."
+                    <div class="quote-author">— Jeremy Bentham</div>
+                </div>
+
+                <!-- Bentham -->
+                <div class="collapsible open" id="bentham">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Bentham's Utilitarianism: The Hedonistic Calculus</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Jeremy Bentham (1748-1832) proposed a radical new approach: happiness is pleasure, and the right action is whatever maximizes overall pleasure (utility) for the greatest number.</p>
+
+                            <h4>Bentham's Hedonic Calculus:</h4>
+
+                            <ul>
+                                <li><strong>Intensity:</strong> How strong is the pleasure or pain?</li>
+                                <li><strong>Duration:</strong> How long will it last?</li>
+                                <li><strong>Certainty:</strong> How likely is it to occur?</li>
+                                <li><strong>Propinquity:</strong> How soon will it occur?</li>
+                                <li><strong>Fecundity:</strong> Will it lead to more pleasures?</li>
+                                <li><strong>Purity:</strong> Will it be followed by pains?</li>
+                                <li><strong>Extent:</strong> How many people are affected?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mill -->
+                <div class="collapsible open" id="mill">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Mill's Qualitative Utilitarianism</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>John Stuart Mill (1806-1873) refined Bentham's theory, distinguishing between higher and lower pleasures: "It is better to be Socrates dissatisfied than a fool satisfied."</p>
+
+                            <div class="mermaid">
+graph LR
+    A[Pleasures] --> B{Quality}
+    B --> C[Higher Pleasures]
+    B --> D[Lower Pleasures]
+    C --> E[Intellectual]
+    C --> F[Aesthetic]
+    C --> G[Moral]
+    D --> H[Physical]
+    D --> I[Sensual]
+    E --> J[Greater Happiness]
+    F --> J
+    G --> J
+    H --> K[Lesser Happiness]
+    I --> K
+                            </div>
+                            <p class="diagram-caption">Figure 5: Mill's distinction between higher and lower pleasures</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modern Era -->
+            <section id="modern">
+                <h2>Modern Philosophy (1800-1950)</h2>
+
+                <!-- Nietzsche -->
+                <div class="collapsible open" id="nietzsche">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Nietzsche: Happiness as Affirming Life</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Friedrich Nietzsche (1844-1900) rejected traditional notions of happiness as comfort or contentment. True happiness comes from self-overcoming, creative power, and saying "Yes" to life in all its tragedy.</p>
+
+                            <h4>Nietzschean Concepts:</h4>
+
+                            <ul>
+                                <li><strong>Will to Power:</strong> The fundamental drive to overcome and create</li>
+                                <li><strong>Amor Fati:</strong> Love your fate; embrace necessity</li>
+                                <li><strong>Eternal Recurrence:</strong> Live as if you would willingly repeat this life infinitely</li>
+                                <li><strong>Übermensch:</strong> The person who creates their own values and meaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Russell -->
+                <div class="collapsible open" id="russell">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Russell: Conquest of Happiness</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Bertrand Russell (1872-1970) took a more practical approach, identifying causes of unhappiness (competition, envy, fatigue) and sources of happiness (work, family, impersonal interests).</p>
+
+                            <div class="mermaid">
+stateDiagram-v2
+    [*] --> Unhappy
+    Unhappy --> SelfAbsorbed: Excessive introspection
+    Unhappy --> Envious: Social comparison
+    Unhappy --> Fatigued: Overwork
+
+    SelfAbsorbed --> Zest: Develop interests
+    Envious --> Affection: Build relationships
+    Fatigued --> Work: Find fulfilling work
+
+    Zest --> Happy
+    Affection --> Happy
+    Work --> Happy
+    Happy --> [*]
+                            </div>
+                            <p class="diagram-caption">Figure 6: Russell's path from unhappiness to happiness</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contemporary -->
+            <section id="contemporary">
+                <h2>Contemporary Philosophy & Psychology (1950-Present)</h2>
+
+                <!-- Positive Psychology -->
+                <div class="collapsible open" id="seligman">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Positive Psychology: The Science of Happiness</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Martin Seligman's positive psychology (1998-present) applies scientific methods to study what makes life worth living, moving beyond merely treating mental illness to actively cultivating well-being.</p>
+
+                            <h4>PERMA Model of Well-being:</h4>
+
+                            <ul>
+                                <li><strong>P - Positive Emotions:</strong> Experiencing joy, gratitude, serenity, interest, hope, pride, amusement, inspiration, awe, and love</li>
+                                <li><strong>E - Engagement:</strong> Being completely absorbed in activities (flow states); losing sense of time and self</li>
+                                <li><strong>R - Relationships:</strong> Authentic connections with others; social support and belongingness</li>
+                                <li><strong>M - Meaning:</strong> Belonging to and serving something bigger than the self</li>
+                                <li><strong>A - Accomplishment:</strong> Pursuing achievement and mastery for their own sake</li>
+                            </ul>
+
+                            <div class="mermaid">
+graph TD
+    A[Well-being] --> B[Hedonic]
+    A --> C[Eudaimonic]
+
+    B --> D[Positive Emotions]
+    B --> E[Life Satisfaction]
+
+    C --> F[Engagement/Flow]
+    C --> G[Meaning/Purpose]
+    C --> H[Personal Growth]
+    C --> I[Accomplishment]
+
+    D --> J[PERMA Model]
+    E --> J
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+
+    J --> K[Flourishing]
+                            </div>
+                            <p class="diagram-caption">Figure 7: Integration of hedonic and eudaimonic well-being in PERMA</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Theory -->
+                <div class="collapsible open" id="flow">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Csikszentmihalyi: Flow and Optimal Experience</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Mihaly Csikszentmihalyi discovered that people are happiest when in a state of "flow"—completely absorbed in an activity that challenges their skills.</p>
+
+                            <h4>Conditions for Flow:</h4>
+
+                            <ol>
+                                <li>Clear goals with immediate feedback</li>
+                                <li>Balance between challenge and skill</li>
+                                <li>Merging of action and awareness</li>
+                                <li>Loss of self-consciousness</li>
+                                <li>Distorted sense of time</li>
+                                <li>Activity becomes intrinsically rewarding</li>
+                            </ol>
+
+                            <div class="mermaid">
+graph TD
+    A[Activity] --> B{Skill Level}
+    A --> C{Challenge Level}
+
+    B --> D[Low Skill]
+    B --> E[High Skill]
+
+    C --> F[Low Challenge]
+    C --> G[High Challenge]
+
+    D --> F
+    D --> G
+    E --> F
+    E --> G
+
+    F --> H[Low Skill + Low Challenge]
+    G --> I[Low Skill + High Challenge]
+    F --> J[High Skill + Low Challenge]
+    G --> K[High Skill + High Challenge]
+
+    H --> L[Apathy]
+    I --> M[Anxiety]
+    J --> N[Boredom]
+    K --> O[FLOW]
+                            </div>
+                            <p class="diagram-caption">Figure 8: The flow channel - optimal experience occurs when challenge matches skill</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capabilities Approach -->
+                <div class="collapsible open" id="nussbaum">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">Nussbaum: Capabilities Approach</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <p>Martha Nussbaum's capabilities approach defines well-being in terms of what people are able to do and be, not just their mental states or resources.</p>
+
+                            <h4>Ten Central Capabilities:</h4>
+
+                            <ol>
+                                <li>Life (being able to live a normal lifespan)</li>
+                                <li>Bodily health (nourishment, shelter)</li>
+                                <li>Bodily integrity (freedom of movement, security)</li>
+                                <li>Senses, imagination, thought (education, expression)</li>
+                                <li>Emotions (loving, grieving, experiencing justified emotions)</li>
+                                <li>Practical reason (forming conception of good and critical reflection)</li>
+                                <li>Affiliation (living with others, self-respect)</li>
+                                <li>Other species (concern for animals, nature)</li>
+                                <li>Play (laughing, recreation)</li>
+                                <li>Control over environment (political and material)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Synthesis -->
+            <section id="synthesis">
+                <h2>Synthesis: Hedonic vs. Eudaimonic Happiness</h2>
+
+                <p>Contemporary research distinguishes between two fundamental types of well-being:</p>
+
+                <div class="card">
+                    <h3>Hedonic Well-being</h3>
+                    <p><strong>Focus:</strong> Pleasure and positive affect; minimizing pain</p>
+                    <p><strong>Key Question:</strong> "Am I feeling good?"</p>
+                    <p><strong>Philosophical Roots:</strong> Epicurus, Bentham</p>
+                    <p><strong>Modern Research:</strong> Subjective well-being, life satisfaction</p>
+                </div>
+
+                <div class="card">
+                    <h3>Eudaimonic Well-being</h3>
+                    <p><strong>Focus:</strong> Meaning, growth, and realization of potential</p>
+                    <p><strong>Key Question:</strong> "Am I living well?"</p>
+                    <p><strong>Philosophical Roots:</strong> Aristotle, Stoics</p>
+                    <p><strong>Modern Research:</strong> Purpose, engagement, self-actualization</p>
+                </div>
+
+                <div class="mermaid">
+graph LR
+    A[Complete Well-being] --> B[Hedonic Component]
+    A --> C[Eudaimonic Component]
+
+    B --> D[Pleasure]
+    B --> E[Positive Emotions]
+    B --> F[Life Satisfaction]
+
+    C --> G[Meaning]
+    C --> H[Growth]
+    C --> I[Virtue]
+    C --> J[Engagement]
+
+    D --> K[Subjective Happiness]
+    E --> K
+    F --> K
+
+    G --> L[Psychological Flourishing]
+    H --> L
+    I --> L
+    J --> L
+
+    K --> M[Optimal Well-being]
+    L --> M
+                </div>
+                <p class="diagram-caption">Figure 9: Integration of hedonic and eudaimonic well-being</p>
+            </section>
+
+            <!-- Timeline -->
+            <section id="timeline">
+                <h2>Historical Timeline</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-date">384-322 BCE</span>
+                        <h4>Aristotle</h4>
+                        <p>Defines happiness as eudaimonia—flourishing through virtuous activity and contemplation</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">341-270 BCE</span>
+                        <h4>Epicurus</h4>
+                        <p>Argues happiness is ataraxia—tranquil pleasure through simple living and philosophy</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">300 BCE-200 CE</span>
+                        <h4>Stoics (Zeno, Epictetus, Marcus Aurelius)</h4>
+                        <p>Teach that happiness comes from virtue alone and accepting what we cannot control</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">354-430 CE</span>
+                        <h4>Augustine</h4>
+                        <p>Transforms Greek happiness into Christian beatitude—union with God</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1225-1274</span>
+                        <h4>Thomas Aquinas</h4>
+                        <p>Synthesizes Aristotle and Christianity: natural and supernatural happiness</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1748-1832</span>
+                        <h4>Jeremy Bentham</h4>
+                        <p>Develops utilitarianism: happiness is pleasure, measure by hedonic calculus</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1806-1873</span>
+                        <h4>John Stuart Mill</h4>
+                        <p>Refines utilitarianism with qualitative distinctions between pleasures</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1844-1900</span>
+                        <h4>Friedrich Nietzsche</h4>
+                        <p>Rejects passive happiness; true joy comes from self-overcoming and life-affirmation</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1872-1970</span>
+                        <h4>Bertrand Russell</h4>
+                        <p>Practical approach: happiness through zest, affection, work, and impersonal interests</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1934-2021</span>
+                        <h4>Mihaly Csikszentmihalyi</h4>
+                        <p>Discovers flow: optimal experience when challenge matches skill</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-date">1998-Present</span>
+                        <h4>Martin Seligman</h4>
+                        <p>Founds positive psychology; develops PERMA model of well-being</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section id="conclusion">
+                <h2>Conclusion: The Enduring Question</h2>
+
+                <p>The Western tradition reveals that happiness is not a simple concept. It encompasses:</p>
+
+                <ul>
+                    <li><strong>Ancient virtue ethics:</strong> Flourishing through excellence of character</li>
+                    <li><strong>Medieval theology:</strong> Beatitude as union with the divine</li>
+                    <li><strong>Enlightenment utilitarianism:</strong> Maximizing pleasure and minimizing pain</li>
+                    <li><strong>Modern existentialism:</strong> Creating meaning through authentic choice</li>
+                    <li><strong>Contemporary science:</strong> Evidence-based well-being through PERMA and flow</li>
+                </ul>
+
+                <p>Perhaps the lesson is not that one view is correct, but that the good life integrates multiple dimensions: pleasure and meaning, engagement and reflection, achievement and connection, reason and emotion.</p>
+
+                <div class="note">
+                    <strong>Further Exploration:</strong> This document provides an overview of major traditions. Each philosopher mentioned deserves deeper study. Consider reading primary sources to engage directly with these profound thinkers.
+                </div>
+
+                <!-- Final Diagram -->
+                <div class="mermaid">
+pie title "Components of Complete Well-being"
+    "Positive Emotions (Hedonic)" : 20
+    "Engagement (Flow)" : 20
+    "Relationships" : 20
+    "Meaning & Purpose" : 20
+    "Accomplishment" : 20
+                </div>
+                <p class="diagram-caption">Figure 10: Balanced well-being requires all PERMA components</p>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+    <script>
+        // ===== THEME MANAGEMENT =====
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+
+        // Store original Mermaid content before initialization
+        const mermaidElements = document.querySelectorAll('.mermaid');
+        const mermaidContent = new Map();
+        mermaidElements.forEach((el, i) => {
+            mermaidContent.set(i, el.textContent);
+        });
+
+        // Initialize Mermaid
+        function initMermaid(theme) {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: theme === 'dark' ? 'dark' : 'default',
+                flowchart: {
+                    useMaxWidth: true,
+                    htmlLabels: true,
+                    curve: 'basis'
+                },
+                mindmap: {
+                    useMaxWidth: true
+                },
+                timeline: {
+                    useMaxWidth: true
+                }
+            });
+        }
+
+        initMermaid(savedTheme);
+
+        // Theme toggle with smooth Mermaid re-rendering
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+
+            // Re-render Mermaid diagrams without page reload
+            initMermaid(newTheme);
+
+            // Restore original content and re-render
+            mermaidElements.forEach((el, i) => {
+                el.textContent = mermaidContent.get(i);
+                el.removeAttribute('data-processed');
+            });
+
+            mermaid.run({
+                nodes: document.querySelectorAll('.mermaid')
+            });
+        });
+
+        // ===== SIDEBAR NAVIGATION =====
+        const navLinks = document.querySelectorAll('.nav-link, .nav-sub-link');
+        const sections = document.querySelectorAll('section');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+
+        // Navigation click handler
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.dataset.section;
+                const targetSection = document.getElementById(sectionId);
+
+                if (targetSection) {
+                    // Smooth scroll to section
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    const mainNavLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+                    if (mainNavLink) {
+                        mainNavLink.classList.add('active');
+                    }
+
+                    // Close mobile menu
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+        });
+
+        // Mobile menu toggle
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 1024) {
+                if (!sidebar.contains(e.target) && e.target !== mobileMenuToggle) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        // ===== COLLAPSIBLE SECTIONS =====
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const collapsible = this.parentElement;
+                collapsible.classList.toggle('open');
+            });
+        });
+
+        // ===== SCROLL TO TOP BUTTON =====
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // ===== INTERSECTION OBSERVER FOR ACTIVE SECTION =====
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -70% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    const activeLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+    </script>
+</body>
+</html>
