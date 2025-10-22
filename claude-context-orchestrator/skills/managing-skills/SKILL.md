@@ -393,65 +393,108 @@ Snippet entries are stored in `scripts/config.local.json` (gitignored) or `scrip
 
 **By default, add entries to `config.local.json`** for personal configurations.
 
-#### ⚠️ CRITICAL: When to Use CLI vs Manual Editing
+#### ⚠️ CRITICAL: ALWAYS Use CLI for Config Editing
 
-**Use `snippets_cli.py` CLI** (REQUIRED for snippet files in `commands/`):
+**REQUIRED: Use `snippets_cli.py` CLI for ALL config modifications**
+
 ```bash
-# For creating NEW snippet files in commands/
-python3 scripts/snippets_cli.py --config scripts/config.local.json create my-snippet \
-  --pattern "\\b(MY_SNIPPET)[.,;:]?\\b" \
-  --description "Description" \
-  --content "Snippet content"
+cd ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts
+
+# Create new snippet with file reference
+python3 snippets_cli.py create my-skill \
+  --pattern "\\bMY_SKILL[.,;:]?\\b" \
+  --file ../skills/my-skill/SKILL.md
+
+# Update existing pattern
+python3 snippets_cli.py update my-skill \
+  --pattern "\\bNEW_PATTERN[.,;:]?\\b"
+
+# Update pattern AND content
+python3 snippets_cli.py update my-skill \
+  --pattern "\\bNEW_PATTERN[.,;:]?\\b" \
+  --file ../skills/my-skill/SKILL.md
+
+# Enable/disable snippet
+python3 snippets_cli.py update my-skill --enabled true
+python3 snippets_cli.py update my-skill --enabled false
+
+# Delete snippet
+python3 snippets_cli.py delete my-skill
 ```
 
-**Use manual editing** (for referencing existing skills):
-- When adding snippet entries that reference existing `SKILL.md` files
-- The CLI creates NEW files and doesn't support file references
+**Why CLI-only?**
 
-❌ **NEVER manually edit config files for snippet files** - always use the CLI to ensure:
-- Proper validation
-- Backup creation
-- Pattern format checking
-- File integrity
+The CLI ensures:
+- ✅ Proper validation
+- ✅ Automatic backups
+- ✅ Pattern format checking
+- ✅ Conflict detection
+- ✅ File integrity
+- ✅ JSON syntax validation
+- ✅ Transaction safety
 
-✅ **Manual editing is OK for skill references** - the CLI doesn't support this use case
+❌ **NEVER manually edit config files** - This can cause:
+- Invalid JSON syntax
+- Pattern conflicts
+- Missing backups
+- Configuration corruption
+- No validation
 
-#### Manual Method (For Skills Only)
+#### CLI Operations Reference
 
-Edit `scripts/config.local.json` directly to reference existing SKILL.md files:
-
-```json
-{
-  "mappings": [
-    {
-      "name": "my-skill",
-      "pattern": "\\bMY_SKILL[.,;:]?\\b",
-      "snippet": [
-        "../skills/my-skill/SKILL.md"
-      ],
-      "enabled": true,
-      "separator": "\n"
-    }
-  ]
-}
-```
-
-**Field Descriptions**:
-- `name`: Kebab-case skill directory name
-- `pattern`: ALL CAPS regex trigger (see convention above)
-- `snippet`: Array of paths to SKILL.md (default: one entry pointing to `SKILL.md`)
-- `enabled`: Boolean (default: `true`)
-- `separator`: String between multiple files (default: `"\n"`)
-
-#### Using snippets_cli.py
-
-The CLI doesn't directly support adding file references, but you can manually edit config files after using it for validation.
-
-**Validation only**:
+**List all snippets:**
 ```bash
-cd scripts
-python3 snippets_cli.py --config config.local.json list
+python3 snippets_cli.py list
+python3 snippets_cli.py list | grep "my-skill"
 ```
+
+**Get snippet details:**
+```bash
+python3 snippets_cli.py get my-skill
+python3 snippets_cli.py get my-skill --json
+```
+
+**Create snippet referencing a skill:**
+```bash
+# Reference existing SKILL.md
+python3 snippets_cli.py create my-skill \
+  --pattern "\\bMY_SKILL[.,;:]?\\b" \
+  --file ../skills/my-skill/SKILL.md
+
+# Or create new content
+python3 snippets_cli.py create my-snippet \
+  --pattern "\\bMY_SNIPPET[.,;:]?\\b" \
+  --content "Snippet content here"
+```
+
+**Update snippet:**
+```bash
+# Update pattern only
+python3 snippets_cli.py update my-skill \
+  --pattern "\\bNEW_PATTERN[.,;:]?\\b"
+
+# Update both pattern and file reference
+python3 snippets_cli.py update my-skill \
+  --pattern "\\bNEW_PATTERN[.,;:]?\\b" \
+  --file ../skills/my-skill/SKILL.md
+
+# Rename snippet
+python3 snippets_cli.py update my-skill --rename new-name
+```
+
+**Delete snippet:**
+```bash
+# With backup (default)
+python3 snippets_cli.py delete my-skill
+
+# Force without confirmation
+python3 snippets_cli.py delete my-skill --force
+
+# Skip backup
+python3 snippets_cli.py delete my-skill --force --backup false
+```
+
+For complete CLI documentation, see the [Using CLIs](../using-clis/SKILL.md) skill.
 
 ### Current Skill Snippet Entries
 
