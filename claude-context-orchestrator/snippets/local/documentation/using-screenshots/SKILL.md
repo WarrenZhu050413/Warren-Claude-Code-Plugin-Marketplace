@@ -1,7 +1,7 @@
 ---
 description: Screenshot workflow for reading, organizing, and naming screenshots with date prefixes
 SNIPPET_NAME: using-screenshots
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Screenshot Workflow

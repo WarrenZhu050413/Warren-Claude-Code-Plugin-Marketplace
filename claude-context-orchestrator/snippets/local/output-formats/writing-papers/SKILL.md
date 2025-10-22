@@ -1,7 +1,7 @@
 ---
 description: Creating interactive paper visualizations with parallel processing
 SNIPPET_NAME: writing-papers
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

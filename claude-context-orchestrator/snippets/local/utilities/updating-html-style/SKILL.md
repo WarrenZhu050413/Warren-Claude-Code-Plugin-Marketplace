@@ -1,7 +1,7 @@
 ---
 description: Guidance for updating HTML output style snippet (HTML.md) with new formatting instructions
 SNIPPET_NAME: updating-html-style
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Updating HTML Output Style
@@ -28,7 +28,7 @@ After any updates, ensure these elements remain intact:
 ```yaml
 ---
 SNIPPET_NAME: HTML
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 ```
 

@@ -1,7 +1,7 @@
 ---
 description: Test-Driven Development methodology with Red-Green-Refactor-Commit cycle
 SNIPPET_NAME: following-tdd
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Following Test-Driven Development (TDD)

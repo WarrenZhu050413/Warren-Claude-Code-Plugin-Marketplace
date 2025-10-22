@@ -1,7 +1,7 @@
 ---
 description: Warren's Neovim configuration reference (~/.config/nvim) with LSP, plugins, and directory structure
 SNIPPET_NAME: using-nvim
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Neovim Configuration

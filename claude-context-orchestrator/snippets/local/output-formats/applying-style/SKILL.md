@@ -1,7 +1,7 @@
 ---
 description: Applying precise writing style with personal voice and logical flow
 SNIPPET_NAME: applying-style
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

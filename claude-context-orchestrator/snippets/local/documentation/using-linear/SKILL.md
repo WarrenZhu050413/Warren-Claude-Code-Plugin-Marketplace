@@ -1,7 +1,7 @@
 ---
 description: Linear GraphQL API workflows with authentication, queries, mutations, and common patterns
 SNIPPET_NAME: using-linear
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Linear Workflows & GraphQL API

@@ -1,7 +1,7 @@
 ---
 description: Generating compact, information-dense HTML content with progressive disclosure
 SNIPPET_NAME: generating-html
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

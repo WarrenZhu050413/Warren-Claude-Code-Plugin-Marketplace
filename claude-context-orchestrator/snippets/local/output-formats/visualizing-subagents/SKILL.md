@@ -1,7 +1,7 @@
 ---
 description: Visualizing subagent workflows with ASCII diagrams and HTML summaries
 SNIPPET_NAME: visualizing-subagents
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

@@ -1,7 +1,7 @@
 ---
 description: Track TODOs in project-specific markdown files in ~/Desktop/TODO/
 SNIPPET_NAME: tracking-todos
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Tracking TODOs

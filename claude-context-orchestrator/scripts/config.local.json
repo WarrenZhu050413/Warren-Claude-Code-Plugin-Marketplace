@@ -4,7 +4,7 @@
       "name": "nvim",
       "pattern": "\\b(NVIM|NEOVIM)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/documentation/using-nvim/SNIPPET.md"
+        "../snippets/local/documentation/using-nvim/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -13,7 +13,7 @@
       "name": "tdd",
       "pattern": "\\bTDD\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/development/following-tdd/SNIPPET.md"
+        "../snippets/local/development/following-tdd/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -22,7 +22,7 @@
       "name": "mail",
       "pattern": "\\b(MAIL|EMAIL)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/communication/managing-email/SNIPPET.md"
+        "../snippets/local/communication/managing-email/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -31,7 +31,7 @@
       "name": "gcal",
       "pattern": "\\b(GCAL|CALENDAR)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/calendar/scheduling-events/SNIPPET.md"
+        "../snippets/local/calendar/scheduling-events/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -40,7 +40,7 @@
       "name": "style",
       "pattern": "\\bSTYLE\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/applying-style/SNIPPET.md"
+        "../snippets/local/output-formats/applying-style/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -49,7 +49,7 @@
       "name": "subagent-viz",
       "pattern": "\\b(SUBAGENT|AGENTS)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/visualizing-subagents/SNIPPET.md"
+        "../snippets/local/output-formats/visualizing-subagents/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -58,7 +58,7 @@
       "name": "plan-html",
       "pattern": "\\b(HTMLPLAN|PLAN)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/planning-html/SNIPPET.md"
+        "../snippets/local/output-formats/planning-html/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -67,7 +67,7 @@
       "name": "download-pdf",
       "pattern": "\\b(DOWNLOAD|PDF)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/documentation/downloading-pdfs/SNIPPET.md"
+        "../snippets/local/documentation/downloading-pdfs/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -76,7 +76,7 @@
       "name": "post",
       "pattern": "\\bPOST\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/communication/posting-content/SNIPPET.md"
+        "../snippets/local/communication/posting-content/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -85,7 +85,7 @@
       "name": "notify",
       "pattern": "\\b(NOTIFY|NOTIF)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/productivity/sending-notifications/SNIPPET.md"
+        "../snippets/local/productivity/sending-notifications/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -94,7 +94,7 @@
       "name": "text-output",
       "pattern": "\\b(TEXT|TXT)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/outputting-text/SNIPPET.md"
+        "../snippets/local/output-formats/outputting-text/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -103,7 +103,7 @@
       "name": "clear-output",
       "pattern": "\\bCLEAR\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/clearing-output/SNIPPET.md"
+        "../snippets/local/output-formats/clearing-output/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -112,7 +112,7 @@
       "name": "add-todo",
       "pattern": "\\b(TODO|TASK)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/productivity/tracking-todos/SNIPPET.md"
+        "../snippets/local/productivity/tracking-todos/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -121,25 +121,25 @@
       "name": "linear",
       "pattern": "\\bLINEAR\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/documentation/using-linear/SNIPPET.md"
+        "../snippets/local/documentation/using-linear/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "screenshot-workflow",
-      "pattern": "\\b(SCREENSHOT|SCREEN)\\b[.:;,]?",
+      "pattern": "\\b(SCREENSHOT|SCREEN)[.,;:]?\\b",
       "snippet": [
-        "../snippets/local/documentation/using-screenshots/SNIPPET.md"
+        "../snippets/local/documentation/using-screenshots/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
     },
     {
-      "name": "explain-code",
-      "pattern": "\\bEXPLAIN\\b[.:;,]?",
+      "name": "journey",
+      "pattern": "\\bJOURNEY\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/explaining-code/SNIPPET.md"
+        "../skills/pedagogical-journey/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -148,7 +148,7 @@
       "name": "lua",
       "pattern": "\\bLUA\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/coding-style-guides/writing-lua/SNIPPET.md"
+        "../snippets/local/coding-style-guides/writing-lua/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -157,7 +157,7 @@
       "name": "iterate-code",
       "pattern": "\\b(ITER|ITERATE)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/development/iterating-code/SNIPPET.md"
+        "../snippets/local/development/iterating-code/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -166,7 +166,7 @@
       "name": "paper",
       "pattern": "\\bPAPER\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/writing-papers/SNIPPET.md"
+        "../snippets/local/output-formats/writing-papers/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -175,16 +175,16 @@
       "name": "create-issue",
       "pattern": "\\bISSUE\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/project-mgmt/creating-issues/SNIPPET.md"
+        "../snippets/local/project-mgmt/creating-issues/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "spanish-learning",
-      "pattern": "\\bSPANISH\\b[.:;,]?",
+      "pattern": "\\b(SPANISH|ESPANOL)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/spanish-learning/SNIPPET.md"
+        "../snippets/local/output-formats/spanish-learning/SKILL.md"
       ],
       "separator": "\n",
       "enabled": true
@@ -193,7 +193,7 @@
       "name": "generating-html",
       "pattern": "\\b(HTMLGEN|HTML)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/output-formats/generating-html/SNIPPET.md"
+        "../snippets/local/output-formats/generating-html/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -202,7 +202,7 @@
       "name": "updating-html-style",
       "pattern": "\\b(HTMLSTYLE|STYLING)\\b[.:;,]?",
       "snippet": [
-        "../snippets/local/utilities/updating-html-style/SNIPPET.md"
+        "../snippets/local/utilities/updating-html-style/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -287,6 +287,24 @@
       ],
       "enabled": true,
       "separator": "\n"
+    },
+    {
+      "name": "generating-tts",
+      "pattern": "\\b(TTS)[.,;:]?\\b",
+      "snippet": [
+        "../skills/generating-tts/SKILL.md"
+      ],
+      "enabled": true,
+      "separator": "\n"
+    },
+    {
+      "name": "reflecting-learnings",
+      "pattern": "\\b(REFLECT)[.,;:]?\\b",
+      "snippet": [
+        "../commands/local/reflecting-learnings.md"
+      ],
+      "separator": "\n",
+      "enabled": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 ---
 description: Context for scheduling and managing Google Calendar events
 SNIPPET_NAME: scheduling-events
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Scheduling Events

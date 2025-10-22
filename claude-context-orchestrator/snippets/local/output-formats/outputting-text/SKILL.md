@@ -1,7 +1,7 @@
 ---
 description: Writing structured text files with markdown and XML formatting
 SNIPPET_NAME: outputting-text
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

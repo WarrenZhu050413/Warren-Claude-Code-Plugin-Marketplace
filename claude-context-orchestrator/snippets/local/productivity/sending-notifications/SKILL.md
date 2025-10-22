@@ -1,7 +1,7 @@
 ---
 description: Send macOS notifications using terminal-notifier with standardized formatting
 SNIPPET_NAME: sending-notifications
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Sending Notifications

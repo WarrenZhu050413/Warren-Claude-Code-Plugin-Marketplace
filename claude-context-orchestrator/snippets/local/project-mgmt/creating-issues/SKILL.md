@@ -1,7 +1,7 @@
 ---
 description: Comprehensive guidance for creating GitHub issues by learning from existing formats
 SNIPPET_NAME: creating-issues
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # GitHub Issue Creation Guide

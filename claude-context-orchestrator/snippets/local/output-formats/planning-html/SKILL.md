@@ -1,7 +1,7 @@
 ---
 description: Creating technical execution plans in HTML format with mandatory review
 SNIPPET_NAME: planning-html
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

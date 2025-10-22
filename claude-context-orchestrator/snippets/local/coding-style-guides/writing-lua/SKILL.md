@@ -1,7 +1,7 @@
 ---
 description: Writing Neovim plugins with Lua - type safety, modular architecture, and best practices
 SNIPPET_NAME: writing-lua
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Writing Neovim Plugins with Lua

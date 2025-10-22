@@ -1,7 +1,7 @@
 ---
 description: Outputting clear, concise, direct responses with minimal tokens
 SNIPPET_NAME: clearing-output
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 ## Purpose

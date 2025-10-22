@@ -1,7 +1,7 @@
 ---
 description: Three-round iterative exploration strategy for complex topics with parallel subagents
 SNIPPET_NAME: iterating-code
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Iterating Through Code and Complex Topics

@@ -1,7 +1,7 @@
 ---
 description: Email management guidelines for drafting and sending emails with proper style and context
 SNIPPET_NAME: managing-email
-ANNOUNCE_USAGE: true
+ANNOUNCE_USAGE: false
 ---
 
 # Managing Email
