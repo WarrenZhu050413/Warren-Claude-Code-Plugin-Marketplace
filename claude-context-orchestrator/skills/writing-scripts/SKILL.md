@@ -82,7 +82,14 @@ grep_result = subprocess.run(['grep', '-oE', pattern],
                             capture_output=True, text=True)
 ```
 
-**Why**: Avoids shell syntax errors with special characters `()[]{}|&;`
+**Why list arguments work**:
+- Python executes command directly (no shell interpretation)
+- Arguments passed as literal strings
+- Special chars like `|(){}` treated as text, not operators
+
+**When shell=True is needed**:
+- Hard-coded commands only
+- Need shell features: `*` wildcards, `~` expansion, `&&` operators
 
 ### Debugging Subprocess Failures
 
@@ -177,11 +184,31 @@ cleanup() {
 }
 ```
 
-**Explanation**:
-- `set -e` (errexit): Exit on any command failure
-- `set -u` (nounset): Exit on undefined variable
-- `set -o pipefail`: Pipeline fails if any command fails
-- `trap`: Run cleanup on exit/error/signal
+**Flag breakdown**:
+
+`-E` (errtrap): Error traps work in functions
+```bash
+trap 'echo "Error"' ERR
+func() { false; }  # Trap fires (wouldn't without -E)
+```
+
+`-e` (errexit): Stop on first error
+```bash
+command_fails  # Script exits here
+never_runs     # Never executes
+```
+
+`-u` (nounset): Catch undefined variables
+```bash
+echo "$TYPO"  # Error: TYPO: unbound variable (not silent)
+```
+
+`-o pipefail`: Detect failures in pipes
+```bash
+false | true  # Fails (not just last command status)
+```
+
+`trap`: Run cleanup on exit/error/signal
 
 ### Script Directory Detection
 
@@ -346,6 +373,131 @@ else
     BACKUP_DIR="/backup"
 fi
 ```
+
+## Automation Script Patterns
+
+### Safety-First Operations
+
+**Dry-Run Mode** - Preview changes before applying:
+
+```python
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--force', action='store_true',
+                   help='Apply changes (dry-run by default)')
+args = parser.parse_args()
+
+dry_run = not args.force
+
+# Use dry_run flag throughout script
+for item in items:
+    change_description = f"Would rename {item['old']} → {item['new']}"
+
+    if dry_run:
+        print(f"→ {change_description}")
+    else:
+        print(f"✓ {change_description}")
+        apply_change(item)
+```
+
+**Why this matters**: Bulk operations on configs/files need risk-free preview. Running with dry-run first builds confidence before `--force` mode.
+
+### Backup-First Pattern
+
+Automatic backups prevent data loss:
+
+```python
+from datetime import datetime
+import shutil
+
+def backup_before_modify(config_path):
+    """Create timestamped backup before modifications."""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_path = f"{config_path}.backup.{timestamp}"
+
+    shutil.copy2(config_path, backup_path)
+    print(f"✓ Backup created: {backup_path}")
+
+    return backup_path
+
+# Use in operations
+if not dry_run:
+    backup_before_modify(config_path)
+    # Now safe to modify original
+    update_config(config_path)
+```
+
+### Config-as-Code Management
+
+Use CLI tools for config modifications instead of manual editing:
+
+```python
+# ❌ Bad: Users manually edit JSON
+# Causes: syntax errors, conflicts, no validation
+
+# ✅ Good: CLI for all config changes
+# Example: python3 config_cli.py update name --pattern "new-pattern"
+
+def cli_update_config(name, pattern, file=None):
+    """Update config via validated CLI."""
+    config = load_config()
+
+    # Validate pattern format
+    if not validate_pattern(pattern):
+        raise ValueError(f"Invalid pattern: {pattern}")
+
+    # Check for conflicts
+    if pattern_exists_elsewhere(pattern, config):
+        raise ValueError(f"Pattern conflict: {pattern}")
+
+    # Update with safety checks
+    entry = config['mappings'].find(lambda x: x['name'] == name)
+    entry['pattern'] = pattern
+    if file:
+        entry['snippet'] = [file]
+
+    save_config(config)
+    return entry
+```
+
+**Benefits**:
+- ✅ Validation prevents JSON syntax errors
+- ✅ Conflict detection prevents duplicates
+- ✅ Automatic backups before changes
+- ✅ Audit trail of all modifications
+
+### Self-Documenting Scripts
+
+Output tells the story of what the script does:
+
+```python
+# ✅ Good: Script output is the specification
+print("=" * 70)
+print("CONFIGURATION MIGRATION")
+print("=" * 70)
+print()
+
+print("Step 1: Analyzing input files")
+print("-" * 70)
+files = find_files()
+print(f"Found: {len(files)} files")
+for f in files[:5]:
+    print(f"  • {f}")
+print()
+
+print("Step 2: Validating configuration")
+print("-" * 70)
+errors = validate_config()
+if errors:
+    print(f"✗ Found {len(errors)} errors")
+    for error in errors:
+        print(f"  • {error}")
+else:
+    print("✓ Configuration valid")
+```
+
+This approach makes the script **self-reporting**: users see exactly what happens without separate docs.
 
 ## Validation Tools
 
