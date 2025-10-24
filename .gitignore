@@ -11,3 +11,7 @@ agent-sdk-tests
 .mcp.json
 .annotations
 .claude/settings.json
+
+# Private snippets with sensitive info
+claude-context-orchestrator/snippets/local/documentation/downloading-pdfs/
+claude-context-orchestrator/snippets/local/communication/posting-content/
