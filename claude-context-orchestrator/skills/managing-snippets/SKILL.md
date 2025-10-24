@@ -7,6 +7,8 @@ description: Comprehensive CRUD operations for managing Claude Code snippets - c
 
 CRUD operations for snippet management. Snippets auto-inject context when regex patterns match user messages.
 
+**💡 Pro Tip**: You can turn any file into a snippet by simply updating the config path. If you have any file (skill, guide, reference, etc.) that you want to inject into your prompts via pattern matching, you can add it to `config.local.json` with a regex pattern and separator. See **File Locations** section below for the directory structure.
+
 ## Core Operations
 
 ### Create (`/create-snippet`)
@@ -43,27 +45,35 @@ Safely removes snippets with timestamped backups and restore instructions.
 
 ## Regex Protocol (CLI-Enforced)
 
-**STANDARD FORMAT**: `\b(PATTERN)[.,;:]?\b`
+**STANDARD FORMAT**: `\b(PATTERN)[.,;:!?]?\b`
 
 **Rules**:
 1. Word boundaries: `\b` at start/end
 2. Parentheses: Pattern wrapped in `()`
 3. ALL CAPS: Uppercase only (A-Z, 0-9)
 4. Multi-word: `_`, `-`, or no separator (never spaces, never mixed)
-5. Optional punctuation: `[.,;:]?` at end
+5. Optional punctuation: `[.,;:!?]?` at end (period, comma, semicolon, colon, exclamation, question mark)
 6. Alternation: Use `|`
 
+**Why all punctuation matters:**
+Users naturally add punctuation when typing. Excluding punctuation (like `!?`) causes pattern mismatches:
+- ❌ Pattern `[.,;:]?` does NOT match "ARTIFACT!"
+- ✅ Pattern `[.,;:!?]?` matches "ARTIFACT!", "ARTIFACT?", "ARTIFACT.", etc.
+
+Always use the full set: `[.,;:!?]?`
+
 **Valid**:
-- `\b(DOCKER)[.,;:]?\b`
-- `\b(BUILD_ARTIFACT)[.,;:]?\b`
-- `\b(BUILD-ARTIFACT)[.,;:]?\b`
-- `\b(DOCKER|CONTAINER|KUBE)[.,;:]?\b`
+- `\b(DOCKER)[.,;:!?]?\b`
+- `\b(BUILD_ARTIFACT)[.,;:!?]?\b`
+- `\b(BUILD-ARTIFACT)[.,;:!?]?\b`
+- `\b(DOCKER|CONTAINER|KUBE)[.,;:!?]?\b`
 
 **Invalid**:
-- `\b(docker)[.,;:]?\b` - lowercase
-- `\b(BUILD ARTIFACT)[.,;:]?\b` - space
-- `\b(BUILD_ART-IFACT)[.,;:]?\b` - mixed separators
+- `\b(docker)[.,;:!?]?\b` - lowercase
+- `\b(BUILD ARTIFACT)[.,;:!?]?\b` - space
+- `\b(BUILD_ART-IFACT)[.,;:!?]?\b` - mixed separators
 - `\bDOCKER\b` - missing parens/punctuation
+- `\b(DOCKER)[.,;:]?\b` - incomplete punctuation set
 
 ## Workflow Examples
 
@@ -130,6 +140,7 @@ User: "Delete terraform snippet"
 - Validate protocol compliance
 - Update one aspect at a time
 - Use context-aware inference
+- Always use full punctuation set: `[.,;:!?]?`
 - Avoid `\s` (use `[-_]?`)
 - Keep alternatives < 8
 
@@ -195,10 +206,13 @@ description: When/why to use
 4. Wrap: `\b(BUILD_ARTIFACT)[.,;:]?\b`
 
 **File Locations**:
-- Snippets: `commands/local/{name}.md`
-- Config: `scripts/config.local.json` or `scripts/config.json`
+- Snippets: `/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/{name}.md`
+- Config: `scripts/config.local.json` (personal) or `scripts/config.json` (with `--use-base-config`, shared)
 - Backups: `backups/YYYYMMDD_HHMMSS_{name}/`
 - Tests: `/Users/wz/.claude/tests/shared/{name}_test.sh`
+
+**When Creating Snippets**:
+Always place new snippet files in the `snippets/` directory. Update `config.local.json` to add the mapping with your desired trigger pattern.
 
 **CLI**:
 ```bash

@@ -8,15 +8,6 @@
       ],
       "enabled": true,
       "separator": "\n"
-    },
-    {
-      "name": "making-clearer",
-      "pattern": "\\b(CLEAR|CLARITY)\\b[.:;,]?",
-      "snippet": [
-        "../snippets/making-clearer.md"
-      ],
-      "enabled": true,
-      "separator": "\n"
     }
   ]
 }

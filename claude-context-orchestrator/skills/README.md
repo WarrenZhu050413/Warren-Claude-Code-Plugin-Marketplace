@@ -2,24 +2,44 @@
 
 This directory contains Agent Skills for Claude Code, organized into two categories:
 
-## 1. Custom Skill Management Skills
+## 1. Custom Skills
 
-These skills help manage and create other Agent Skills:
+Custom skills created for this project:
 
-- **creating-skills** - Guide for creating new Agent Skills
-- **deleting-skills** - Guide for safely removing Agent Skills
+### Content Creation
+- **documentation-tutorial** - Systematically analyze technical documentation and create interactive tutorials with exact quotes, code snippets, and feature demonstrations. Use when developing educational content from API docs, platform guides, or software documentation.
+
+### Educational Tools
+- **pedagogical-journey** - Create structured learning paths and educational progressions
+- **using-claude** - Guide for using Claude effectively in various contexts
+
+### Development & Scripting
+- **writing-scripts** - Best practices for creating Python and Bash scripts
+- **using-clis** - Guide for working with command-line interfaces
+
+### Media & Content
+- **generating-tts** - Guide for text-to-speech generation
+- **fetching-images** - Tools and patterns for retrieving and processing images
+
+### Analysis & Research
+- **searching-deeply** - Deep web search and research methodology
+- **reflecting-learnings** - Reflection and knowledge synthesis tools
+- **using-codex** - Advanced code analysis and documentation tools
+
+### Artifact Building
+- **building-artifacts** - Create complex interactive artifacts (React, Vue, etc.)
+- **building-mcp** - Build Model Context Protocol servers
+- **theming-artifacts** - Professional theming and styling for artifacts
+
+### Management Tools
 - **managing-skills** - Comprehensive skill management guide
-- **reading-skills** - Guide for listing and viewing Agent Skills
-- **updating-skills** - Guide for modifying existing Agent Skills
+- **managing-snippets** - Snippet management and organization
 
 ## 2. Anthropic Example Skills
 
 The following skills are from [Anthropic's example-skills repository](https://github.com/anthropics/skills) and are licensed under the Apache License 2.0:
 
-- **artifacts-builder** - Build complex HTML artifacts with React, Tailwind CSS, and shadcn/ui
-- **mcp-builder** - Guide for creating high-quality MCP servers
-- **webapp-testing** - Test local web applications using Playwright
-- **theme-factory** - Style artifacts with professional themes
+- **testing-webapps** - Test local web applications using Playwright
 
 ## License Attribution
 

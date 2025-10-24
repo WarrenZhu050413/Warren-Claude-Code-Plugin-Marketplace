@@ -16,11 +16,13 @@ The context window is shared across all skills, conversation history, and the cu
 **Default assumption**: Claude already has extensive knowledge. Only add information Claude doesn't already know.
 
 **Challenge each piece of information**:
+
 - Does Claude really need this explanation?
 - Can I assume Claude knows this?
 - Does this content justify its token cost?
 
 **Example - Concise** (preferred):
+
 ```python
 import pdfplumber
 with pdfplumber.open("file.pdf") as pdf:
@@ -28,6 +30,7 @@ with pdfplumber.open("file.pdf") as pdf:
 ```
 
 **Example - Too verbose** (avoid):
+
 ```
 PDF (Portable Document Format) files are a common file format...
 To extract text, you'll need to use a library. There are many
@@ -39,13 +42,16 @@ libraries available, but we recommend pdfplumber because...
 Keep SKILL.md under 500 lines. Use separate reference files for detailed content.
 
 **Pattern**:
+
 ```markdown
 # My Skill
 
 ## Quick Start
+
 [Brief overview and common usage]
 
 ## Advanced Features
+
 See [reference.md](reference.md) for complete API documentation.
 See [examples.md](examples.md) for usage patterns.
 ```
@@ -57,17 +63,20 @@ Claude loads additional files only when needed.
 Descriptions enable skill discovery. Include both WHAT the skill does and WHEN to use it.
 
 **Requirements**:
+
 - Write in third person (this goes in system prompt)
 - Be specific with trigger terms
 - Include key terms users would mention
 - Maximum 1024 characters
 
 **Good**:
+
 ```yaml
 description: Analyzes Excel spreadsheets, creates pivot tables, generates charts. Use when working with Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
 **Bad**:
+
 ```yaml
 description: Helps with documents
 ```
@@ -105,6 +114,7 @@ my-skill/
 ```
 
 Reference files from SKILL.md:
+
 ```markdown
 For advanced usage, see [reference.md](reference.md).
 ```
@@ -126,6 +136,7 @@ When active, Claude can only use the specified tools without asking permission.
 ## Naming Conventions
 
 **Prefer gerund form** (verb + -ing):
+
 - "Processing PDFs"
 - "Analyzing Spreadsheets"
 - "Managing Databases"
@@ -133,6 +144,7 @@ When active, Claude can only use the specified tools without asking permission.
 - "Writing Documentation"
 
 **Avoid**:
+
 - Vague names: "Helper", "Utils", "Tools"
 - Overly generic: "Documents", "Data", "Files"
 
@@ -143,11 +155,13 @@ When active, Claude can only use the specified tools without asking permission.
 One skill = one capability
 
 **Good** (focused):
+
 - "PDF form filling"
 - "Excel data analysis"
 - "Git commit messages"
 
 **Too broad** (split into separate skills):
+
 - "Document processing"
 - "Data tools"
 
@@ -194,16 +208,20 @@ For error-prone operations, validate after each step:
 ### Avoid Time-Sensitive Information
 
 **Bad** (will become outdated):
+
 ```markdown
 If you're doing this before August 2025, use the old API.
 ```
 
 **Good** (use "old patterns" section):
+
 ```markdown
 ## Current Method
+
 Use the v2 API: `api.example.com/v2/messages`
 
 ## Old Patterns
+
 <details>
 <summary>Legacy v1 API (deprecated 2025-08)</summary>
 The v1 API used: `api.example.com/v1/messages`
@@ -216,11 +234,13 @@ This endpoint is no longer supported.
 Choose one term and use it throughout:
 
 **Good** (consistent):
+
 - Always "API endpoint"
 - Always "field"
 - Always "extract"
 
 **Bad** (inconsistent):
+
 - Mix "API endpoint", "URL", "API route", "path"
 
 ## Common Patterns
@@ -238,13 +258,16 @@ Use this template:
 # [Analysis Title]
 
 ## Executive Summary
+
 [Overview]
 
 ## Key Findings
+
 - Finding 1
 - Finding 2
 
 ## Recommendations
+
 1. Recommendation 1
 2. Recommendation 2
 ```
@@ -260,6 +283,7 @@ Show input/output pairs for clarity:
 **Example 1:**
 Input: Added user authentication
 Output:
+
 ```
 feat(auth): implement JWT authentication
 
@@ -269,6 +293,7 @@ Add login endpoint and token validation
 **Example 2:**
 Input: Fixed date bug in reports
 Output:
+
 ```
 fix(reports): correct timezone handling
 
@@ -300,15 +325,18 @@ Guide through decision points:
 ## Skill Locations
 
 ### Personal Skills
+
 **Location**: `~/.claude/skills/`
 **Use for**: Individual workflows, experimental skills, personal tools
 
 ### Project Skills
+
 **Location**: `.claude/skills/` (in project root)
 **Use for**: Team workflows, project-specific expertise, shared utilities
 **Note**: Commit to git for team sharing
 
 ### Plugin Skills
+
 **Location**: Plugin's `skills/` directory
 **Use for**: Distributable skills as part of a plugin
 **Note**: Automatically available when plugin is installed
@@ -317,80 +345,387 @@ Guide through decision points:
 
 ### Creating Skills
 
-Create new Agent Skills with proper structure and descriptions.
+#### Step 1: Choose Skill Location
 
-**Quick Start**:
+**Personal Skills** (`~/.claude/skills/`):
+
+- Individual workflows, experimental skills, personal tools
+
+**Project Skills** (`.claude/skills/`):
+
+- Team workflows, project-specific expertise, commit to git
+
+**Plugin Skills** (plugin's `skills/` directory):
+
+- Distributable skills, part of plugin packages
+
+#### Step 2: Create Directory & SKILL.md
+
 ```bash
+# Personal
 mkdir -p ~/.claude/skills/my-skill
+
+# Create SKILL.md with required frontmatter
 ```
 
-**⚠️ IMPORTANT: Always Create HTML Summary**
+**YAML Frontmatter Requirements**:
 
-After creating a skill, generate a high-density, minimalistic black HTML summary page and open it in the browser:
+❌ **WRONG** - Missing YAML or no trigger terms:
+
+```yaml
+description: Helps with documents
+```
+
+✅ **RIGHT** - Specific, includes when to use:
+
+```yaml
+---
+name: Your Skill Name
+description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
+---
+```
+
+**Why:** Description enables skill discovery and includes both what + when to use.
+
+#### Step 3: Write Clear Instructions
+
+❌ **WRONG** - Too vague:
+
+```markdown
+## Instructions
+
+Process the data and generate output.
+```
+
+✅ **RIGHT** - Concrete, step-by-step:
+
+````markdown
+## Instructions
+
+1. Load data from CSV using pandas:
+   ```python
+   import pandas as pd
+   df = pd.read_csv('data.csv')
+   ```
+````
+
+2. Clean data:
+   - Remove null values
+   - Normalize formats
+
+3. Generate summary statistics:
+   ```python
+   summary = df.describe()
+   ```
+
+```
+
+#### Step 4: Keep SKILL.md Under 500 Lines
+
+Use **progressive disclosure** for large content:
+
+```
+
+my-skill/
+├── SKILL.md # Main (< 500 lines)
+├── reference.md # Detailed API docs
+└── examples.md # Usage patterns
+
+````
+
+**In SKILL.md**:
+```markdown
+## Quick Start
+[Brief overview]
+
+## Advanced Features
+For complete API documentation, see [reference.md](reference.md).
+````
+
+Claude loads additional files only when needed.
+
+#### Step 5: Test Your Skill
+
+Ask Claude a question matching your description:
+
+```
+Can you help me extract text from this PDF?
+```
+
+Claude should autonomously activate your skill if:
+
+- ✅ Description is specific (includes trigger terms)
+- ✅ YAML frontmatter is valid
+- ✅ Skill is in correct location
+- ✅ Claude Code has been restarted
+
+#### Step 6: Add Contributing Section (Optional)
+
+For skills that benefit from growing with real-world usage, add a "Contributing" section at the **end of SKILL.md**:
+
+```markdown
+## Contributing Patterns
+
+When you discover useful workflows or patterns using this skill:
+
+1. Create in `~/.claude/skills/my-skill/workflows/` with clear documentation
+2. Update this section with link and brief description
+3. Next session will have access to your discovery!
+
+### Available Patterns
+
+- **pattern-name.sh** - What it does, when to use it
+- **another-pattern.md** - What it does, when to use it
+
+See: `~/.claude/skills/my-skill/workflows/`
+```
+
+**Why:** Creates feedback loop where practical discoveries get captured. Skills become living documents that improve over time from real usage.
+
+**Example:** See `using-github-cli` skill for this pattern in action.
+
+#### HTML Summary (Optional)
+
+For visual verification:
 
 ```bash
-# Generate HTML summary (use template)
-cat > skill-summary.html << 'EOF'
-[HTML content with skill details]
-EOF
-
-# Open in browser
-open skill-summary.html
+cd ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts
+python3 generate-skill-html.py ../skills/my-skill > /tmp/my-skill-summary.html
+open /tmp/my-skill-summary.html
 ```
-
-**HTML Summary Must Include:**
-- Skill name, description, triggers
-- Files created
-- What it does
-- Key features
-- Usage examples
-- Configuration details
-- Testing instructions
-- Related skills
-- Next steps
-- Verification commands
-- Completion summary
-
-**Style Requirements:**
-- Black background (#000)
-- High information density
-- Minimalistic design
-- Green/cyan accents (#0f0, #0ff)
-- Monospace fonts
-- Compact layout
 
 For complete guidance, see [creating.md](creating.md).
 
+---
+
 ### Reading Skills
 
-List, view, and inspect available Agent Skills.
+#### List All Available Skills
 
-**Quick Start**:
-Ask Claude: "What skills are available?"
+**Ask Claude**:
+
+```
+What skills are available?
+```
+
+Or use filesystem:
+
+```bash
+# Personal skills
+ls ~/.claude/skills/
+
+# Project skills
+ls .claude/skills/
+
+# With descriptions
+head -n 10 ~/.claude/skills/*/SKILL.md
+```
+
+#### Inspect a Specific Skill
+
+```bash
+# View SKILL.md
+cat ~/.claude/skills/my-skill/SKILL.md
+
+# Check directory structure
+ls -la ~/.claude/skills/my-skill/
+
+# View referenced files
+ls ~/.claude/skills/my-skill/*.md
+```
+
+#### Find Skills by Keyword
+
+```bash
+# Find skills mentioning "PDF"
+grep -l "PDF" ~/.claude/skills/*/SKILL.md
+
+# Find by description
+grep "description:.*Excel" ~/.claude/skills/*/SKILL.md
+```
+
+#### Validate Skill Structure
+
+Check that a skill has required components:
+
+```bash
+# Verify SKILL.md exists
+test -f ~/.claude/skills/my-skill/SKILL.md && echo "✓ Found" || echo "✗ Missing"
+
+# Check YAML frontmatter
+head -n 10 ~/.claude/skills/my-skill/SKILL.md
+
+# Verify description length (max 1024 chars)
+grep "description:" ~/.claude/skills/my-skill/SKILL.md
+```
 
 For complete guidance, see [reading.md](reading.md).
 
+---
+
 ### Updating Skills
 
-Modify and maintain existing Agent Skills.
+#### Locate & Edit
 
-**Quick Start**:
 ```bash
+# Personal
 code ~/.claude/skills/my-skill/SKILL.md
+
+# Project
+code .claude/skills/my-skill/SKILL.md
 ```
 
-Changes take effect after restarting Claude Code.
+❌ **WRONG** - Changes don't appear:
+
+```
+Edit SKILL.md → Keep Claude Code running
+→ Changes don't load
+```
+
+✅ **RIGHT** - Always restart after editing:
+
+```
+Edit SKILL.md → Restart Claude Code → Changes load
+```
+
+#### Common Updates
+
+**Update Description**:
+
+❌ Generic:
+
+```yaml
+description: Helps with PDFs
+```
+
+✅ Specific:
+
+```yaml
+description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
+```
+
+**Add Examples**:
+
+````markdown
+## Examples
+
+**Example 1: Simple Extraction**
+Input: PDF with plain text
+Output:
+
+```python
+import pdfplumber
+with pdfplumber.open("document.pdf") as pdf:
+    text = pdf.pages[0].extract_text()
+```
+````
+
+```
+
+**Split Large Skills** (> 500 lines):
+
+```
+
+Before: SKILL.md with 800 lines
+After:
+├── SKILL.md (overview + quick start)
+├── reference.md (API documentation)
+└── examples.md (usage patterns)
+
+````
+
+#### Version Management
+
+Track updates:
+```markdown
+## Version History
+- v2.1.0 (2025-10-16): Added batch processing
+- v2.0.0 (2025-10-01): Breaking changes to API
+- v1.0.0 (2025-09-01): Initial release
+````
+
+#### Testing After Update
+
+1. **Verify YAML syntax**:
+
+   ```bash
+   head -n 10 SKILL.md
+   ```
+
+   Check for: opening `---`, closing `---`, valid YAML
+
+2. **Test with relevant question**:
+   Ask Claude a question matching your updated description
+
+3. **Check file references**:
+   ```bash
+   ls ~/.claude/skills/my-skill/*.md
+   ```
+   Verify all linked files exist
 
 For complete guidance, see [updating.md](updating.md).
 
+---
+
 ### Deleting Skills
 
-Safely remove Agent Skills with backup.
+#### Simple Deletion
 
-**Quick Start**:
 ```bash
+# Create backup first
 cp -r ~/.claude/skills/my-skill ~/.claude/skills/my-skill.backup
+
+# Delete
 rm -rf ~/.claude/skills/my-skill
+
+# Verify
+ls ~/.claude/skills/
+```
+
+#### For Project Skills (in git)
+
+```bash
+# Backup
+cp -r .claude/skills/my-skill ~/skill-backups/my-skill-backup
+
+# Remove from git
+git rm -rf .claude/skills/my-skill
+
+# Commit
+git commit -m "Remove my-skill: no longer needed"
+
+# Notify team to restart Claude Code
+```
+
+#### Safety Checklist
+
+Before deleting a skill, ask:
+
+- [ ] Is anyone else using this skill?
+- [ ] Do I have a backup?
+- [ ] Is there a migration path for users?
+- [ ] Will this break any workflows?
+
+❌ **WRONG** - Delete without backup:
+
+```bash
+rm -rf ~/.claude/skills/my-skill  # Lost forever!
+```
+
+✅ **RIGHT** - Always backup first:
+
+```bash
+cp -r ~/.claude/skills/my-skill ~/skill-backups/
+rm -rf ~/.claude/skills/my-skill
+```
+
+#### Restore from Backup
+
+```bash
+# Restore entire skill
+cp -r ~/skill-backups/my-skill ~/.claude/skills/my-skill
+
+# Restart Claude Code
 ```
 
 For complete guidance, see [deleting.md](deleting.md).
@@ -399,193 +734,19 @@ For complete guidance, see [deleting.md](deleting.md).
 
 Skills can optionally have snippet entries in `config.local.json` for hook-based injection. This allows skills to be triggered by specific keywords in user prompts.
 
-### When to Add Snippet Entries
-
-Add snippet entries when:
-- You want keyword-based triggering (e.g., typing `BUILD_MCP` loads the building-mcp skill)
-- The skill is frequently used and benefits from explicit activation
-- You want backward compatibility with the hook-based snippet system
-
-**Note**: Most skills work fine without snippet entries - they're discovered automatically via descriptions.
-
-### Regex Pattern Convention
-
-**All snippet trigger patterns MUST follow the ALL CAPS convention**:
-
-- **Format**: `\\b<KEYWORD>[.,;:]?\\b`
-- **Style**: ALL CAPS, descriptive, not too long (≤15 chars)
-- **Multi-word naming**: Use one of these separators:
-  - **Underscore**: `BUILD_ARTIFACT`, `MANAGE_SKILL` (preferred)
-  - **Hyphen**: `BUILD-ARTIFACT`, `MANAGE-SKILL`
-  - **No separator**: `BUILDARTIFACT`, `MANAGESKILL`
-- **Examples**:
-  - ✅ `BUILD_ARTIFACT`, `BUILD-ARTIFACT`, `BUILDARTIFACT`
-  - ❌ `build-artifact`, `BuildArtifact`, `Build_Artifact`
-
-### Adding Snippet Entries
-
-Snippet entries are stored in `scripts/config.local.json` (gitignored) or `scripts/config.json` (committed).
-
-**By default, add entries to `config.local.json`** for personal configurations.
-
-#### ⚠️ CRITICAL: ALWAYS Use CLI for Config Editing
-
-**REQUIRED: Use `snippets_cli.py` CLI for ALL config modifications**
-
-```bash
-cd ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts
-
-# Create new snippet with file reference
-python3 snippets_cli.py create my-skill \
-  --pattern "\\bMY_SKILL[.,;:]?\\b" \
-  --file ../skills/my-skill/SKILL.md
-
-# Update existing pattern
-python3 snippets_cli.py update my-skill \
-  --pattern "\\bNEW_PATTERN[.,;:]?\\b"
-
-# Update pattern AND content
-python3 snippets_cli.py update my-skill \
-  --pattern "\\bNEW_PATTERN[.,;:]?\\b" \
-  --file ../skills/my-skill/SKILL.md
-
-# Enable/disable snippet
-python3 snippets_cli.py update my-skill --enabled true
-python3 snippets_cli.py update my-skill --enabled false
-
-# Delete snippet
-python3 snippets_cli.py delete my-skill
-```
-
-**Why CLI-only?**
-
-The CLI ensures:
-- ✅ Proper validation
-- ✅ Automatic backups
-- ✅ Pattern format checking
-- ✅ Conflict detection
-- ✅ File integrity
-- ✅ JSON syntax validation
-- ✅ Transaction safety
-
-❌ **NEVER manually edit config files** - This can cause:
-- Invalid JSON syntax
-- Pattern conflicts
-- Missing backups
-- Configuration corruption
-- No validation
-
-#### CLI Operations Reference
-
-**List all snippets:**
-```bash
-python3 snippets_cli.py list
-python3 snippets_cli.py list | grep "my-skill"
-```
-
-**Get snippet details:**
-```bash
-python3 snippets_cli.py get my-skill
-python3 snippets_cli.py get my-skill --json
-```
-
-**Create snippet referencing a skill:**
-```bash
-# Reference existing SKILL.md
-python3 snippets_cli.py create my-skill \
-  --pattern "\\bMY_SKILL[.,;:]?\\b" \
-  --file ../skills/my-skill/SKILL.md
-
-# Or create new content
-python3 snippets_cli.py create my-snippet \
-  --pattern "\\bMY_SNIPPET[.,;:]?\\b" \
-  --content "Snippet content here"
-```
-
-**Update snippet:**
-```bash
-# Update pattern only
-python3 snippets_cli.py update my-skill \
-  --pattern "\\bNEW_PATTERN[.,;:]?\\b"
-
-# Update both pattern and file reference
-python3 snippets_cli.py update my-skill \
-  --pattern "\\bNEW_PATTERN[.,;:]?\\b" \
-  --file ../skills/my-skill/SKILL.md
-
-# Rename snippet
-python3 snippets_cli.py update my-skill --rename new-name
-```
-
-**Delete snippet:**
-```bash
-# With backup (default)
-python3 snippets_cli.py delete my-skill
-
-# Force without confirmation
-python3 snippets_cli.py delete my-skill --force
-
-# Skip backup
-python3 snippets_cli.py delete my-skill --force --backup false
-```
-
-For complete CLI documentation, see the [Using CLIs](../using-clis/SKILL.md) skill.
-
-### Current Skill Snippet Entries
-
-These skills have snippet entries in `config.local.json`:
-
-| Skill | Trigger Pattern | Purpose |
-|-------|----------------|---------|
-| building-artifacts | `BUILD_ARTIFACT` | Build claude.ai HTML artifacts |
-| building-mcp | `BUILD_MCP` | Create MCP servers |
-| managing-skills | `MANAGE_SKILL` | Manage Agent Skills |
-| managing-snippets | `MANAGE_SNIPPET` | Manage snippet configs |
-| searching-deeply | `DEEP_SEARCH` | Deep web/code search |
-| testing-webapps | `TEST_WEB` | Test web apps with Playwright |
-| theming-artifacts | `THEME_ARTIFACT` | Apply themes to artifacts |
-| using-claude | `USE_CLAUDE` | Claude Code features & debugging |
-| using-codex | `USE_CODEX` | Codex MCP analysis tool |
-
-### Best Practices
-
-✅ **Do**:
-- Use ALL CAPS for trigger keywords
-- For multi-word patterns, use `_`, `-`, or no separator consistently
-- Keep patterns short and memorable (≤15 chars)
-- Point `snippet` to `SKILL.md` by default
-- Add to `config.local.json` for personal use
-- Add to `config.json` for shared/committed patterns
-
-❌ **Don't**:
-- Use lowercase or mixed case in patterns
-- Mix separators within the same pattern (e.g., `BUILD_ARTIFACT-TEST`)
-- Use spaces in patterns
-- Make patterns too long (>15 chars)
-- Include multiple files unless necessary
-- Duplicate patterns across different skills
-
-### Testing Snippet Entries
-
-After adding snippet entries:
-
-1. **Restart Claude Code** to reload configurations
-2. **Test pattern matching**:
-   ```bash
-   cd scripts
-   python3 -c "import re; print(re.search(r'\\bMY_SKILL[.,;:]?\\b', 'MY_SKILL'))"
-   ```
-3. **Verify in conversation**: Type the trigger keyword in a prompt
+If the managing-snippets skill is available, then read it to understand how to add snippets. You should always add snippet unless the user says otherwise.
 
 ### Troubleshooting
 
 **Snippet not loading**:
+
 - Check pattern regex syntax
 - Verify file paths are relative to `scripts/` directory
 - Ensure `enabled: true`
 - Restart Claude Code
 
 **Pattern not matching**:
+
 - Test regex with Python: `python3 -c "import re; print(re.match(r'YOUR_PATTERN', 'test'))"`
 - Check for typos in ALL CAPS keyword
 - Verify `\\b` word boundaries are present
@@ -595,11 +756,13 @@ After adding snippet entries:
 ### Make Description Specific
 
 **Too vague**:
+
 ```yaml
 description: Helps with documents
 ```
 
 **Specific**:
+
 ```yaml
 description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
 ```
@@ -610,6 +773,7 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 **Project Skills**: `.claude/skills/skill-name/SKILL.md`
 
 Check file exists:
+
 ```bash
 ls ~/.claude/skills/my-skill/SKILL.md
 ```
@@ -617,11 +781,13 @@ ls ~/.claude/skills/my-skill/SKILL.md
 ### Check YAML Syntax
 
 Invalid YAML prevents skill loading:
+
 ```bash
 cat SKILL.md | head -n 10
 ```
 
 Ensure:
+
 - Opening `---` on line 1
 - Closing `---` before markdown content
 - Valid YAML (no tabs, correct indentation)
@@ -637,6 +803,7 @@ Include both what the skill does AND when to use it, with key terms users would 
 **Check**: Is YAML valid?
 
 Run validation:
+
 ```bash
 cat ~/.claude/skills/my-skill/SKILL.md | head -n 15
 ```
@@ -660,6 +827,7 @@ Changes to skills require restarting Claude Code to take effect.
 Be specific in descriptions with distinct trigger terms:
 
 **Instead of**:
+
 ```yaml
 # Skill 1
 description: For data analysis
@@ -669,6 +837,7 @@ description: For analyzing data
 ```
 
 **Use**:
+
 ```yaml
 # Skill 1
 description: Analyze sales data in Excel files and CRM exports. Use for sales reports, pipeline analysis, revenue tracking.
@@ -680,12 +849,14 @@ description: Analyze log files and system metrics. Use for performance monitorin
 ### YAML Frontmatter Errors
 
 **Common issues**:
+
 - Missing closing `---`
 - Tabs instead of spaces
 - Unquoted strings with colons
 - Incorrect indentation
 
 **Validation**:
+
 ```bash
 cat SKILL.md | head -n 10
 ```
@@ -693,11 +864,13 @@ cat SKILL.md | head -n 10
 ### Permission Issues
 
 **Check permissions**:
+
 ```bash
 ls -la ~/.claude/skills/my-skill/SKILL.md
 ```
 
 **Fix if needed**:
+
 ```bash
 chmod 644 ~/.claude/skills/my-skill/SKILL.md
 ```

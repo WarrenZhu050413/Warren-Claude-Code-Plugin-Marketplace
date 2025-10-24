@@ -163,12 +163,12 @@ class SnippetManager:
 
     def _validate_pattern(self, pattern: str) -> bool:
         """
-        Validate regex pattern follows standard format: \\b(PATTERN)[.,;:]?\\b
+        Validate regex pattern follows standard format: \\b(PATTERN)[.,;:!?]?\\b
 
         Standard format requirements:
         - Must use word boundaries: \\b
         - Pattern must be wrapped in parentheses: (PATTERN)
-        - Must allow optional trailing punctuation: [.,;:]?
+        - Must allow optional trailing punctuation: [.,;:!?]?
         - Pattern content must be ALL CAPS
         - Multi-word patterns use _, -, or no separator
         - Can use | for alternation (e.g., NVIM|NEOVIM)
@@ -187,9 +187,9 @@ class SnippetManager:
                 {"pattern": pattern}
             )
 
-        # Check for standard format: \b(PATTERN)[.,;:]?\b
+        # Check for standard format: \b(PATTERN)[.,;:!?]?\b
         # Allow for complex patterns as exceptions
-        standard_pattern = r'^\\b\([A-Z0-9_|\-]+\)\[.,;:\]\?\\b$'
+        standard_pattern = r'^\\b\([A-Z0-9_|]+\)\[\.,;:!\?\]\?\\b$'
 
         if not re.match(standard_pattern, pattern):
             # Check if it's a complex pattern (contains .* or other advanced regex)
@@ -201,18 +201,18 @@ class SnippetManager:
             # Not standard format and not complex - reject
             raise SnippetError(
                 "INVALID_PATTERN_FORMAT",
-                f"Pattern must follow standard format: \\b(PATTERN)[.,;:]?\\b\n"
+                f"Pattern must follow standard format: \\b(PATTERN)[.,;:!?]?\\b\n"
                 f"  - Pattern must be ALL CAPS (A-Z, 0-9)\n"
                 f"  - Multi-word patterns use _, -, or no separator\n"
                 f"  - Use | for alternation (e.g., NVIM|NEOVIM)\n"
-                f"  - Must have word boundaries \\b and optional punctuation [.,;:]?\n"
+                f"  - Must have word boundaries \\b and optional punctuation [.,;:!?]?\n"
                 f"  Your pattern: {pattern}\n"
-                f"  Example: \\b(BUILD_ARTIFACT)[.,;:]?\\b",
+                f"  Example: \\b(BUILD_ARTIFACT)[.,;:!?]?\\b",
                 {"pattern": pattern}
             )
 
         # Validate the pattern content (between parentheses)
-        match = re.match(r'^\\b\(([^)]+)\)\[.,;:\]\?\\b$', pattern)
+        match = re.match(r'^\\b\(([^)]+)\)\[\.,;:!\?\]\?\\b$', pattern)
         if match:
             pattern_content = match.group(1)
 

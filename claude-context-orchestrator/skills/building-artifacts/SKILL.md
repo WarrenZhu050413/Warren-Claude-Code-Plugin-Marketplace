@@ -72,9 +72,55 @@ bash scripts/bundle-artifact.sh
 - Builds with Parcel (no source maps)
 - Inlines all assets
 
+### Fallback: Vite + vite-plugin-singlefile
+
+If Parcel fails (e.g., @swc/core signature errors on macOS), use Vite:
+
+1. **Install vite-plugin-singlefile**:
+   ```bash
+   pnpm add -D vite-plugin-singlefile
+   ```
+
+2. **Update vite.config.ts** with complete configuration:
+   ```typescript
+   import { viteSingleFile } from "vite-plugin-singlefile";
+
+   export default defineConfig({
+     plugins: [react(), viteSingleFile()],
+     resolve: {
+       alias: {
+         "@": path.resolve(__dirname, "./src"),
+       },
+     },
+     build: {
+       rollupOptions: {
+         output: {
+           inlineDynamicImports: true,
+           manualChunks: undefined,
+         },
+       },
+       cssCodeSplit: false,
+     },
+   });
+   ```
+
+3. **Build**:
+   ```bash
+   pnpm run build
+   ```
+
+4. **Output**: `dist/index.html` - fully self-contained, opens directly in browser (file:// protocol)
+
+**Critical**: The `build` configuration is **required**. Without `inlineDynamicImports: true`, `manualChunks: undefined`, and `cssCodeSplit: false`, the bundle will not work properly (JavaScript won't execute, modules won't load).
+
+**When to use**:
+- Parcel bundling fails with signature errors
+- Custom inline scripts produce non-executable output
+- Need reliable single-file distribution
+
 ## Step 4: Share
 
-Share `bundle.html` in conversation for user to view as artifact.
+Share `bundle.html` (or `dist/index.html` if using Vite fallback) in conversation for user to view as artifact.
 
 ## Step 5: Testing (Optional)
 
