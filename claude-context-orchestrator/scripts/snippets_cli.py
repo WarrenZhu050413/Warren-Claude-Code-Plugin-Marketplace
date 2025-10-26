@@ -809,16 +809,34 @@ def interactive_select(snippets: List[Dict], operation: str = "edit", base_dir: 
 
     # Prompt for selection
     try:
-        choice = input(f"Select snippet to {operation} [1-{len(snippets)}, q to quit]: ").strip()
-        if choice.lower() == 'q':
+        if len(snippets) == 1:
+            # Single match: allow Enter to select
+            choice = input(f"Press Enter to {operation}, or q to quit: ").strip()
+            if choice.lower() == 'q':
+                return None
+            if choice == '':
+                return 0  # Select the only snippet
+            # If they typed something else, try to parse as number
+            try:
+                index = int(choice) - 1
+                if index == 0:
+                    return 0
+            except ValueError:
+                pass
+            print("Invalid input.")
             return None
-
-        index = int(choice) - 1
-        if 0 <= index < len(snippets):
-            return index
         else:
-            print(f"Invalid selection. Please enter 1-{len(snippets)}")
-            return None
+            # Multiple matches: require number
+            choice = input(f"Select snippet to {operation} [1-{len(snippets)}, q to quit]: ").strip()
+            if choice.lower() == 'q':
+                return None
+
+            index = int(choice) - 1
+            if 0 <= index < len(snippets):
+                return index
+            else:
+                print(f"Invalid selection. Please enter 1-{len(snippets)}")
+                return None
     except (ValueError, KeyboardInterrupt):
         print("\nCancelled.")
         return None
