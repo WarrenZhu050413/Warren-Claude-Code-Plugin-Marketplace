@@ -861,6 +861,47 @@ def format_output(success: bool, operation: str, data: Dict = None,
     return ""
 
 
+def preprocess_args(args):
+    """
+    Pre-process arguments to treat first positional arg as keyword if it's not a subcommand.
+
+    Examples:
+      snippets DOCKER        → snippets -k DOCKER list
+      snippets create foo    → snippets create foo (unchanged)
+      snippets -k DOCKER     → snippets -k DOCKER list (unchanged)
+    """
+    subcommands = {'create', 'list', 'update', 'delete', 'validate', 'test', 'set-priority'}
+
+    # Skip global flags to find first positional arg
+    i = 0
+    while i < len(args):
+        arg = args[i]
+
+        # Skip flag and its value
+        if arg in ['--config', '--config-name', '--snippets-dir', '--output', '-k', '--keyword']:
+            i += 2  # Skip flag and value
+            continue
+        if arg in ['--use-base-config', '-v', '--verbose']:
+            i += 1  # Skip boolean flag
+            continue
+        if arg.startswith('-'):
+            # Unknown flag, skip
+            i += 1
+            continue
+
+        # Found first positional argument
+        if arg not in subcommands:
+            # Treat as keyword
+            return args[:i] + ['-k', arg] + args[i+1:]
+        else:
+            # It's a subcommand, leave as is
+            return args
+
+        i += 1
+
+    return args
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Claude Code Snippets CLI with Multi-Config Support",
@@ -962,7 +1003,9 @@ Config Priority System:
     priority_parser.add_argument("priority", type=int,
                                 help="Priority value (higher = takes precedence)")
 
-    args = parser.parse_args()
+    # Pre-process arguments to treat first positional as keyword
+    processed_args = preprocess_args(sys.argv[1:])
+    args = parser.parse_args(processed_args)
 
     # Default to list command if no command specified
     if args.command is None:

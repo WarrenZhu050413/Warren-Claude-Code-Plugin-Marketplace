@@ -225,6 +225,39 @@ def test_help_output():
     print("  ✓ Help output includes new flags")
 
 
+def test_keyword_without_flag():
+    """Test using keyword as first positional arg (no -k flag)"""
+    print("Test 11: Keyword as first argument (no -k)...")
+
+    # Should treat CLEAR as keyword
+    code, stdout, stderr = run_cli("CLEAR", "--output", "json")
+
+    assert code == 0, f"Expected exit code 0, got {code}\n{stderr}"
+
+    data = json.loads(stdout)
+    snippets = data.get("snippets", [])
+
+    # Should find snippets with CLEAR
+    assert len(snippets) > 0, "Should find snippets with CLEAR"
+
+    print(f"  ✓ Keyword without -k flag works ({len(snippets)} found)")
+
+
+def test_subcommand_not_treated_as_keyword():
+    """Test that actual subcommands aren't treated as keywords"""
+    print("Test 12: Subcommands not treated as keywords...")
+
+    # Should execute list command, not search for 'list'
+    code, stdout, stderr = run_cli("--output", "json", "list")
+
+    assert code == 0, f"Expected exit code 0, got {code}\n{stderr}"
+
+    data = json.loads(stdout)
+    assert "snippets" in data, "Should execute list command"
+
+    print("  ✓ Subcommands work correctly")
+
+
 def run_all_tests():
     """Run all tests"""
     print("=" * 60)
@@ -243,6 +276,8 @@ def run_all_tests():
         test_output_format_validation,
         test_keyword_case_insensitive,
         test_help_output,
+        test_keyword_without_flag,
+        test_subcommand_not_treated_as_keyword,
     ]
 
     passed = 0
