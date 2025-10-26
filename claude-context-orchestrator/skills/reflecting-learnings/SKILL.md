@@ -156,6 +156,42 @@ Learnings captured for future sessions.
 
 **Updating:** Minimal edits. Preserve structure. Add, don't replace (unless correcting). Match existing style.
 
+## File Locations
+
+**Skills directory:**
+```
+/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/{skill-name}/SKILL.md
+```
+
+**Snippets directory:**
+```
+/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/{category}/{snippet-name}/SKILL.md
+```
+
+**Evals directory:**
+```
+/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/evals/{date}_{session}_{context}.md
+```
+
+**Finding files:**
+```bash
+# Find a skill
+find /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills -name "*keyword*"
+
+# Find a snippet
+find /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets -name "*keyword*"
+
+# Search for content
+grep -r "search term" /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator --include="*.md"
+```
+
+**Common snippet categories:**
+- `documentation/` - Guides, references, how-tos
+- `development/` - Code patterns, debugging
+- `communication/` - Email, writing templates
+- `productivity/` - Workflow, automation
+- `utilities/` - Tools, scripts
+
 ## Example
 
 ```

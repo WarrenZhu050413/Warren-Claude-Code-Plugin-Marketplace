@@ -159,13 +159,6 @@
       "separator": "\n"
     },
     {
-      "name": "updating-html-style",
-      "pattern": "\\b(HTMLSTYLE|STYLING)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/utilities/updating-html-style/SKILL.md"],
-      "enabled": true,
-      "separator": "\n"
-    },
-    {
       "name": "building-artifacts",
       "pattern": "\\b(BUILDART|ARTIFACT)\\b[.,;:!?]?",
       "snippet": ["../skills/building-artifacts/SKILL.md"],
@@ -267,6 +260,22 @@
       "name": "images",
       "pattern": "\\b(IMAGES)[.,;:!?]?\\b",
       "snippet": ["../skills/fetching-images/SKILL.md"],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "developing-essays",
+      "pattern": "\\b(ESSAY)[.,;:!?]?\\b",
+      "snippet": ["../skills/developing-essays/SKILL.md"],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "prompt-engineering",
+      "pattern": "\\b(PROMPT|PROMPTING)[.,;:!?]?\\b",
+      "snippet": [
+        "/Users/wz/.claude/skills/prompt-engineering/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     }

@@ -11,6 +11,7 @@ import json
 import re
 import sys
 import os
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -437,7 +438,7 @@ class SnippetManager:
         }
 
     def list(self, name: str = None, show_content: bool = False,
-             show_stats: bool = False, show_source: bool = True) -> Dict:
+             show_stats: bool = False, show_source: bool = True, keyword: str = None) -> Dict:
         """List snippets with source config and priority information"""
         snippets = []
 
@@ -454,6 +455,19 @@ class SnippetManager:
             # Filter by name if specified
             if name and snippet_name != name:
                 continue
+
+            # Filter by keyword in pattern
+            if keyword:
+                pattern = mapping["pattern"]
+                # Extract pattern content between parentheses
+                pattern_match = re.search(r'\(([^)]+)\)', pattern)
+                if pattern_match:
+                    pattern_content = pattern_match.group(1)
+                    # Check if keyword matches any alternative in the pattern
+                    if not any(keyword.upper() in alt.upper() for alt in pattern_content.split('|')):
+                        continue
+                else:
+                    continue
 
             snippet_info = {
                 "name": snippet_name,
@@ -760,6 +774,56 @@ class SnippetManager:
         }
 
 
+def open_in_editor(file_path: Path) -> bool:
+    """Open file in user's preferred editor"""
+    # Get editor from environment
+    editor = os.environ.get('EDITOR', os.environ.get('VISUAL', 'vim'))
+
+    try:
+        subprocess.run([editor, str(file_path)], check=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"Error opening editor: {e}", file=sys.stderr)
+        return False
+
+
+def interactive_select(snippets: List[Dict], operation: str = "edit", base_dir: Path = None) -> Optional[int]:
+    """Prompt user to select a snippet from a numbered list"""
+    if not snippets:
+        print("No snippets found.")
+        return None
+
+    # Display numbered list
+    print(f"\nFound {len(snippets)} snippet{'s' if len(snippets) != 1 else ''}:\n")
+    for i, snippet in enumerate(snippets, 1):
+        print(f"[{i}] {snippet['name']}")
+        print(f"    Pattern: {snippet['pattern']}")
+
+        # Show absolute path
+        file_path = Path(snippet['files'][0])
+        if not file_path.is_absolute() and base_dir:
+            file_path = (base_dir / file_path).resolve()
+
+        print(f"    File: {file_path}")
+        print()
+
+    # Prompt for selection
+    try:
+        choice = input(f"Select snippet to {operation} [1-{len(snippets)}, q to quit]: ").strip()
+        if choice.lower() == 'q':
+            return None
+
+        index = int(choice) - 1
+        if 0 <= index < len(snippets):
+            return index
+        else:
+            print(f"Invalid selection. Please enter 1-{len(snippets)}")
+            return None
+    except (ValueError, KeyboardInterrupt):
+        print("\nCancelled.")
+        return None
+
+
 def format_output(success: bool, operation: str, data: Dict = None,
                   message: str = None, error: SnippetError = None,
                   format_type: str = "json") -> str:
@@ -832,13 +896,15 @@ Config Priority System:
                        help="Snippets directory (default: ./commands/local)")
     parser.add_argument("--use-base-config", action="store_true",
                        help="Save to config.json instead of config.local.json")
-    parser.add_argument("--format", choices=["json", "text"], default="json",
-                       help="Output format (default: json)")
+    parser.add_argument("--output", choices=["json", "text"], default="text",
+                       help="Output format (default: text, use 'json' for raw JSON)")
     parser.add_argument("-v", "--verbose", action="store_true",
                        help="Verbose output")
+    parser.add_argument("-k", "--keyword", type=str,
+                       help="Filter by keyword (searches in pattern)")
 
-    # Subcommands
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    # Subcommands (default to list if not specified)
+    subparsers = parser.add_subparsers(dest="command", required=False)
 
     # create
     create_parser = subparsers.add_parser("create", help="Create new snippet")
@@ -898,6 +964,14 @@ Config Priority System:
 
     args = parser.parse_args()
 
+    # Default to list command if no command specified
+    if args.command is None:
+        args.command = "list"
+        # Set default list args
+        args.name = None
+        args.show_content = False
+        args.show_stats = False
+
     # Set defaults for paths
     script_dir = Path(__file__).parent
     config_path = args.config or script_dir / "config.json"
@@ -922,11 +996,36 @@ Config Priority System:
             )
             print(format_output(True, "create", data,
                               f"Snippet '{args.name}' created successfully",
-                              format_type=args.format))
+                              format_type=args.output))
 
         elif args.command == "list":
-            data = manager.list(args.name, args.show_content, args.show_stats)
-            print(format_output(True, "list", data, format_type=args.format))
+            # Use keyword from global args if provided
+            keyword = args.keyword if hasattr(args, 'keyword') else None
+            data = manager.list(args.name, args.show_content, args.show_stats, keyword=keyword)
+
+            # If output is JSON, just print it
+            if args.output == "json":
+                print(json.dumps(data, indent=2))
+            else:
+                # Interactive mode: show list and prompt for selection
+                snippets = data.get("snippets", [])
+                if not snippets:
+                    print("No snippets found.")
+                else:
+                    # Show list
+                    selected_idx = interactive_select(snippets, operation="edit", base_dir=snippets_dir.parent)
+                    if selected_idx is not None:
+                        # Open selected snippet in editor
+                        snippet = snippets[selected_idx]
+                        file_path = Path(snippet['files'][0])
+                        if not file_path.is_absolute():
+                            file_path = snippets_dir.parent / file_path
+
+                        print(f"\nOpening {file_path} in $EDITOR...")
+                        if open_in_editor(file_path):
+                            print("Saved.")
+                        else:
+                            print("Editor closed without saving or error occurred.")
 
         elif args.command == "update":
             data = manager.update(
@@ -935,42 +1034,42 @@ Config Priority System:
             )
             print(format_output(True, "update", data,
                               f"Snippet '{args.name}' updated successfully",
-                              format_type=args.format))
+                              format_type=args.output))
 
         elif args.command == "delete":
             data = manager.delete(args.name, args.force, args.backup,
                                  args.backup_dir)
             print(format_output(True, "delete", data,
                               f"Snippet '{args.name}' deleted successfully",
-                              format_type=args.format))
+                              format_type=args.output))
 
         elif args.command == "validate":
             data = manager.validate()
             message = "All snippets valid" if data["config_valid"] else "Validation issues found"
             print(format_output(True, "validate", data, message,
-                              format_type=args.format))
+                              format_type=args.output))
 
         elif args.command == "test":
             data = manager.test(args.name, args.text)
             message = f"Pattern {'matched' if data['matched'] else 'did not match'}"
             print(format_output(True, "test", data, message,
-                              format_type=args.format))
+                              format_type=args.output))
 
         elif args.command == "set-priority":
             data = manager.set_priority(args.priority)
             print(format_output(True, "set-priority", data, data["message"],
-                              format_type=args.format))
+                              format_type=args.output))
 
         sys.exit(0)
 
     except SnippetError as e:
-        print(format_output(False, args.command, error=e, format_type=args.format),
+        print(format_output(False, args.command, error=e, format_type=args.output),
               file=sys.stderr)
         sys.exit(1)
 
     except Exception as e:
         error = SnippetError("UNKNOWN_ERROR", str(e))
-        print(format_output(False, args.command, error=error, format_type=args.format),
+        print(format_output(False, args.command, error=error, format_type=args.output),
               file=sys.stderr)
         sys.exit(2)
 
