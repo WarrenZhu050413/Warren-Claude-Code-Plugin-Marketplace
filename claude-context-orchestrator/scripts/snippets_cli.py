@@ -18,6 +18,47 @@ from datetime import datetime
 import shutil
 
 
+# ANSI color codes
+class Colors:
+    """ANSI color codes for terminal output"""
+    CYAN = '\033[96m'
+    YELLOW = '\033[93m'
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    DIM = '\033[2m'
+    BOLD = '\033[1m'
+    RESET = '\033[0m'
+
+    @staticmethod
+    def enabled():
+        """Check if colors should be enabled (TTY and not piped)"""
+        return sys.stdout.isatty()
+
+    @classmethod
+    def cyan(cls, text):
+        return f"{cls.CYAN}{text}{cls.RESET}" if cls.enabled() else text
+
+    @classmethod
+    def yellow(cls, text):
+        return f"{cls.YELLOW}{text}{cls.RESET}" if cls.enabled() else text
+
+    @classmethod
+    def green(cls, text):
+        return f"{cls.GREEN}{text}{cls.RESET}" if cls.enabled() else text
+
+    @classmethod
+    def red(cls, text):
+        return f"{cls.RED}{text}{cls.RESET}" if cls.enabled() else text
+
+    @classmethod
+    def dim(cls, text):
+        return f"{cls.DIM}{text}{cls.RESET}" if cls.enabled() else text
+
+    @classmethod
+    def bold(cls, text):
+        return f"{cls.BOLD}{text}{cls.RESET}" if cls.enabled() else text
+
+
 # Template for Agent Skills format
 ANNOUNCEMENT_TEMPLATE = """---
 name: {name}
@@ -796,15 +837,18 @@ def interactive_select(snippets: List[Dict], operation: str = "edit", base_dir: 
     # Display numbered list
     print(f"\nFound {len(snippets)} snippet{'s' if len(snippets) != 1 else ''}:\n")
     for i, snippet in enumerate(snippets, 1):
-        print(f"[{i}] {snippet['name']}")
-        print(f"    Pattern: {snippet['pattern']}")
+        # Snippet name in cyan
+        print(f"[{i}] {Colors.cyan(snippet['name'])}")
 
-        # Show absolute path
+        # Pattern in yellow
+        print(f"    Pattern: {Colors.yellow(snippet['pattern'])}")
+
+        # Show absolute path in dim
         file_path = Path(snippet['files'][0])
         if not file_path.is_absolute() and base_dir:
             file_path = (base_dir / file_path).resolve()
 
-        print(f"    File: {file_path}")
+        print(f"    File: {Colors.dim(str(file_path))}")
         print()
 
     # Prompt for selection
