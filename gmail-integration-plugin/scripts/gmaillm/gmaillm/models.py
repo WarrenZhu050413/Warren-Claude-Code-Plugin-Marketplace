@@ -1,33 +1,42 @@
-"""
-Pydantic models for email data structures with LLM-friendly formatting
-"""
+"""Pydantic models for email data structures with LLM-friendly formatting."""
 
-from typing import Optional, List, Dict, Any, Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from enum import Enum
+from typing import Dict, List, Optional
+
+from email_validator import EmailNotValidError, validate_email
+from pydantic import BaseModel, Field, field_validator
+
+# Constants
+BYTES_PER_KB = 1024
+MAX_BODY_CHARS = 3000
+MAX_FAILURES_SHOWN = 10
 
 
 class EmailFormat(str, Enum):
-    """Email display format types"""
+    """Email display format types."""
+
     SUMMARY = "summary"  # Brief overview: ID, from, subject, date, snippet
     HEADERS = "headers"  # Summary + all headers
-    FULL = "full"        # Complete email with body and attachments
+    FULL = "full"  # Complete email with body and attachments
 
 
 class EmailAddress(BaseModel):
-    """Email address with optional name"""
+    """Email address with optional name."""
+
     email: str
     name: Optional[str] = None
 
     def __str__(self) -> str:
+        """Return formatted email address with optional name."""
         if self.name:
             return f"{self.name} <{self.email}>"
         return self.email
 
 
 class Attachment(BaseModel):
-    """Email attachment metadata"""
+    """Email attachment metadata."""
+
     filename: str
     mime_type: str
     size: int  # in bytes
@@ -35,17 +44,18 @@ class Attachment(BaseModel):
 
     @property
     def size_human(self) -> str:
-        """Human-readable file size"""
-        if self.size < 1024:
+        """Human-readable file size."""
+        if self.size < BYTES_PER_KB:
             return f"{self.size}B"
-        elif self.size < 1024 * 1024:
-            return f"{self.size / 1024:.1f}KB"
+        elif self.size < BYTES_PER_KB * BYTES_PER_KB:
+            return f"{self.size / BYTES_PER_KB:.1f}KB"
         else:
-            return f"{self.size / (1024 * 1024):.1f}MB"
+            return f"{self.size / (BYTES_PER_KB * BYTES_PER_KB):.1f}MB"
 
 
 class EmailSummary(BaseModel):
-    """Concise email summary for list views - LLM optimized"""
+    """Concise email summary for list views - LLM optimized."""
+
     message_id: str
     thread_id: str
     from_: EmailAddress = Field(alias="from")
@@ -61,20 +71,27 @@ class EmailSummary(BaseModel):
     }
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
-        unread = "🔵 " if self.is_unread else ""
-        attachment = "📎 " if self.has_attachments else ""
+        """Human-friendly markdown format."""
+        # Build status indicators without emojis
+        status_parts = []
+        if self.is_unread:
+            status_parts.append("UNREAD")
+        if self.has_attachments:
+            status_parts.append("HAS ATTACHMENTS")
+        status = f" [{', '.join(status_parts)}]" if status_parts else ""
+
         return (
-            f"{unread}{attachment}**{self.subject}**\n"
+            f"**{self.subject}**{status}\n"
             f"From: {self.from_}\n"
             f"Date: {self.date.strftime('%Y-%m-%d %H:%M')}\n"
-            f"ID: `{self.message_id}`\n"
-            f"_{self.snippet}_"
+            f"ID: {self.message_id}\n"
+            f"\n{self.snippet}\n"
         )
 
 
 class EmailFull(BaseModel):
-    """Complete email with body and attachments"""
+    """Complete email with body and attachments."""
+
     message_id: str
     thread_id: str
     from_: EmailAddress = Field(alias="from")
@@ -96,37 +113,37 @@ class EmailFull(BaseModel):
     }
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
+        """Human-friendly markdown format."""
         lines = [
             f"# {self.subject}",
             "",
-            f"**From:** {self.from_}",
-            f"**To:** {', '.join(str(addr) for addr in self.to)}",
+            f"From: {self.from_}",
+            f"To: {', '.join(str(addr) for addr in self.to)}",
         ]
 
         if self.cc:
-            lines.append(f"**CC:** {', '.join(str(addr) for addr in self.cc)}")
+            lines.append(f"CC: {', '.join(str(addr) for addr in self.cc)}")
 
-        lines.append(f"**Date:** {self.date.strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append(f"**Message ID:** `{self.message_id}`")
+        lines.append(f"Date: {self.date.strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append(f"Message ID: {self.message_id}")
 
         if self.labels:
-            lines.append(f"**Labels:** {', '.join(self.labels)}")
+            lines.append(f"Labels: {', '.join(self.labels)}")
 
         if self.attachments:
-            lines.append(f"\n**Attachments:** ({len(self.attachments)} files)")
+            lines.append(f"\nAttachments ({len(self.attachments)} files):")
             for att in self.attachments:
-                lines.append(f"  - {att.filename} ({att.size_human}, {att.mime_type})")
+                lines.append(f"  • {att.filename} — {att.size_human}, {att.mime_type}")
 
-        lines.append("\n---\n")
+        lines.append("\n" + "─" * 80 + "\n")
 
         # Prefer plain text body
         body = self.body_plain if self.body_plain else self.body_html
         if body:
-            # Truncate if too long (keep first 3000 chars for LLM context efficiency)
-            if len(body) > 3000:
-                lines.append(body[:3000])
-                lines.append(f"\n\n_[Body truncated - {len(body)} total characters]_")
+            # Truncate if too long (keep first MAX_BODY_CHARS chars for context efficiency)
+            if len(body) > MAX_BODY_CHARS:
+                lines.append(body[:MAX_BODY_CHARS])
+                lines.append(f"\n\n[Body truncated — {len(body)} total characters]")
             else:
                 lines.append(body)
 
@@ -134,37 +151,46 @@ class EmailFull(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """Paginated search results"""
+    """Paginated search results."""
+
     emails: List[EmailSummary]
     total_count: int
     next_page_token: Optional[str] = None
     query: str
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
+        """Human-friendly markdown format."""
         lines = [
-            f"# Search Results: \"{self.query}\"",
-            f"",
+            f'# Search Results: "{self.query}"',
+            "",
             f"Found {self.total_count} emails. Showing {len(self.emails)}.",
             "",
         ]
 
         for i, email in enumerate(self.emails, 1):
-            lines.append(f"## {i}. {email.subject}")
+            # Build status indicators
+            status_parts = []
+            if email.is_unread:
+                status_parts.append("UNREAD")
+            if email.has_attachments:
+                status_parts.append("HAS ATTACHMENTS")
+            status = f" [{', '.join(status_parts)}]" if status_parts else ""
+
+            lines.append(f"## {i}. {email.subject}{status}")
             lines.append(f"From: {email.from_}")
             lines.append(f"Date: {email.date.strftime('%Y-%m-%d %H:%M')}")
-            lines.append(f"ID: `{email.message_id}`")
-            lines.append(f"_{email.snippet}_")
-            lines.append("")
+            lines.append(f"ID: {email.message_id}")
+            lines.append(f"\n{email.snippet}\n")
 
         if self.next_page_token:
-            lines.append(f"_More results available. Use next_page_token: `{self.next_page_token}`_")
+            lines.append(f"\nMore results available. Use next_page_token: {self.next_page_token}")
 
         return "\n".join(lines)
 
 
 class Folder(BaseModel):
-    """Gmail label/folder"""
+    """Gmail label/folder."""
+
     id: str
     name: str
     type: str  # system or user
@@ -172,14 +198,27 @@ class Folder(BaseModel):
     unread_count: Optional[int] = None
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
-        unread = f" ({self.unread_count} unread)" if self.unread_count else ""
-        msg_count = f" [{self.message_count} messages]" if self.message_count else ""
-        return f"- **{self.name}**{msg_count}{unread} (ID: `{self.id}`)"
+        """Human-friendly markdown format."""
+        parts = []
+
+        if self.message_count is not None:
+            parts.append(f"{self.message_count} messages")
+
+        if self.unread_count:
+            parts.append(f"{self.unread_count} unread")
+
+        # Use bullet point (•) and em dash (—) for better formatting
+        # Format: "• FOLDER_NAME — 123 messages, 5 unread, ID: `Label_1`"
+        if parts:
+            details = f" — {', '.join(parts)}, ID: `{self.id}`"
+        else:
+            details = f" — ID: `{self.id}`"
+        return f"• {self.name}{details}"
 
 
 class SendEmailRequest(BaseModel):
-    """Request to send an email"""
+    """Request to send an email."""
+
     to: List[str] = Field(min_length=1, description="List of recipient email addresses")
     subject: str = Field(min_length=1, description="Email subject")
     body: str = Field(description="Email body (plain text or HTML)")
@@ -195,66 +234,75 @@ class SendEmailRequest(BaseModel):
         "populate_by_name": True,
     }
 
-    @field_validator('to', 'cc', 'bcc')
+    @field_validator("to", "cc", "bcc")
     @classmethod
-    def validate_emails(cls, v):
-        """Ensure email addresses are valid"""
+    def validate_emails(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Ensure email addresses are valid using email-validator library."""
         if v is None:
             return v
-        # Basic email validation
+
         for email in v:
-            if '@' not in email or '.' not in email.split('@')[1]:
-                raise ValueError(f"Invalid email address: {email}")
+            try:
+                # Validate email format without checking DNS deliverability
+                validate_email(email, check_deliverability=False)
+            except EmailNotValidError as e:
+                raise ValueError(f"Invalid email address: {email}") from e
         return v
 
 
 class SendEmailResponse(BaseModel):
-    """Response after sending an email"""
+    """Response after sending an email."""
+
     message_id: str
     thread_id: str
     success: bool = True
     error: Optional[str] = None
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
+        """Human-friendly markdown format."""
         if self.success:
             return (
-                f"✅ Email sent successfully!\n"
-                f"Message ID: `{self.message_id}`\n"
-                f"Thread ID: `{self.thread_id}`"
+                f"Email sent successfully!\n"
+                f"Message ID: {self.message_id}\n"
+                f"Thread ID: {self.thread_id}"
             )
         else:
-            return f"❌ Failed to send email: {self.error}"
+            return f"Failed to send email: {self.error}"
 
 
 class BatchOperationResult(BaseModel):
-    """Result of batch operations"""
-    successful: List[str] = Field(default_factory=list, description="Successfully processed message IDs")
-    failed: Dict[str, str] = Field(default_factory=dict, description="Failed message IDs with error messages")
+    """Result of batch operations."""
+
+    successful: List[str] = Field(
+        default_factory=list, description="Successfully processed message IDs"
+    )
+    failed: Dict[str, str] = Field(
+        default_factory=dict, description="Failed message IDs with error messages"
+    )
     total: int
 
     @property
     def success_rate(self) -> float:
-        """Calculate success rate"""
+        """Calculate success rate."""
         return len(self.successful) / self.total if self.total > 0 else 0.0
 
     def to_markdown(self) -> str:
-        """LLM-friendly markdown format"""
+        """Human-friendly markdown format."""
         success_pct = self.success_rate * 100
         lines = [
-            f"# Batch Operation Results",
+            "# Batch Operation Results",
             "",
-            f"✅ Successful: {len(self.successful)}/{self.total} ({success_pct:.1f}%)",
+            f"Successful: {len(self.successful)}/{self.total} ({success_pct:.1f}%)",
         ]
 
         if self.failed:
-            lines.append(f"❌ Failed: {len(self.failed)}")
+            lines.append(f"Failed: {len(self.failed)}")
             lines.append("")
             lines.append("## Failed Operations")
-            for msg_id, error in list(self.failed.items())[:10]:  # Limit to first 10
-                lines.append(f"- `{msg_id}`: {error}")
+            for msg_id, error in list(self.failed.items())[:MAX_FAILURES_SHOWN]:
+                lines.append(f"• {msg_id}: {error}")
 
-            if len(self.failed) > 10:
-                lines.append(f"_... and {len(self.failed) - 10} more failures_")
+            if len(self.failed) > MAX_FAILURES_SHOWN:
+                lines.append(f"\n... and {len(self.failed) - MAX_FAILURES_SHOWN} more failures")
 
         return "\n".join(lines)

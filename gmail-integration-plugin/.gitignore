@@ -1,0 +1,23 @@
+Tutorial/
+
+# Credentials - NEVER commit these
+credentials/
+*.json
+!config/*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Build artifacts
+build/
+dist/
