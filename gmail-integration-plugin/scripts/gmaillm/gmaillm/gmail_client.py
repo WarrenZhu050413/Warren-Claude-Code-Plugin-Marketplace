@@ -72,15 +72,72 @@ class GmailClient:
                 f"Please ensure OAuth2 client secrets are available."
             )
 
+        # Check if credentials file is empty
+        try:
+            cred_size = os.path.getsize(self.credentials_file)
+        except OSError as e:
+            raise RuntimeError(
+                f"Cannot access credentials file: {self.credentials_file}\n"
+                f"Error: {e}"
+            )
+
+        if cred_size == 0:
+            raise RuntimeError(
+                f"Credentials file is empty: {self.credentials_file}\n\n"
+                f"You need to authenticate first. Run this command:\n"
+                f"  python3 -m gmaillm.setup_auth\n\n"
+                f"Or follow the Gmail MCP setup instructions."
+            )
+
+        # Check if oauth keys file is empty
+        try:
+            oauth_size = os.path.getsize(self.oauth_keys_file)
+        except OSError as e:
+            raise RuntimeError(
+                f"Cannot access OAuth keys file: {self.oauth_keys_file}\n"
+                f"Error: {e}"
+            )
+
+        if oauth_size == 0:
+            raise RuntimeError(
+                f"OAuth keys file is empty: {self.oauth_keys_file}\n\n"
+                f"Please ensure OAuth2 client secrets are available.\n"
+                f"Follow the Gmail MCP setup instructions."
+            )
+
         # Load OAuth keys
-        with open(self.oauth_keys_file, 'r') as f:
-            oauth_keys = json.load(f)
-            if 'installed' in oauth_keys:
-                oauth_keys = oauth_keys['installed']
+        try:
+            with open(self.oauth_keys_file, 'r') as f:
+                oauth_keys = json.load(f)
+                if 'installed' in oauth_keys:
+                    oauth_keys = oauth_keys['installed']
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Invalid JSON in OAuth keys file: {self.oauth_keys_file}\n"
+                f"The file may be corrupted. Error: {e}\n\n"
+                f"Please ensure the file contains valid JSON."
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"Error reading OAuth keys file: {self.oauth_keys_file}\n"
+                f"Error: {e}"
+            )
 
         # Load saved credentials
-        with open(self.credentials_file, 'r') as f:
-            creds_data = json.load(f)
+        try:
+            with open(self.credentials_file, 'r') as f:
+                creds_data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Invalid JSON in credentials file: {self.credentials_file}\n"
+                f"The file may be corrupted. Error: {e}\n\n"
+                f"Try re-authenticating with: python3 -m gmaillm.setup_auth"
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"Error reading credentials file: {self.credentials_file}\n"
+                f"Error: {e}"
+            )
 
         # Merge OAuth keys with credentials
         creds_data['client_id'] = oauth_keys['client_id']
@@ -398,6 +455,40 @@ class GmailClient:
 
         except HttpError as e:
             raise RuntimeError(f"Failed to get folders: {e}")
+
+    def create_label(self, name: str, visibility: str = 'labelShow') -> Folder:
+        """
+        Create a new Gmail label/folder
+
+        Args:
+            name: Name of the label to create
+            visibility: Label visibility ('labelShow', 'labelShowIfUnread', 'labelHide')
+
+        Returns:
+            Folder object for the newly created label
+        """
+        try:
+            label_object = {
+                'name': name,
+                'labelListVisibility': visibility,
+                'messageListVisibility': 'show'
+            }
+
+            result = self.service.users().labels().create(
+                userId='me',
+                body=label_object
+            ).execute()
+
+            return Folder(
+                id=result['id'],
+                name=result['name'],
+                type=result['type'].lower(),
+                message_count=result.get('messagesTotal'),
+                unread_count=result.get('messagesUnread'),
+            )
+
+        except HttpError as e:
+            raise RuntimeError(f"Failed to create label '{name}': {e}")
 
     def verify_setup(self) -> Dict[str, Any]:
         """

@@ -331,6 +331,66 @@ def cmd_folders(args):
         sys.exit(1)
 
 
+def cmd_label_create(args):
+    """Create a new label/folder"""
+    try:
+        client = GmailClient()
+
+        # Show preview
+        print("=" * 60)
+        print("Creating Label")
+        print("=" * 60)
+        print(f"Name: {args.name}")
+        print("=" * 60)
+
+        # Confirm
+        response = input("\nCreate this label? (y/n): ").lower()
+        if response not in ['y', 'yes']:
+            print("Cancelled.")
+            return
+
+        # Create label
+        label = client.create_label(args.name)
+
+        print(f"\n✅ Label created: {label.name}")
+        print(f"   ID: {label.id}")
+
+    except Exception as e:
+        print(f"✗ Error creating label: {e}")
+        sys.exit(1)
+
+
+def cmd_label_list(args):
+    """List all labels/folders"""
+    try:
+        client = GmailClient()
+        folders = client.get_folders()
+
+        # Separate system and user labels
+        system_labels = [f for f in folders if f.type == 'system']
+        user_labels = [f for f in folders if f.type == 'user']
+
+        print("=" * 60)
+        print(f"Gmail Labels")
+        print("=" * 60)
+
+        if system_labels:
+            print("\n📋 System Labels:")
+            for label in system_labels:
+                print(f"  {label.to_markdown()}")
+
+        if user_labels:
+            print("\n🏷️  Custom Labels:")
+            for label in user_labels:
+                print(f"  {label.to_markdown()}")
+
+        print(f"\nTotal: {len(system_labels)} system, {len(user_labels)} custom")
+
+    except Exception as e:
+        print(f"✗ Error listing labels: {e}")
+        sys.exit(1)
+
+
 def cmd_config_edit_style(args):
     """Edit email style configuration"""
     config_dir = get_plugin_config_dir()
@@ -478,6 +538,20 @@ def main():
     # folders command
     folders_parser = subparsers.add_parser('folders', help='List available folders/labels')
     folders_parser.set_defaults(func=cmd_folders)
+
+    # label command with subcommands
+    label_parser = subparsers.add_parser('label', help='Manage Gmail labels')
+    label_subparsers = label_parser.add_subparsers(dest='label_command', help='Label commands')
+    label_subparsers.required = True
+
+    # label create
+    label_create_parser = label_subparsers.add_parser('create', help='Create a new label')
+    label_create_parser.add_argument('name', help='Name of the label to create')
+    label_create_parser.set_defaults(func=cmd_label_create)
+
+    # label list
+    label_list_parser = label_subparsers.add_parser('list', help='List all labels (system and custom)')
+    label_list_parser.set_defaults(func=cmd_label_list)
 
     # config command with subcommands
     config_parser = subparsers.add_parser('config', help='Manage Gmail integration configuration')

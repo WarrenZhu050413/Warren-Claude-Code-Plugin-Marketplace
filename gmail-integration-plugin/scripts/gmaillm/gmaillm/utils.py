@@ -37,10 +37,10 @@ def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
 
 def clean_snippet(snippet: str) -> str:
     """Clean email snippet for display"""
+    # Remove common email artifacts first
+    snippet = re.sub(r'\[image:.*?\]', '', snippet)
     # Remove extra whitespace
     snippet = re.sub(r'\s+', ' ', snippet.strip())
-    # Remove common email artifacts
-    snippet = re.sub(r'\[image:.*?\]', '', snippet)
     return snippet
 
 
@@ -121,14 +121,23 @@ def create_mime_message(
 
 def decode_base64(data: str) -> str:
     """Decode base64 encoded string"""
+    if not data or not isinstance(data, str):
+        return ""
+
     try:
         # Handle URL-safe base64
-        data = data.replace('-', '+').replace('_', '/')
+        data_to_decode = data.replace('-', '+').replace('_', '/')
         # Add padding if needed
-        padding = 4 - len(data) % 4
+        padding = 4 - len(data_to_decode) % 4
         if padding != 4:
-            data += '=' * padding
-        return base64.b64decode(data).decode('utf-8', errors='ignore')
+            data_to_decode += '=' * padding
+
+        # Validate base64 format - only allow alphanumeric, +, /, =
+        if not all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=' for c in data_to_decode):
+            return ""
+
+        decoded = base64.b64decode(data_to_decode, validate=True)
+        return decoded.decode('utf-8', errors='strict')
     except Exception:
         return ""
 
