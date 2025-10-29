@@ -20,10 +20,10 @@ class HelpfulCommand(click.Command):
         app = typer.Typer(cls=HelpfulGroup)
     """
 
-    def parse_args(self, ctx, args):
-        """Override parse_args to intercept missing arguments."""
+    def invoke(self, ctx):
+        """Override invoke to catch missing parameter errors and show help."""
         try:
-            return super().parse_args(ctx, args)
+            return super().invoke(ctx)
         except (click.MissingParameter, click.exceptions.UsageError) as e:
             # Show help instead of error
             click.echo(self.get_help(ctx), file=sys.stderr)
@@ -64,16 +64,16 @@ class HelpfulGroup(typer.core.TyperGroup):
     def add_command(self, cmd: click.Command, name: str = None):
         """Override to convert existing commands to HelpfulCommand."""
         if isinstance(cmd, click.Command) and not isinstance(cmd, HelpfulCommand):
-            # Convert the command to use HelpfulCommand's parse_args override
-            original_parse_args = cmd.parse_args
+            # Convert the command to use HelpfulCommand's invoke override
+            original_invoke = cmd.invoke
 
-            def new_parse_args(ctx, args):
+            def new_invoke(ctx):
                 try:
-                    return original_parse_args(ctx, args)
+                    return original_invoke(ctx)
                 except (click.MissingParameter, click.exceptions.UsageError) as e:
                     click.echo(cmd.get_help(ctx), file=sys.stderr)
                     ctx.exit(2)
 
-            cmd.parse_args = new_parse_args
+            cmd.invoke = new_invoke
 
         return super().add_command(cmd, name)

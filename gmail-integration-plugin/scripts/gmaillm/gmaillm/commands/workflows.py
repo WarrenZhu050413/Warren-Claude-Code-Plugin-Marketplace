@@ -165,14 +165,30 @@ def run_workflow(
             # Display email
             formatter.print_email_full(email)
 
-            # Prompt for action
-            console.print("\n[bold]Actions:[/bold]")
-            console.print("  [cyan]r[/cyan] - Reply (then archive)")
-            console.print("  [cyan]a[/cyan] - Archive")
-            console.print("  [cyan]s[/cyan] - Skip" + (" (mark as read)" if auto_mark_read else ""))
-            console.print("  [cyan]q[/cyan] - Quit workflow")
+            # Prompt for action (loop until valid action)
+            while True:
+                console.print("\n[bold]Actions:[/bold]")
+                console.print("  [cyan]v[/cyan] - View full body")
+                console.print("  [cyan]r[/cyan] - Reply (then archive)")
+                console.print("  [cyan]a[/cyan] - Archive")
+                console.print("  [cyan]s[/cyan] - Skip" + (" (mark as read)" if auto_mark_read else ""))
+                console.print("  [cyan]q[/cyan] - Quit workflow")
 
-            action = console.input("\n[bold]Choose action:[/bold] ").lower().strip()
+                action = console.input("\n[bold]Choose action:[/bold] ").lower().strip()
+
+                if action == 'v':
+                    # View full body
+                    body = email.body_plain or email.body_html or "[No body]"
+                    console.print("\n" + "=" * 60)
+                    console.print("[bold]Full Email Body:[/bold]")
+                    console.print("=" * 60)
+                    console.print(body)
+                    console.print("=" * 60 + "\n")
+                    # Continue loop to show actions again
+                    continue
+
+                # Break loop for other actions
+                break
 
             if action == 'r':
                 # Reply
