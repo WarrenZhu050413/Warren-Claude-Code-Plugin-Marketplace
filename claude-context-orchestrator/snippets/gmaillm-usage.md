@@ -137,6 +137,27 @@ Claude:
 
 ### 🔄 WORKFLOW Pattern
 
+**Typical LLM Workflow:**
+
+When user asks to "process emails" or "handle my inbox":
+
+1. **Create or use workflow**:
+   ```bash
+   gmail workflows start gmaillm-inbox --output-format json
+   ```
+
+2. **Loop through emails autonomously**:
+   ```bash
+   # For each email in JSON response:
+   # - Read email summary
+   # - Determine action (archive, skip, reply, read)
+   # - Execute: gmail workflows continue <token> <action> --output-format json
+   # - Repeat until has_more: false
+   ```
+
+3. **Summary**:
+   - Show user what was done (e.g., "Archived 5 newsletters, replied to 2 emails")
+
 **Creating Workflows:**
 
 To create a workflow for specific email patterns:
@@ -160,16 +181,85 @@ gmail workflows create proj-alpha \
 
 **Running Workflows:**
 
+**For LLMs (Programmatic/Non-Interactive Mode):**
+
+This is the preferred mode for Claude to process workflows autonomously:
+
 ```bash
-# Interactive mode (shows each email, prompts for actions)
+# 1. Start workflow - returns JSON with token and first email
+gmail workflows start gmaillm-inbox --output-format json
+
+# Returns:
+# {
+#   "token": "abc123...",
+#   "email": { "id": "...", "from": "...", "subject": "...", "snippet": "..." },
+#   "position": "1/5",
+#   "has_more": true
+# }
+
+# 2. Process current email - Claude decides action based on content
+gmail workflows continue <token> archive           # Archive and move to next
+gmail workflows continue <token> skip              # Skip and move to next
+gmail workflows continue <token> reply -b "..."    # Reply, archive, and move to next
+gmail workflows continue <token> read              # Get full email content
+
+# 3. Repeat step 2 for each email until has_more: false
+```
+
+**Programmatic Workflow Pattern (for Claude):**
+
+1. **Start workflow**: `gmail workflows start <name> --output-format json`
+2. **For each email**:
+   - Read the email summary from JSON response
+   - Determine action based on content:
+     - `archive` - Archive and continue
+     - `skip` - Skip and continue
+     - `reply -b "message"` - Reply and continue
+     - `read` - Get full content (then decide)
+     - `stop` - Stop processing workflow
+3. **Continue until** `has_more: false`
+
+**Example LLM workflow execution:**
+
+```python
+# User: "Process my gmaillm inbox and archive newsletters"
+
+# 1. Start workflow
+response = run("gmail workflows start gmaillm-inbox --output-format json")
+token = response["token"]
+
+# 2. Process each email
+while response["has_more"]:
+    email = response["email"]
+
+    # Decide action based on email content
+    if "newsletter" in email["from"].lower():
+        action = "archive"
+    elif needs_full_content(email):
+        # Get full email to decide
+        full = run(f"gmail workflows continue {token} read --output-format json")
+        action = determine_action(full["email"]["body"])
+    else:
+        action = "skip"
+
+    # Execute action
+    response = run(f"gmail workflows continue {token} {action} --output-format json")
+
+# 3. Done when has_more: false
+```
+
+**For Humans (Interactive Mode):**
+
+```bash
+# Run interactively - shows each email and prompts for action
 gmail workflows run gmaillm-inbox
 
-# Programmatic mode (LLM-friendly with continuation tokens)
-gmail workflows start gmaillm-inbox           # Returns token
-gmail workflows continue <token> archive       # Archive current email
-gmail workflows continue <token> skip          # Skip to next
-gmail workflows continue <token> reply -b "Thanks!"  # Reply and archive
+# At each email, user types: archive, skip, reply, read, stop
 ```
+
+**Key Difference:**
+- **Interactive (`run`)**: Human types actions one by one
+- **Programmatic (`start`/`continue`)**: LLM decides actions autonomously in a loop
 
 **Common Gmail Search Queries:**
 
