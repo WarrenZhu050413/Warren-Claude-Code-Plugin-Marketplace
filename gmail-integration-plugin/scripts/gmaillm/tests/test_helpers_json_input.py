@@ -311,7 +311,7 @@ class TestDisplaySchemaAndExit:
 
         assert called_with_indent == 2
 
-    @patch("gmaillm.helpers.json_input.console")
+    @patch("gmaillm.helpers.cli.validation.console")
     def test_display_schema_prints_all_sections(self, mock_console):
         """Test that all sections are printed."""
         def schema_getter(indent=2):
