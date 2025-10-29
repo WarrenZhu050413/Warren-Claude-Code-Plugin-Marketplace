@@ -320,3 +320,161 @@ Test
         # Trailing whitespace should be fixed
         assert '   \n' not in fixed_content
         assert '  \n' not in fixed_content
+
+
+class TestConvertJsonToMarkdownStyle:
+    """Tests for create_style_from_json function."""
+
+    def test_convert_valid_json_to_markdown(self, tmp_path):
+        """Test converting valid JSON to markdown style file."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        json_data = {
+            "name": "test-style",
+            "description": "When to use: For testing purposes with adequate description length.",
+            "examples": ["Example 1", "Example 2"],
+            "greeting": ["Hi,", "Hello,"],
+            "body": ["Keep it brief.", "Be clear."],
+            "closing": ["Best,", "Thanks,"],
+            "do": ["Be professional", "Be concise"],
+            "dont": ["Don't ramble", "Don't be vague"]
+        }
+        
+        output_file = tmp_path / "test-style.md"
+        create_style_from_json(json_data, output_file)
+        
+        assert output_file.exists()
+        content = output_file.read_text()
+        
+        # Check YAML frontmatter
+        assert "---" in content
+        assert 'name: "test-style"' in content
+        assert 'description: "When to use:' in content
+        
+        # Check all sections exist
+        assert "<examples>" in content
+        assert "</examples>" in content
+        assert "<greeting>" in content
+        assert "</greeting>" in content
+        assert "<body>" in content
+        assert "</body>" in content
+        assert "<closing>" in content
+        assert "</closing>" in content
+        assert "<do>" in content
+        assert "</do>" in content
+        assert "<dont>" in content
+        assert "</dont>" in content
+        
+        # Check content
+        assert "Example 1" in content
+        assert "- Hi," in content
+        assert "- Keep it brief." in content
+        assert "- Best," in content
+        assert "- Be professional" in content
+        assert "- Don't ramble" in content
+
+    def test_convert_with_single_example(self, tmp_path):
+        """Test converting with single example (no separator needed)."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        json_data = {
+            "name": "simple",
+            "description": "When to use: Simple style with one example only for testing.",
+            "examples": ["Only one example"],
+            "greeting": ["Hi,"],
+            "body": ["Be brief."],
+            "closing": ["Thanks,"],
+            "do": ["Do this", "Do that"],
+            "dont": ["Don't this", "Don't that"]
+        }
+        
+        output_file = tmp_path / "simple.md"
+        create_style_from_json(json_data, output_file)
+        
+        content = output_file.read_text()
+        assert "Only one example" in content
+        # Should not have --- separator between examples
+        assert content.count("---") == 2  # Only YAML frontmatter delimiters
+
+    def test_convert_with_multiple_examples(self, tmp_path):
+        """Test converting with multiple examples (separator needed)."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        json_data = {
+            "name": "multi",
+            "description": "When to use: Style with multiple examples for testing purposes.",
+            "examples": ["Example 1", "Example 2", "Example 3"],
+            "greeting": ["Hi,"],
+            "body": ["Be brief."],
+            "closing": ["Thanks,"],
+            "do": ["Do this", "Do that"],
+            "dont": ["Don't this", "Don't that"]
+        }
+        
+        output_file = tmp_path / "multi.md"
+        create_style_from_json(json_data, output_file)
+        
+        content = output_file.read_text()
+        # Should have separators between examples
+        assert "Example 1" in content
+        assert "Example 2" in content
+        assert "Example 3" in content
+
+    def test_convert_invalid_json_raises_error(self, tmp_path):
+        """Test that invalid JSON raises ValueError."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        invalid_json = {
+            "name": "A",  # Too short
+            "description": "Short",  # Wrong format
+            "examples": []  # Too few
+        }
+        
+        output_file = tmp_path / "invalid.md"
+        
+        with pytest.raises(ValueError, match="Invalid JSON data"):
+            create_style_from_json(invalid_json, output_file)
+
+    def test_convert_missing_required_field(self, tmp_path):
+        """Test that missing required field raises ValueError."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        incomplete_json = {
+            "name": "test-style",
+            # Missing description and other fields
+        }
+        
+        output_file = tmp_path / "incomplete.md"
+        
+        with pytest.raises(ValueError, match="Invalid JSON data"):
+            create_style_from_json(incomplete_json, output_file)
+
+    def test_convert_creates_proper_list_format(self, tmp_path):
+        """Test that list items are formatted with bullet points."""
+        from gmaillm.validators.styles import create_style_from_json
+        
+        json_data = {
+            "name": "list-test",
+            "description": "When to use: Testing list formatting in markdown output style.",
+            "examples": ["Example"],
+            "greeting": ["First greeting", "Second greeting"],
+            "body": ["First body item", "Second body item"],
+            "closing": ["First closing", "Second closing"],
+            "do": ["First do", "Second do", "Third do"],
+            "dont": ["First dont", "Second dont", "Third dont"]
+        }
+        
+        output_file = tmp_path / "list-test.md"
+        create_style_from_json(json_data, output_file)
+        
+        content = output_file.read_text()
+        
+        # All list items should have "- " prefix
+        assert "- First greeting" in content
+        assert "- Second greeting" in content
+        assert "- First body item" in content
+        assert "- Second body item" in content
+        assert "- First do" in content
+        assert "- Third do" in content
+        assert "- First dont" in content
+        assert "- Third dont" in content
