@@ -393,6 +393,9 @@ def edit_style(
         $ gmail styles edit my-style -j /path/to/updated.json -f
     """
     try:
+        # Validate name
+        validate_style_name(name)
+
         style_file = get_style_file_path(name)
 
         # Check if exists
@@ -465,6 +468,9 @@ def delete_style(
 ) -> None:
     """Delete an email style."""
     try:
+        # Validate name
+        validate_style_name(name)
+
         style_file = get_style_file_path(name)
 
         # Check if exists
