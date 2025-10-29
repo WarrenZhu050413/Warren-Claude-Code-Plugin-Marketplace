@@ -413,7 +413,7 @@ class TestCLICommands:
 
         mock_client.get_thread.assert_called_once_with("thread123")
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_config_show(self, mock_config_dir, tmp_path):
         """Test config show command."""
         mock_config_dir.return_value = tmp_path
@@ -535,7 +535,7 @@ Example
 </dont>
 """
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_list(self, mock_config_dir, tmp_path):
         """Test listing all styles."""
         mock_config_dir.return_value = tmp_path
@@ -550,7 +550,7 @@ Example
             with patch("sys.exit"):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_list_empty(self, mock_config_dir, tmp_path):
         """Test listing styles when directory is empty."""
         mock_config_dir.return_value = tmp_path
@@ -561,7 +561,7 @@ Example
             with patch("sys.exit"):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_show(self, mock_config_dir, tmp_path):
         """Test showing specific style."""
         mock_config_dir.return_value = tmp_path
@@ -575,7 +575,7 @@ Example
             with patch("sys.exit"):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_show_not_found(self, mock_config_dir, tmp_path):
         """Test showing non-existent style."""
         mock_config_dir.return_value = tmp_path
@@ -586,7 +586,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_create(self, mock_confirm, mock_config_dir, tmp_path):
         """Test creating new style."""
@@ -602,7 +602,7 @@ Example
         # Verify file was created
         assert (styles_dir / "new-style.md").exists()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_create_cancelled(self, mock_confirm, mock_config_dir, tmp_path):
         """Test creating style cancelled by user."""
@@ -618,7 +618,7 @@ Example
         # Verify file was not created
         assert not (styles_dir / "new-style.md").exists()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_create_duplicate(self, mock_confirm, mock_config_dir, tmp_path):
         """Test creating style that already exists."""
@@ -634,7 +634,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_create_invalid_name(self, mock_config_dir, tmp_path):
         """Test creating style with invalid name."""
         mock_config_dir.return_value = tmp_path
@@ -646,7 +646,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_create_skip_validation(self, mock_confirm, mock_config_dir, tmp_path):
         """Test creating style with --skip-validation flag."""
@@ -661,7 +661,7 @@ Example
 
         assert (styles_dir / "new-style.md").exists()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("subprocess.run")
     def test_styles_edit(self, mock_subprocess, mock_config_dir, tmp_path):
         """Test editing existing style."""
@@ -679,7 +679,7 @@ Example
         # Verify editor was called
         mock_subprocess.assert_called_once()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_edit_not_found(self, mock_config_dir, tmp_path):
         """Test editing non-existent style."""
         mock_config_dir.return_value = tmp_path
@@ -690,7 +690,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("subprocess.run")
     def test_styles_edit_skip_validation(self, mock_subprocess, mock_config_dir, tmp_path):
         """Test editing style with --skip-validation flag."""
@@ -707,7 +707,7 @@ Example
 
         mock_subprocess.assert_called_once()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_delete(self, mock_confirm, mock_config_dir, tmp_path):
         """Test deleting style with confirmation."""
@@ -730,7 +730,7 @@ Example
         backups = list(styles_dir.glob("old-style.backup.*"))
         assert len(backups) == 1
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     @patch("typer.confirm")
     def test_styles_delete_cancelled(self, mock_confirm, mock_config_dir, tmp_path):
         """Test deleting style cancelled by user."""
@@ -749,7 +749,7 @@ Example
         # Verify file still exists
         assert style_file.exists()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_delete_force(self, mock_config_dir, tmp_path):
         """Test deleting style with --force flag."""
         mock_config_dir.return_value = tmp_path
@@ -765,7 +765,7 @@ Example
 
         assert not style_file.exists()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_delete_not_found(self, mock_config_dir, tmp_path):
         """Test deleting non-existent style."""
         mock_config_dir.return_value = tmp_path
@@ -776,7 +776,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_valid(self, mock_config_dir, tmp_path):
         """Test validating valid style."""
         mock_config_dir.return_value = tmp_path
@@ -790,7 +790,7 @@ Example
             with patch("sys.exit"):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_invalid(self, mock_config_dir, tmp_path):
         """Test validating invalid style."""
         mock_config_dir.return_value = tmp_path
@@ -804,7 +804,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_fix(self, mock_config_dir, tmp_path):
         """Test validating and auto-fixing style."""
         mock_config_dir.return_value = tmp_path
@@ -824,7 +824,7 @@ Example
         fixed_content = style_file.read_text()
         assert not any(line.endswith("   ") for line in fixed_content.split('\n'))
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_not_found(self, mock_config_dir, tmp_path):
         """Test validating non-existent style."""
         mock_config_dir.return_value = tmp_path
@@ -835,7 +835,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_all(self, mock_config_dir, tmp_path):
         """Test validating all styles."""
         mock_config_dir.return_value = tmp_path
@@ -850,7 +850,7 @@ Example
             with patch("sys.exit"):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_all_with_invalid(self, mock_config_dir, tmp_path):
         """Test validating all styles when some are invalid."""
         mock_config_dir.return_value = tmp_path
@@ -864,7 +864,7 @@ Example
             with pytest.raises(SystemExit):
                 main()
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_all_fix(self, mock_config_dir, tmp_path):
         """Test validating and fixing all styles."""
         mock_config_dir.return_value = tmp_path
@@ -887,7 +887,7 @@ Example
             # Check no lines have 3 or more trailing spaces
             assert not any(len(line) - len(line.rstrip()) >= 3 for line in lines)
 
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
+    @patch("gmaillm.helpers.core.paths.get_plugin_config_dir")
     def test_styles_validate_all_empty(self, mock_config_dir, tmp_path):
         """Test validating all styles when directory is empty."""
         mock_config_dir.return_value = tmp_path

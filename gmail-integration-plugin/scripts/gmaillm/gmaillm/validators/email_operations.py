@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 # JSON Schema for sending emails
 SEND_EMAIL_JSON_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "required": ["to", "subject", "body"],
     "properties": {
@@ -47,7 +47,7 @@ SEND_EMAIL_JSON_SCHEMA = {
 
 # JSON Schema for replying to emails
 REPLY_EMAIL_JSON_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "required": ["body"],
     "properties": {
@@ -66,7 +66,7 @@ REPLY_EMAIL_JSON_SCHEMA = {
 
 # JSON Schema for creating email groups
 GROUP_JSON_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "required": ["name", "members"],
     "properties": {

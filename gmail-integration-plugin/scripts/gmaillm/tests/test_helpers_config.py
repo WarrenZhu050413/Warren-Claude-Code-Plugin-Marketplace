@@ -1,4 +1,4 @@
-"""Tests for gmaillm.helpers.config module."""
+"""Tests for gmaillm.helpers.core.paths module."""
 
 import json
 import pytest
@@ -36,7 +36,7 @@ class TestConfigDirFunctions:
         # Mock get_plugin_config_dir to return temp_dir
         def mock_config_dir():
             return temp_dir
-        monkeypatch.setattr('gmaillm.helpers.config.get_plugin_config_dir', mock_config_dir)
+        monkeypatch.setattr('gmaillm.helpers.core.paths.get_plugin_config_dir', mock_config_dir)
 
         styles_dir = get_styles_dir()
         assert styles_dir.exists()
@@ -46,7 +46,7 @@ class TestConfigDirFunctions:
         """Test that get_style_file_path returns correct path."""
         def mock_styles_dir():
             return temp_dir
-        monkeypatch.setattr('gmaillm.helpers.config.get_styles_dir', mock_styles_dir)
+        monkeypatch.setattr('gmaillm.helpers.core.paths.get_styles_dir', mock_styles_dir)
 
         path = get_style_file_path("test-style")
         assert path == temp_dir / "test-style.md"
@@ -55,7 +55,7 @@ class TestConfigDirFunctions:
         """Test that get_groups_file_path returns correct path."""
         def mock_config_dir():
             return temp_dir
-        monkeypatch.setattr('gmaillm.helpers.config.get_plugin_config_dir', mock_config_dir)
+        monkeypatch.setattr('gmaillm.helpers.core.paths.get_plugin_config_dir', mock_config_dir)
 
         path = get_groups_file_path()
         assert path == temp_dir / "email-groups" / "groups.json"
@@ -206,7 +206,7 @@ class TestStyleFunctions:
         """Test loading styles from empty directory."""
         def mock_styles_dir():
             return temp_dir
-        monkeypatch.setattr('gmaillm.helpers.config.get_styles_dir', mock_styles_dir)
+        monkeypatch.setattr('gmaillm.helpers.core.paths.get_styles_dir', mock_styles_dir)
 
         result = load_all_styles(temp_dir)
         assert result == []

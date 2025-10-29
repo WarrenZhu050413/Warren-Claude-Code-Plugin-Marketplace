@@ -28,7 +28,7 @@ MIN_DONT_ITEMS = 2
 
 # JSON Schema for programmatic style creation
 STYLE_JSON_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "required": ["name", "description", "greeting", "body", "closing", "do", "dont"],
     "properties": {

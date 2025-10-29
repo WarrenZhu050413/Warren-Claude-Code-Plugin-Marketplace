@@ -236,7 +236,7 @@ class TestDisplaySchemaAndExit:
         """Test basic schema display."""
         def schema_getter(indent=2):
             return json.dumps({
-                "$schema": "http://json-schema.org/draft-07/schema#",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "type": "object",
                 "required": ["field1"]
             }, indent=indent)
@@ -271,7 +271,7 @@ class TestDisplaySchemaAndExit:
         """Test displaying complex nested schema."""
         def schema_getter(indent=2):
             complex_schema = {
-                "$schema": "http://json-schema.org/draft-07/schema#",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "type": "object",
                 "properties": {
                     "to": {
