@@ -1,7 +1,8 @@
 Tutorial/
 
 # Credentials - NEVER commit these
-credentials/
+credentials/*
+!credentials/.gitkeep
 *.json
 !config/*.json
 
@@ -21,3 +22,20 @@ venv/
 # Build artifacts
 build/
 dist/
+
+# Development artifacts
+.quibbler/
+*.backup.*
+.DS_Store
+
+# Documentation (development/migration)
+SETUP_PY_TUTORIAL.md
+TUTORIAL.md
+scripts/gmaillm/MIGRATION_SUMMARY.md
+scripts/gmaillm/CLI_FIXES_SUMMARY.md
+scripts/gmaillm/COMPLETION_GUIDE.md
+scripts/gmaillm/PIP_UV_COMPATIBILITY.md
+scripts/gmaillm/REFACTORING_SUMMARY.md
+scripts/gmaillm/STYLES.md
+scripts/gmaillm/refactoring-examples.py
+scripts/gmaillm/pyproject-strict.toml.example

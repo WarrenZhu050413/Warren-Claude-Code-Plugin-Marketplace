@@ -1,9 +1,10 @@
 """Pytest configuration and shared fixtures."""
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
@@ -25,6 +26,7 @@ def mock_credentials_file(temp_dir):
         "client_secret": "mock_client_secret",
     }
     import json
+
     creds_file.write_text(json.dumps(creds_data))
     return creds_file
 
@@ -43,6 +45,7 @@ def sample_email_groups():
 def sample_email_summary_data():
     """Sample data for creating EmailSummary instances."""
     from datetime import datetime
+
     from gmaillm.models import EmailAddress
 
     return {

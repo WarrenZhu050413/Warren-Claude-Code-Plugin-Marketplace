@@ -203,9 +203,47 @@ class SnippetManager:
             json.dump(self.target_config, f, indent=2)
             f.write('\n')
 
+    def _diagnose_pattern_issue(self, pattern: str) -> str:
+        """Diagnose specific issue with pattern format"""
+        # Check for missing opening \b
+        if not pattern.startswith('\\b'):
+            return "Missing opening word boundary \\b at start"
+
+        # Check for missing opening parenthesis
+        if not re.match(r'^\\b\(', pattern):
+            return "Missing opening parenthesis after \\b (should be \\b(PATTERN))"
+
+        # Check if has parentheses but \b in wrong place (after punctuation)
+        if re.search(r'\)\[\.,;:!\?\]\?\\b', pattern):
+            return "Word boundary \\b is after punctuation; move it: (PATTERN)\\b[.,;:!?]?"
+
+        # Check for missing \b after closing paren
+        if re.search(r'\)[^\\\[]', pattern):
+            return "Missing word boundary \\b after closing parenthesis"
+
+        # Check for wrong punctuation class
+        if '[' in pattern:
+            if '[.,;:]?' in pattern or '[.,;:?]?' in pattern:
+                return "Incomplete punctuation class; use [.,;:!?]? (missing !)"
+            if not re.search(r'\[\.,;:!\?\]\?', pattern):
+                return "Incorrect punctuation format; use [.,;:!?]?"
+
+        # Check for missing punctuation class
+        if not '[' in pattern:
+            return "Missing optional punctuation [.,;:!?]? at end"
+
+        # Check for lowercase in pattern
+        paren_match = re.search(r'\(([^)]+)\)', pattern)
+        if paren_match:
+            content = paren_match.group(1)
+            if re.search(r'[a-z]', content):
+                return "Pattern content must be ALL CAPS (found lowercase letters)"
+
+        return "Pattern doesn't match required format \\b(PATTERN)\\b[.,;:!?]?"
+
     def _validate_pattern(self, pattern: str) -> bool:
         """
-        Validate regex pattern follows standard format: \\b(PATTERN)[.,;:!?]?\\b
+        Validate regex pattern follows standard format: \\b(PATTERN)\\b[.,;:!?]?
 
         Standard format requirements:
         - Must use word boundaries: \\b
@@ -229,9 +267,9 @@ class SnippetManager:
                 {"pattern": pattern}
             )
 
-        # Check for standard format: \b(PATTERN)[.,;:!?]?\b
+        # Check for standard format: \b(PATTERN)\b[.,;:!?]?
         # Allow for complex patterns as exceptions
-        standard_pattern = r'^\\b\([A-Z0-9_|]+\)\[\.,;:!\?\]\?\\b$'
+        standard_pattern = r'^\\b\([A-Z0-9_|]+\)\\b\[\.,;:!\?\]\?$'
 
         if not re.match(standard_pattern, pattern):
             # Check if it's a complex pattern (contains .* or other advanced regex)
@@ -240,21 +278,21 @@ class SnippetManager:
                 # (Could add warning in the future)
                 return True
 
+            # Diagnose specific issue for better error message
+            issue_detail = self._diagnose_pattern_issue(pattern)
+
             # Not standard format and not complex - reject
             raise SnippetError(
                 "INVALID_PATTERN_FORMAT",
-                f"Pattern must follow standard format: \\b(PATTERN)[.,;:!?]?\\b\n"
-                f"  - Pattern must be ALL CAPS (A-Z, 0-9)\n"
-                f"  - Multi-word patterns use _, -, or no separator\n"
-                f"  - Use | for alternation (e.g., NVIM|NEOVIM)\n"
-                f"  - Must have word boundaries \\b and optional punctuation [.,;:!?]?\n"
+                f"Pattern must follow standard format: \\b(PATTERN)\\b[.,;:!?]?\n"
+                f"  Issue: {issue_detail}\n"
                 f"  Your pattern: {pattern}\n"
-                f"  Example: \\b(BUILD_ARTIFACT)[.,;:!?]?\\b",
-                {"pattern": pattern}
+                f"  Example: \\b(BUILD_ARTIFACT)\\b[.,;:!?]?",
+                {"pattern": pattern, "issue": issue_detail}
             )
 
         # Validate the pattern content (between parentheses)
-        match = re.match(r'^\\b\(([^)]+)\)\[\.,;:!\?\]\?\\b$', pattern)
+        match = re.match(r'^\\b\(([^)]+)\)\\b\[\.,;:!\?\]\?$', pattern)
         if match:
             pattern_content = match.group(1)
 
@@ -910,15 +948,84 @@ def format_output(success: bool, operation: str, data: Dict = None,
         return json.dumps(output, indent=2)
 
     elif format_type == "text":
-        if success:
-            lines = [f"✓ {message or 'Success'}"]
-            if data:
-                for key, value in data.items():
-                    lines.append(f"  {key}: {value}")
-            return "\n".join(lines)
-        else:
+        if not success:
             error_msg = error.message if error else message or "Unknown error"
             return f"✗ {error_msg}"
+
+        # Special formatting for validate command
+        if operation == "validate" and data:
+            lines = []
+
+            config_valid = data.get("config_valid", False)
+            files_checked = data.get("files_checked", 0)
+            issues = data.get("issues", [])
+
+            # Header
+            if config_valid:
+                lines.append(Colors.green(f"✓ All snippets valid ({files_checked} checked)"))
+            else:
+                lines.append(Colors.yellow(f"⚠ Validation issues found ({len(issues)} issues, {files_checked} snippets checked)"))
+                lines.append("")
+
+            # Group issues by type
+            if issues:
+                invalid_patterns = [i for i in issues if i["type"] == "invalid_pattern"]
+                missing_files = [i for i in issues if i["type"] == "missing_file"]
+                duplicate_patterns = [i for i in issues if i["type"] == "duplicate_pattern"]
+
+                # Invalid patterns
+                if invalid_patterns:
+                    lines.append(Colors.bold("Invalid Patterns:"))
+                    for issue in invalid_patterns:
+                        snippet_files = issue["snippet"]
+                        snippet_path = snippet_files[0] if isinstance(snippet_files, list) else snippet_files
+
+                        # Show parent directory + filename for better context
+                        path_parts = Path(snippet_path).parts
+                        if len(path_parts) >= 2:
+                            display_name = f"{path_parts[-2]}/{Path(snippet_path).name}"
+                        else:
+                            display_name = Path(snippet_path).name
+
+                        pattern = issue["details"]["pattern"]
+                        specific_issue = issue["details"].get("issue", "Pattern format is incorrect")
+
+                        expected_pattern = '\\b(PATTERN)\\b[.,;:!?]?'
+                        lines.append(f"  {Colors.red('✗')} {Colors.cyan(display_name)}")
+                        lines.append(f"    Current:  {Colors.yellow(pattern)}")
+                        lines.append(f"    Issue:    {Colors.red(specific_issue)}")
+                        lines.append(f"    Expected: {Colors.dim(expected_pattern)}")
+                        lines.append("")
+
+                # Missing files
+                if missing_files:
+                    lines.append(Colors.bold("Missing Files:"))
+                    for issue in missing_files:
+                        snippet_file = issue["snippet"]
+                        lines.append(f"  {Colors.red('✗')} {Colors.dim(snippet_file)}")
+                        lines.append("")
+
+                # Duplicate patterns
+                if duplicate_patterns:
+                    lines.append(Colors.bold("Duplicate Patterns:"))
+                    for issue in duplicate_patterns:
+                        pattern = issue["pattern"]
+                        snippets = issue["snippets"]
+                        snippet_names = [Path(s[0]).stem if isinstance(s, list) else Path(s).stem for s in snippets]
+
+                        lines.append(f"  {Colors.red('✗')} Pattern: {Colors.yellow(pattern)}")
+                        lines.append(f"    Found in: {', '.join(Colors.cyan(name) for name in snippet_names)}")
+                        lines.append("")
+
+            return "\n".join(lines)
+
+        # Default formatting for other commands
+        lines = [f"✓ {message or 'Success'}"]
+        if data:
+            for key, value in data.items():
+                if key not in ["config_valid", "files_checked", "issues"]:  # Skip validation-specific keys
+                    lines.append(f"  {key}: {value}")
+        return "\n".join(lines)
 
     return ""
 
@@ -1090,6 +1197,45 @@ Config Priority System:
 
     try:
         manager = SnippetManager(config_path, snippets_dir, args.use_base_config, args.config_name)
+
+        # Run automatic validation on every invocation (except for validate command itself)
+        # Only output if there are issues
+        if args.command != "validate" and args.output != "json":
+            validation_result = manager.validate()
+            if not validation_result["config_valid"]:
+                issues = validation_result["issues"]
+                issue_count = len(issues)
+                print(Colors.yellow(f"⚠ {issue_count} validation issue{'s' if issue_count != 1 else ''} detected:"), file=sys.stderr)
+
+                for issue in issues:
+                    if issue["type"] == "invalid_pattern":
+                        snippet_files = issue["snippet"]
+                        snippet_path = snippet_files[0] if isinstance(snippet_files, list) else snippet_files
+
+                        # Show parent directory + filename for better context
+                        path_parts = Path(snippet_path).parts
+                        if len(path_parts) >= 2:
+                            display_name = f"{path_parts[-2]}/{Path(snippet_path).name}"
+                        else:
+                            display_name = Path(snippet_path).name
+
+                        pattern = issue["details"]["pattern"]
+                        specific_issue = issue["details"].get("issue", "")
+
+                        # Show specific issue in dim text
+                        if specific_issue:
+                            print(f"  {Colors.red('✗')} {Colors.cyan(display_name)}: {Colors.dim(specific_issue)}", file=sys.stderr)
+                        else:
+                            print(f"  {Colors.red('✗')} {Colors.cyan(display_name)}: {Colors.dim(pattern)}", file=sys.stderr)
+
+                    elif issue["type"] == "missing_file":
+                        print(f"  {Colors.red('✗')} Missing: {Colors.dim(issue['snippet'])}", file=sys.stderr)
+
+                    elif issue["type"] == "duplicate_pattern":
+                        snippet_names = [Path(s[0]).stem if isinstance(s, list) else Path(s).stem for s in issue["snippets"]]
+                        print(f"  {Colors.red('✗')} Duplicate {Colors.yellow(issue['pattern'])} in: {', '.join(Colors.cyan(n) for n in snippet_names)}", file=sys.stderr)
+
+                print(Colors.dim(f"\nRun 'snippets_cli.py validate' for full details\n"), file=sys.stderr)
 
         if args.command == "create":
             data = manager.create(

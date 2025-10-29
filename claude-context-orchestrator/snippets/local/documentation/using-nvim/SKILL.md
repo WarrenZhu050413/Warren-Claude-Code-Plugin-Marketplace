@@ -1,46 +1,45 @@
 ---
-description: Warren's Neovim configuration reference (~/.config/nvim) with LSP, plugins, and directory structure
-SNIPPET_NAME: using-nvim
-ANNOUNCE_USAGE: false
+name: "Using Nvim"
+description: "Reference Warren's Neovim configuration (~/.config/nvim) with LSP, plugins, and directory structure."
 ---
 
-# Neovim Configuration
+# Using Nvim
 
-Warren's Neovim setup is at: ~/.config/nvim. Always refer to this setup for Neovim questions.
+Warren's Neovim: ~/.config/nvim
 
-## Critical Rule: Check Local Configuration First
+## Critical Rule
 
-**BEFORE answering ANY Neovim question, you MUST:**
-1. Read relevant config files from ~/.config/nvim/
-2. Understand Warren's actual setup, plugins, and settings
-3. Base answers on what's configured, not generic assumptions
+**BEFORE answering Neovim questions:**
+1. Read config files from ~/.config/nvim/
+2. Understand Warren's setup, plugins, settings
+3. Base answers on actual config, not assumptions
 
 ## Directory Structure
 
 ```
-~/.config/nvim/              # Main configuration root
-├── init.lua                 # Entry point (or init.vim)
+~/.config/nvim/
+├── init.lua                 # Entry point
 ├── lua/
-│   ├── plugins/             # Plugin configurations
-│   │   ├── lsp.lua          # LSP config (pyright for Python)
-│   │   ├── treesitter.lua   # Syntax highlighting
+│   ├── plugins/             # Plugin configs
+│   │   ├── lsp.lua          # LSP (pyright)
+│   │   ├── treesitter.lua   # Syntax
 │   │   └── telescope.lua    # Fuzzy finder
 │   ├── config/              # Custom settings
-│   └── utils/               # Helper functions
-└── after/                   # After-load scripts
+│   └── utils/               # Helpers
+└── after/                   # After-load
 ```
 
-## Standard Neovim Directories
+## Standard Directories
 
-- **Config**: ~/.config/nvim/ (main configuration)
+- **Config**: ~/.config/nvim/
 - **Data**: ~/.local/share/nvim/ (plugins, state, shada)
-- **Cache**: ~/.cache/nvim/ (temporary files, swap)
-- **State**: ~/.local/state/nvim/ (persistent state)
+- **Cache**: ~/.cache/nvim/ (temp, swap)
+- **State**: ~/.local/state/nvim/ (persistent)
 
-## LSP & Plugin Management
+## LSP & Plugins
 
-- **Python LSP**: pyright (in ~/.config/nvim/lua/plugins/lsp.lua)
+- **Python LSP**: pyright (in lua/plugins/lsp.lua)
 - **Auto venv**: checks venv/, .venv/, env/, virtualenv/, $VIRTUAL_ENV
-- **Custom paths**: Create pyrightconfig.json with `extraPaths: ["."]`
-- **Plugin specs**: ~/.config/nvim/lua/plugins/*.lua (lazy.nvim)
-- **Plugin data**: ~/.local/share/nvim/lazy/ (installed plugins)
+- **Custom paths**: pyrightconfig.json with `extraPaths: ["."]`
+- **Plugin specs**: lua/plugins/*.lua (lazy.nvim)
+- **Plugin data**: ~/.local/share/nvim/lazy/

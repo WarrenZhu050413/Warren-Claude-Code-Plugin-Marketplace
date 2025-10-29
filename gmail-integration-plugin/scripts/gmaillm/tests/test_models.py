@@ -1,20 +1,20 @@
 """Tests for models.py module."""
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from gmaillm.models import (
-    EmailFormat,
-    EmailAddress,
     Attachment,
-    EmailSummary,
+    EmailAddress,
+    EmailFormat,
     EmailFull,
-    SearchResult,
+    EmailSummary,
     Folder,
+    SearchResult,
     SendEmailRequest,
     SendEmailResponse,
-    BatchOperationResult,
 )
 
 
@@ -149,13 +149,12 @@ class TestEmailSummary:
             is_unread=True,
         )
         markdown = summary.to_markdown()
-        assert "🔵" in markdown  # Unread indicator
-        assert "📎" in markdown  # Attachment indicator
+        assert "[UNREAD, HAS ATTACHMENTS]" in markdown
         assert "**Important Email**" in markdown
         assert "From: Sender <sender@example.com>" in markdown
         assert "2025-01-15 10:30" in markdown
-        assert "`msg123`" in markdown
-        assert "_Check this out..._" in markdown
+        assert "msg123" in markdown
+        assert "Check this out..." in markdown
 
     def test_to_markdown_read_no_attachment(self):
         """Test markdown formatting for read email without attachments."""
@@ -170,8 +169,9 @@ class TestEmailSummary:
             has_attachments=False,
         )
         markdown = summary.to_markdown()
-        assert "🔵" not in markdown
-        assert "📎" not in markdown
+        assert "[UNREAD" not in markdown
+        assert "[HAS ATTACHMENTS" not in markdown
+        assert "**Regular Email**" in markdown
 
 
 class TestEmailFull:
@@ -207,8 +207,8 @@ class TestEmailFull:
         )
         markdown = email.to_markdown()
         assert "# Test Email" in markdown
-        assert "**From:** Sender <sender@example.com>" in markdown
-        assert "**To:** recipient@example.com" in markdown
+        assert "From: Sender <sender@example.com>" in markdown
+        assert "To: recipient@example.com" in markdown
         assert "2025-01-15 10:30:45" in markdown
         assert "Email body text" in markdown
 
@@ -225,7 +225,7 @@ class TestEmailFull:
             body_plain="Body",
         )
         markdown = email.to_markdown()
-        assert "**CC:** CC Person <cc@example.com>" in markdown
+        assert "CC: CC Person <cc@example.com>" in markdown
 
     def test_to_markdown_with_attachments(self):
         """Test markdown with attachments."""
@@ -247,8 +247,8 @@ class TestEmailFull:
             ],
         )
         markdown = email.to_markdown()
-        assert "**Attachments:** (1 files)" in markdown
-        assert "doc.pdf (2.0KB, application/pdf)" in markdown
+        assert "Attachments (1 files):" in markdown
+        assert "doc.pdf — 2.0KB, application/pdf" in markdown
 
     def test_to_markdown_truncates_long_body(self):
         """Test that long email body is truncated."""
@@ -256,15 +256,21 @@ class TestEmailFull:
         email = EmailFull(
             message_id="msg123",
             thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            to=[EmailAddress(email="to@example.com")],
+            from_=EmailAddress(email="sender@domain.com"),
+            to=[EmailAddress(email="to@domain.com")],
             subject="Test",
             date=datetime(2025, 1, 15, 10, 30),
             body_plain=long_body,
         )
         markdown = email.to_markdown()
-        assert "[Body truncated - 4000 total characters]" in markdown
-        assert markdown.count("x") == 3000  # Only first 3000 chars
+        assert "[Body truncated — 4000 total characters]" in markdown
+
+        # Extract body section (after the separator line)
+        separator = "─" * 80
+        body_section = markdown.split(separator + "\n\n", 1)[1] if separator in markdown else ""
+        # Count x's only in the body section (excluding truncation message)
+        body_content = body_section.split("\n\n[Body truncated")[0]
+        assert body_content.count("x") == 3000  # Only first 3000 chars
 
     def test_prefers_plain_text_over_html(self):
         """Test that plain text is preferred over HTML."""
@@ -313,7 +319,7 @@ class TestSearchResult:
             query="search term",
         )
         markdown = result.to_markdown()
-        assert "# Search Results: \"search term\"" in markdown
+        assert '# Search Results: "search term"' in markdown
         assert "Found 1 emails. Showing 1." in markdown
         assert "## 1. Result 1" in markdown
 
@@ -327,7 +333,7 @@ class TestSearchResult:
         )
         markdown = result.to_markdown()
         assert "More results available" in markdown
-        assert "`token123`" in markdown
+        assert "token123" in markdown
 
 
 class TestFolder:
@@ -357,10 +363,12 @@ class TestFolder:
             unread_count=5,
         )
         markdown = folder.to_markdown()
-        assert "**Inbox**" in markdown
-        assert "[100 messages]" in markdown
-        assert "(5 unread)" in markdown
-        assert "`INBOX`" in markdown
+        assert "Inbox" in markdown
+        assert "100 messages" in markdown
+        assert "5 unread" in markdown
+        assert "INBOX" in markdown
+        assert "•" in markdown  # Bullet point
+        assert "—" in markdown  # Em dash separator
 
     def test_to_markdown_without_counts(self):
         """Test markdown without counts."""
@@ -370,9 +378,11 @@ class TestFolder:
             type="user",
         )
         markdown = folder.to_markdown()
-        assert "**Custom**" in markdown
-        assert "[" not in markdown  # No message count
-        assert "(ID: `Label_1`)" in markdown
+        assert "Custom" in markdown
+        assert "messages" not in markdown  # No message count
+        assert "Label_1" in markdown
+        assert "•" in markdown  # Bullet point
+        assert "—" in markdown  # Em dash separator
 
 
 class TestSendEmailRequest:
@@ -439,6 +449,89 @@ class TestSendEmailRequest:
                 body="Body",
             )
 
+    def test_invalid_email_empty_local_part(self):
+        """Test that email with empty local part raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["@domain.com"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_domain_starts_with_dot(self):
+        """Test that email with domain starting with dot raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user@.com"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_domain_ends_with_dot(self):
+        """Test that email with domain ending with dot raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user@domain."],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_double_at(self):
+        """Test that email with double @ raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user@@domain.com"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_no_domain(self):
+        """Test that email without domain raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user@"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_no_tld(self):
+        """Test that email without TLD raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user@domain"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_consecutive_dots(self):
+        """Test that email with consecutive dots raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["user..name@domain.com"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_in_cc(self):
+        """Test that invalid email in CC field raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["valid@example.com"],
+                cc=["@invalid.com"],
+                subject="Test",
+                body="Body",
+            )
+
+    def test_invalid_email_in_bcc(self):
+        """Test that invalid email in BCC field raises validation error."""
+        with pytest.raises(ValidationError):
+            SendEmailRequest(
+                to=["valid@example.com"],
+                bcc=["user@.com"],
+                subject="Test",
+                body="Body",
+            )
+
     def test_valid_email_formats(self):
         """Test various valid email formats."""
         req = SendEmailRequest(
@@ -447,6 +540,33 @@ class TestSendEmailRequest:
             body="Body",
         )
         assert len(req.to) == 2
+
+    def test_valid_email_with_plus(self):
+        """Test that email with plus sign is accepted."""
+        req = SendEmailRequest(
+            to=["user+tag@example.com"],
+            subject="Test",
+            body="Body",
+        )
+        assert req.to == ["user+tag@example.com"]
+
+    def test_valid_email_with_subdomain(self):
+        """Test that email with subdomain is accepted."""
+        req = SendEmailRequest(
+            to=["user@mail.example.com"],
+            subject="Test",
+            body="Body",
+        )
+        assert req.to == ["user@mail.example.com"]
+
+    def test_valid_email_with_hyphen(self):
+        """Test that email with hyphen in domain is accepted."""
+        req = SendEmailRequest(
+            to=["user@my-domain.com"],
+            subject="Test",
+            body="Body",
+        )
+        assert req.to == ["user@my-domain.com"]
 
 
 class TestSendEmailResponse:
@@ -481,9 +601,9 @@ class TestSendEmailResponse:
             success=True,
         )
         markdown = resp.to_markdown()
-        assert "✅ Email sent successfully!" in markdown
-        assert "`msg123`" in markdown
-        assert "`thread123`" in markdown
+        assert "Email sent successfully!" in markdown
+        assert "msg123" in markdown
+        assert "thread123" in markdown
 
     def test_to_markdown_failure(self):
         """Test markdown for failed send."""
@@ -494,80 +614,7 @@ class TestSendEmailResponse:
             error="Network error",
         )
         markdown = resp.to_markdown()
-        assert "❌ Failed to send email" in markdown
+        assert "Failed to send email" in markdown
         assert "Network error" in markdown
 
 
-class TestBatchOperationResult:
-    """Tests for BatchOperationResult model."""
-
-    def test_create_result(self):
-        """Test creating batch result."""
-        result = BatchOperationResult(
-            successful=["msg1", "msg2"],
-            failed={"msg3": "Error"},
-            total=3,
-        )
-        assert len(result.successful) == 2
-        assert len(result.failed) == 1
-        assert result.total == 3
-
-    def test_success_rate_calculation(self):
-        """Test success rate calculation."""
-        result = BatchOperationResult(
-            successful=["msg1", "msg2"],
-            failed={"msg3": "Error"},
-            total=3,
-        )
-        assert result.success_rate == pytest.approx(2 / 3)
-
-    def test_success_rate_all_success(self):
-        """Test success rate with all successful."""
-        result = BatchOperationResult(
-            successful=["msg1", "msg2", "msg3"],
-            failed={},
-            total=3,
-        )
-        assert result.success_rate == 1.0
-
-    def test_success_rate_all_failed(self):
-        """Test success rate with all failed."""
-        result = BatchOperationResult(
-            successful=[],
-            failed={"msg1": "Error 1", "msg2": "Error 2"},
-            total=2,
-        )
-        assert result.success_rate == 0.0
-
-    def test_success_rate_zero_total(self):
-        """Test success rate with zero total."""
-        result = BatchOperationResult(
-            successful=[],
-            failed={},
-            total=0,
-        )
-        assert result.success_rate == 0.0
-
-    def test_to_markdown_basic(self):
-        """Test basic markdown formatting."""
-        result = BatchOperationResult(
-            successful=["msg1", "msg2"],
-            failed={"msg3": "Connection timeout"},
-            total=3,
-        )
-        markdown = result.to_markdown()
-        assert "# Batch Operation Results" in markdown
-        assert "✅ Successful: 2/3 (66.7%)" in markdown
-        assert "❌ Failed: 1" in markdown
-        assert "`msg3`: Connection timeout" in markdown
-
-    def test_to_markdown_truncates_failures(self):
-        """Test that markdown truncates long failure list."""
-        failed = {f"msg{i}": f"Error {i}" for i in range(15)}
-        result = BatchOperationResult(
-            successful=[],
-            failed=failed,
-            total=15,
-        )
-        markdown = result.to_markdown()
-        assert "and 5 more failures" in markdown  # 15 - 10 = 5

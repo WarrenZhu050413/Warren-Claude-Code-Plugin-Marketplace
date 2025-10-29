@@ -1,12 +1,9 @@
 ---
-description: Test-Driven Development methodology with Red-Green-Refactor-Commit cycle
-SNIPPET_NAME: following-tdd
-ANNOUNCE_USAGE: false
+name: "Following TDD"
+description: "This snippet should be used when following Test-Driven Development (TDD) methodology with the Red-Green-Refactor-Commit cycle for all implementation tasks."
 ---
 
-# Following Test-Driven Development (TDD)
-
-Follow Test-Driven Development (TDD) methodology for all implementation tasks. TDD is a software development approach where you write tests before writing the actual code, ensuring high-quality, reliable, and maintainable software.
+Follow Test-Driven Development (TDD): write tests before code for high-quality, reliable, maintainable software.
 
 ## The Red-Green-Refactor-Commit Cycle
 
@@ -246,61 +243,21 @@ Modern software development often combines methodologies:
 - **TDD + DDD:** Use TDD to implement domain-driven designs
 - **TDD + Agile:** TDD fits naturally into agile sprints and iterations
 
-## Benefits You'll Experience
+## Benefits
 
-1. **Higher Code Quality**
-   - Bugs caught early in development
-   - Code is inherently testable
-   - Comprehensive test coverage
+- **Quality**: Bugs caught early, testable code, comprehensive coverage
+- **Design**: Modular architecture, clear separation, maintainable
+- **Confidence**: Refactor fearlessly, instant feedback, regression prevention
+- **Documentation**: Tests document behavior, always up-to-date
+- **Git History**: Atomic commits, easy tracing, simple reverts
+- **Speed** (long-term): Less debugging, fewer bugs, easier features
 
-2. **Better Design**
-   - Forces modular, decoupled architecture
-   - Clearer separation of concerns
-   - More maintainable code
+## Challenges
 
-3. **Confidence in Changes**
-   - Refactor fearlessly with test safety net
-   - Instant feedback when something breaks
-   - Regression prevention
-
-4. **Living Documentation**
-   - Tests document expected behavior
-   - Examples of how to use the code
-   - Always up-to-date (unlike comments)
-
-5. **Detailed Git History**
-   - Each commit represents a complete feature cycle
-   - Easy to trace when and why features were added
-   - Simple to revert to known-good states
-   - Code review becomes easier with atomic commits
-
-6. **Faster Development (Long-term)**
-   - Slower at first, but speeds up over time
-   - Less debugging time
-   - Fewer production bugs
-   - Easier to add new features
-
-## Expected Challenges
-
-1. **Steeper Learning Curve**
-   - Requires discipline and practice
-   - New teams may experience slower velocity initially
-   - Patience and persistence needed
-
-2. **More Code to Maintain**
-   - Tests are code too
-   - Keep tests clean and refactored
-   - Treat test code with same care as production code
-
-3. **Resistance to Change**
-   - Different from traditional development
-   - Requires mindset shift
-   - Team buy-in is essential
-
-4. **Committing Discipline**
-   - Easy to forget to commit after each cycle
-   - Requires building a new habit
-   - Set reminders until it becomes automatic
+- **Learning Curve**: Requires discipline, practice, patience
+- **More Code**: Tests need maintenance too
+- **Mindset Shift**: Different from traditional development, needs team buy-in
+- **Committing**: Easy to forget after each cycle, build the habit
 
 ## Your TDD Workflow Checklist
 

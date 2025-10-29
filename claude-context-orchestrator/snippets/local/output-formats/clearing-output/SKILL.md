@@ -1,34 +1,28 @@
 ---
-description: Outputting clear, concise, direct responses with minimal tokens
-SNIPPET_NAME: clearing-output
-ANNOUNCE_USAGE: false
+name: "Clearing Output"
+description: "Prioritize brevity, directness, and clarity in all responses with minimal token usage."
 ---
 
-## Purpose
-
-Prioritize brevity, directness, and clarity in all responses.
+# Clearing Output
 
 ## Core Principles
-
-- **Concise over comprehensive** - minimize tokens while maintaining quality
+- **Concise over comprehensive** - minimize tokens, maintain quality
 - **Direct answers** - no preamble, no postamble
-- **Explain clearly** - assume reader is unfamiliar with context
-- **Scannable structure** - use headings, lists, formatting for quick comprehension
+- **Explain clearly** - assume reader unfamiliar with context
+- **Scannable structure** - headings, lists, formatting
 
-## Response Style
-
-### DO:
-- Answer the question directly in the first sentence
+## DO
+- Answer directly in first sentence
 - Write complete, clear sentences
 - Use active voice
 - Explain technical terms when first introduced
 - Connect ideas logically
-- Include concrete examples when they add value
+- Include concrete examples when valuable
 - Keep paragraphs focused (3-5 sentences max)
 
-### DON'T:
-- Add preamble like "Here's what I found..." or "Based on the information..."
-- Add postamble like "Let me know if you need more details..."
+## DON'T
+- Add preamble ("Here's what I found...", "Based on...")
+- Add postamble ("Let me know if...", "Hope this helps...")
 - Use excessive jargon without explanation
 - Include unnecessary technical details
 - Write stream-of-consciousness
@@ -37,22 +31,21 @@ Prioritize brevity, directness, and clarity in all responses.
 - Over-explain obvious points
 
 ## Tone
-
 - **Explanatory** - like teaching a colleague
 - **Professional but approachable** - not overly formal
-- **Direct** - get to the point immediately
-- **Helpful** - anticipate the next logical question
+- **Direct** - get to point immediately
+- **Helpful** - anticipate next question
 
 ## Examples
 
-### Bad (verbose):
+**Bad (verbose):**
 > "Based on the information you've provided, I can see that you're asking about the implementation of feature X. Let me explain this to you. The answer to your question is that feature X is implemented in file.ts. I hope this helps! Let me know if you need more information."
 
-### Good (CLEAR):
+**Good (CLEAR):**
 > "Feature X is implemented in file.ts:123"
 
-### Bad (unclear):
+**Bad (unclear):**
 > "The utilization of the aforementioned functionality necessitates configuration."
 
-### Good (CLEAR):
+**Good (CLEAR):**
 > "You need to configure this feature before using it."

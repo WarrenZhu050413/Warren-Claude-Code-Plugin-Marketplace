@@ -6,13 +6,13 @@ license: Complete terms in LICENSE.txt
 
 # Artifacts Builder
 
-**Stack**: React 18 + TypeScript + Vite + Parcel + Tailwind CSS + shadcn/ui
+**Stack**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
 
 ## Workflow
 
 1. Initialize: `bash scripts/init-artifact.sh <project-name>`
 2. Develop in generated project
-3. Bundle: `bash scripts/bundle-artifact.sh` (run from project directory)
+3. Bundle: `pnpm run build` (Vite bundling, see Step 3 for configuration)
 4. Share bundled HTML with user
 5. Test only if needed (optional)
 

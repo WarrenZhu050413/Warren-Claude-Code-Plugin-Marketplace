@@ -1,13 +1,3 @@
 {
-  "mappings": [
-    {
-      "name": "HTML",
-      "pattern": "\\bHTML\\b|\\bhtml\\b",
-      "snippet": [
-        "../commands/HTML.md"
-      ],
-      "enabled": true,
-      "separator": "\n"
-    }
-  ]
+  "mappings": []
 }

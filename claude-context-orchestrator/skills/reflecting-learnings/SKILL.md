@@ -38,6 +38,16 @@ Identify:
 - Knowledge gaps filled, misunderstandings corrected
 - How invoked skills contributed to the solutions
 
+### 2.5. Analyze Quibbler Interactions
+
+Consider what rules could improve Quibbler's behavior:
+- What patterns did you notice that Quibbler missed or could have caught earlier?
+- Are there project-specific checks Quibbler should enforce (e.g., "always run X test before claiming completion")?
+- What guidance would help Quibbler make better decisions about code quality in this project?
+- Are there false positives where Quibbler flagged something unnecessarily?
+
+**Decision**: Plan rules for `.quibbler/rules.md` that guide Quibbler to be more effective and accurate.
+
 ### 3. Categorize Discoveries
 
 For each discovery:

@@ -1,0 +1,125 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmaillm"
+version = "0.1.0"
+description = "LLM-friendly Gmail API wrapper with CLI"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "Warren Zhu", email = "wzhu@college.harvard.edu"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "google-auth-oauthlib>=1.0.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-api-python-client>=2.100.0",
+    "pydantic>=2.0.0",
+    "python-dateutil>=2.8.2",
+    "PyYAML>=6.0.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    "packaging>=21.0", # Required by google-api-python-client but not declared
+    "email-validator>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "pytest-asyncio>=0.21.0",
+    "freezegun>=1.2.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+]
+
+[project.scripts]
+gmail = "gmaillm.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/wzhu/gmaillm"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gmaillm*"]
+
+# Ruff configuration (modern Python linter)
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "E",       # pycodestyle errors
+    "W",       # pycodestyle warnings
+    "F",       # pyflakes
+    "I",       # isort
+    "B",       # flake8-bugbear
+    "C4",      # flake8-comprehensions
+    "UP",      # pyupgrade
+    "ANN",     # type annotations
+    "D",       # pydocstyle (docstring conventions)
+    "PLR2004", # magic value comparison
+]
+ignore = [
+    "E501",    # line too long (handled by black)
+    "B008",    # do not perform function calls in argument defaults
+    "C901",    # too complex
+    "B904",    # raise from exception - overly strict for CLI tools
+    "ANN101",  # missing type annotation for self
+    "ANN102",  # missing type annotation for cls
+    "ANN401",  # dynamically typed expressions (Any) are disallowed
+    "D203",    # 1 blank line required before class docstring (conflicts with D211)
+    "D213",    # multi-line docstring summary should start at second line (conflicts with D212)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]           # Allow unused imports in __init__.py
+"tests/**" = ["ANN", "D", "PLR2004"]  # Relax for tests
+
+# Black configuration (code formatter)
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "--strict-markers",
+    "--cov=gmaillm",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[dependency-groups]
+dev = [
+    "freezegun>=1.5.5",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.1",
+]

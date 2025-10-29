@@ -1,24 +1,19 @@
 ---
-description: Creating interactive paper visualizations with parallel processing
-SNIPPET_NAME: writing-papers
-ANNOUNCE_USAGE: false
+name: "Writing Papers"
+description: "Create interactive HTML artifacts for academic papers using parallel subagent processing."
 ---
 
-## Purpose
+# Writing Papers
 
-Create interactive HTML artifacts for academic papers using parallel subagent processing and the artifacts-builder skill.
+## Sources
+Use parallel subagents to fetch:
+- **ArXiv**: Open-access papers (most common)
+- **Anna's Archive**: Download if not freely available
+- **Exa Search** (`mcp__exa__web_search_exa`): Fallback
+- **Web search**: General fallback
 
-## Source Acquisition Strategy
-
-Use parallel subagents to fetch papers from multiple sources:
-- **ArXiv**: Direct fetch for open-access papers (most common)
-- **Anna's Archive**: DOWNLOAD if paper not freely available
-- **Exa Search** (`mcp__exa__web_search_exa`): Fallback for hard-to-find sources
-- **Web search**: General web search if needed
-
-## Parallel Processing with Subagents
-
-- Launch **one subagent per paper** (or per major section for very long papers)
+## Subagent Processing
+- Launch one subagent per paper (or per major section for long papers)
 - Each agent extracts:
   - Title, authors, publication info
   - Abstract and key findings
@@ -26,24 +21,22 @@ Use parallel subagents to fetch papers from multiple sources:
   - Important figures/tables
   - Citations and references
 
-## Interactive Artifact Creation
+## Artifact Creation
+**Compose with artifacts-builder skill** - don't duplicate instructions.
 
-**Compose with artifacts-builder skill** - don't duplicate those instructions.
+Include:
+- Paper summary (title, authors, abstract)
+- Key visualizations (figures, concept maps)
+- Navigation (collapsible sections, TOC)
+- Searchable content (full-text search)
+- Citations (properly formatted)
+- Responsive design (mobile/desktop)
 
-Create interactive HTML artifacts that include:
-- **Paper summary**: Title, authors, abstract
-- **Key visualizations**: Extracted figures, concept maps
-- **Navigation**: Collapsible sections, table of contents
-- **Searchable content**: Full-text search within artifact
-- **Citations**: Properly formatted references
-- **Responsive design**: Works on mobile/desktop
-
-## Weekly/Batch Organization
-
+## Batch Organization
 When handling multiple papers:
 - Group by week, topic, or theme
-- Create dashboard/index with links between papers
+- Create dashboard with links between papers
 - Highlight connections and cross-references
-- Show thematic patterns across papers
+- Show thematic patterns
 
-**Output Format**: Single interactive HTML artifact per paper, or combined dashboard for weekly batches.
+**Output**: Single HTML artifact per paper, or combined dashboard for batches.

@@ -1,883 +1,339 @@
 ---
 name: Managing Skills
-description: Comprehensive guidance for creating, reading, updating, and deleting Agent Skills in Claude Code. Use when the user asks to create, list, view, modify, update, delete, or manage skills, or needs help with skill authoring, structure, descriptions, naming conventions, or best practices.
+description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations. Adapted for Warren's system with snippet integration.
+license: Complete terms in LICENSE.txt
 ---
 
 # Managing Skills
 
-Comprehensive guidance for managing Agent Skills in Claude Code, following official best practices.
+**Attribution:** This skill is based on Anthropic's `skill-creator` from the [anthropic-agent-skills](https://github.com/anthropics/anthropic-agent-skills) repository, licensed under Apache License 2.0. This derivative work includes modifications for Warren's plugin system and snippet integration.
 
-## Core Principles
+**Copyright:** Original work Copyright Anthropic. Modifications Copyright 2025 Warren Zhu.
 
-### 1. Conciseness is Critical
+**License:** Apache License 2.0 (see LICENSE.txt for complete terms)
 
-The context window is shared across all skills, conversation history, and the current task. Every token counts.
-
-**Default assumption**: Claude already has extensive knowledge. Only add information Claude doesn't already know.
-
-**Challenge each piece of information**:
-
-- Does Claude really need this explanation?
-- Can I assume Claude knows this?
-- Does this content justify its token cost?
-
-**Example - Concise** (preferred):
-
-```python
-import pdfplumber
-with pdfplumber.open("file.pdf") as pdf:
-    text = pdf.pages[0].extract_text()
-```
-
-**Example - Too verbose** (avoid):
-
-```
-PDF (Portable Document Format) files are a common file format...
-To extract text, you'll need to use a library. There are many
-libraries available, but we recommend pdfplumber because...
-```
-
-### 2. Progressive Disclosure
-
-Keep SKILL.md under 500 lines. Use separate reference files for detailed content.
-
-**Pattern**:
-
-```markdown
-# My Skill
-
-## Quick Start
-
-[Brief overview and common usage]
-
-## Advanced Features
-
-See [reference.md](reference.md) for complete API documentation.
-See [examples.md](examples.md) for usage patterns.
-```
-
-Claude loads additional files only when needed.
-
-### 3. Clear Descriptions
-
-Descriptions enable skill discovery. Include both WHAT the skill does and WHEN to use it.
-
-**Requirements**:
-
-- Write in third person (this goes in system prompt)
-- Be specific with trigger terms
-- Include key terms users would mention
-- Maximum 1024 characters
-
-**Good**:
-
-```yaml
-description: Analyzes Excel spreadsheets, creates pivot tables, generates charts. Use when working with Excel files, spreadsheets, tabular data, or .xlsx files.
-```
-
-**Bad**:
-
-```yaml
-description: Helps with documents
-```
-
-## Skill Structure
-
-### Required: SKILL.md with YAML Frontmatter
-
-```yaml
----
-name: Your Skill Name
-description: What it does and when to use it (include trigger terms)
 ---
 
-# Your Skill Name
+## Warren's System Configuration
 
-## Instructions
-[Step-by-step guidance]
+**Default Skill Location:**
 
-## Examples
-[Concrete examples]
+All new skills for Warren's system should be created in:
+```
+~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/
 ```
 
-### Optional: Supporting Files
+**Other Skill Locations:**
+- Personal: `~/.claude/skills/` (individual workflows)
+- Project: `.claude/skills/` (team workflows, commit to git)
+- Plugin: Plugin's `skills/` directory (distributable)
+
+---
+
+## About Skills
+
+Skills are modular, self-contained packages that extend Claude's capabilities by providing
+specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
+domains or tasks—they transform Claude from a general-purpose agent into a specialized agent
+equipped with procedural knowledge that no model can fully possess.
+
+### What Skills Provide
+
+1. Specialized workflows - Multi-step procedures for specific domains
+2. Tool integrations - Instructions for working with specific file formats or APIs
+3. Domain expertise - Company-specific knowledge, schemas, business logic
+4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
+
+### Anatomy of a Skill
+
+Every skill consists of a required SKILL.md file and optional bundled resources:
 
 ```
-my-skill/
+skill-name/
 ├── SKILL.md (required)
-├── reference.md (detailed documentation)
-├── examples.md (usage examples)
-├── scripts/
-│   └── helper.py
-└── templates/
-    └── template.txt
+│   ├── YAML frontmatter metadata (required)
+│   │   ├── name: (required)
+│   │   └── description: (required)
+│   └── Markdown instructions (required)
+└── Bundled Resources (optional)
+    ├── scripts/          - Executable code (Python/Bash/etc.)
+    ├── references/       - Documentation intended to be loaded into context as needed
+    └── assets/           - Files used in output (templates, icons, fonts, etc.)
 ```
 
-Reference files from SKILL.md:
+#### SKILL.md (required)
 
-```markdown
-For advanced usage, see [reference.md](reference.md).
-```
+**Metadata Quality:** The `name` and `description` in YAML frontmatter determine when Claude will use the skill. Be specific about what the skill does and when to use it. Use the third-person (e.g. "This skill should be used when..." instead of "Use this skill when...").
 
-### Tool Restrictions (allowed-tools)
+#### Bundled Resources (optional)
 
-Limit which tools Claude can use when a skill is active:
+##### Scripts (`scripts/`)
 
-```yaml
----
-name: Safe File Reader
-description: Read files without making changes. Use when you need read-only file access.
-allowed-tools: Read, Grep, Glob
----
-```
+Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
 
-When active, Claude can only use the specified tools without asking permission.
+- **When to include**: When the same code is being rewritten repeatedly or deterministic reliability is needed
+- **Example**: `scripts/rotate_pdf.py` for PDF rotation tasks
+- **Benefits**: Token efficient, deterministic, may be executed without loading into context
+- **Note**: Scripts may still need to be read by Claude for patching or environment-specific adjustments
 
-## Naming Conventions
+##### References (`references/`)
 
-**Prefer gerund form** (verb + -ing):
+Documentation and reference material intended to be loaded as needed into context to inform Claude's process and thinking.
 
-- "Processing PDFs"
-- "Analyzing Spreadsheets"
-- "Managing Databases"
-- "Testing Code"
-- "Writing Documentation"
+- **When to include**: For documentation that Claude should reference while working
+- **Examples**: `references/finance.md` for financial schemas, `references/mnda.md` for company NDA template, `references/policies.md` for company policies, `references/api_docs.md` for API specifications
+- **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
+- **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
+- **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
+- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
 
-**Avoid**:
+##### Assets (`assets/`)
 
-- Vague names: "Helper", "Utils", "Tools"
-- Overly generic: "Documents", "Data", "Files"
+Files not intended to be loaded into context, but rather used within the output Claude produces.
 
-## Best Practices
+- **When to include**: When the skill needs files that will be used in the final output
+- **Examples**: `assets/logo.png` for brand assets, `assets/slides.pptx` for PowerPoint templates, `assets/frontend-template/` for HTML/React boilerplate, `assets/font.ttf` for typography
+- **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents that get copied or modified
+- **Benefits**: Separates output resources from documentation, enables Claude to use files without loading them into context
 
-### Keep Skills Focused
+### Progressive Disclosure Design Principle
 
-One skill = one capability
+Skills use a three-level loading system to manage context efficiently:
 
-**Good** (focused):
+1. **Metadata (name + description)** - Always in context (~100 words)
+2. **SKILL.md body** - When skill triggers (<5k words)
+3. **Bundled resources** - As needed by Claude (Unlimited*)
 
-- "PDF form filling"
-- "Excel data analysis"
-- "Git commit messages"
+*Unlimited because scripts can be executed without reading into context window.
 
-**Too broad** (split into separate skills):
+## Skill Creation Process
 
-- "Document processing"
-- "Data tools"
+To create a skill, follow the "Skill Creation Process" in order, skipping steps only if there is a clear reason why they are not applicable.
 
-### Use Workflows for Complex Tasks
+### Step 1: Understanding the Skill with Concrete Examples
 
-For multi-step processes, provide a clear checklist:
+Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.
 
-````markdown
-## PDF Form Filling Workflow
+To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
 
-Copy this checklist and track your progress:
+For example, when building an image-editor skill, relevant questions include:
 
-```
-Task Progress:
-- [ ] Step 1: Analyze form structure
-- [ ] Step 2: Create field mapping
-- [ ] Step 3: Validate mapping
-- [ ] Step 4: Fill the form
-- [ ] Step 5: Verify output
-```
+- "What functionality should the image-editor skill support? Editing, rotating, anything else?"
+- "Can you give some examples of how this skill would be used?"
+- "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
+- "What would a user say that should trigger this skill?"
 
-**Step 1: Analyze form structure**
-Run: `python scripts/analyze_form.py input.pdf`
-...
-````
+To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
 
-### Implement Feedback Loops
+Conclude this step when there is a clear sense of the functionality the skill should support.
 
-For error-prone operations, validate after each step:
+### Step 2: Planning the Reusable Skill Contents
 
-```markdown
-## Document Editing Process
+To turn concrete examples into an effective skill, analyze each example by:
 
-1. Make edits to `word/document.xml`
-2. **Validate immediately**: `python scripts/validate.py`
-3. If validation fails:
-   - Review error message
-   - Fix issues
-   - Run validation again
-4. **Only proceed when validation passes**
-5. Rebuild document
-```
+1. Considering how to execute on the example from scratch
+2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
 
-### Avoid Time-Sensitive Information
+Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
 
-**Bad** (will become outdated):
+1. Rotating a PDF requires re-writing the same code each time
+2. A `scripts/rotate_pdf.py` script would be helpful to store in the skill
 
-```markdown
-If you're doing this before August 2025, use the old API.
-```
+Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
 
-**Good** (use "old patterns" section):
+1. Writing a frontend webapp requires the same boilerplate HTML/React each time
+2. An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
 
-```markdown
-## Current Method
+Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
 
-Use the v2 API: `api.example.com/v2/messages`
+1. Querying BigQuery requires re-discovering the table schemas and relationships each time
+2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
 
-## Old Patterns
+To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
 
-<details>
-<summary>Legacy v1 API (deprecated 2025-08)</summary>
-The v1 API used: `api.example.com/v1/messages`
-This endpoint is no longer supported.
-</details>
-```
+### Step 3: Initializing the Skill
 
-### Use Consistent Terminology
+At this point, it is time to actually create the skill.
 
-Choose one term and use it throughout:
+Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
 
-**Good** (consistent):
-
-- Always "API endpoint"
-- Always "field"
-- Always "extract"
-
-**Bad** (inconsistent):
-
-- Mix "API endpoint", "URL", "API route", "path"
-
-## Common Patterns
-
-### Template Pattern
-
-Provide templates for consistent output:
-
-````markdown
-## Report Structure
-
-Use this template:
-
-```markdown
-# [Analysis Title]
-
-## Executive Summary
-
-[Overview]
-
-## Key Findings
-
-- Finding 1
-- Finding 2
-
-## Recommendations
-
-1. Recommendation 1
-2. Recommendation 2
-```
-````
-
-### Examples Pattern
-
-Show input/output pairs for clarity:
-
-````markdown
-## Commit Message Format
-
-**Example 1:**
-Input: Added user authentication
-Output:
-
-```
-feat(auth): implement JWT authentication
-
-Add login endpoint and token validation
-```
-
-**Example 2:**
-Input: Fixed date bug in reports
-Output:
-
-```
-fix(reports): correct timezone handling
-
-Use UTC consistently across reports
-```
-````
-
-### Conditional Workflow Pattern
-
-Guide through decision points:
-
-```markdown
-## Document Modification Workflow
-
-1. Determine modification type:
-   **Creating new?** → Follow "Creation workflow"
-   **Editing existing?** → Follow "Editing workflow"
-
-2. Creation workflow:
-   - Use docx-js library
-   - Build from scratch
-
-3. Editing workflow:
-   - Unpack existing document
-   - Modify XML directly
-   - Validate changes
-```
-
-## Skill Locations
-
-### Personal Skills
-
-**Location**: `~/.claude/skills/`
-**Use for**: Individual workflows, experimental skills, personal tools
-
-### Project Skills
-
-**Location**: `.claude/skills/` (in project root)
-**Use for**: Team workflows, project-specific expertise, shared utilities
-**Note**: Commit to git for team sharing
-
-### Plugin Skills
-
-**Location**: Plugin's `skills/` directory
-**Use for**: Distributable skills as part of a plugin
-**Note**: Automatically available when plugin is installed
-
-## CRUD Operations
-
-### Creating Skills
-
-#### Step 1: Choose Skill Location
-
-**Personal Skills** (`~/.claude/skills/`):
-
-- Individual workflows, experimental skills, personal tools
-
-**Project Skills** (`.claude/skills/`):
-
-- Team workflows, project-specific expertise, commit to git
-
-**Plugin Skills** (plugin's `skills/` directory):
-
-- Distributable skills, part of plugin packages
-
-#### Step 2: Create Directory & SKILL.md
+**For Warren's system**, create the skill directory manually in the default location:
 
 ```bash
-# Personal
-mkdir -p ~/.claude/skills/my-skill
+# Create skill directory in Warren's plugin
+mkdir -p ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/my-skill
 
-# Create SKILL.md with required frontmatter
+# Create subdirectories as needed
+mkdir -p ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/my-skill/scripts
+mkdir -p ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/my-skill/references
+mkdir -p ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/my-skill/assets
 ```
 
-**YAML Frontmatter Requirements**:
+**If using Anthropic's init_skill.py script** (for other systems):
 
-❌ **WRONG** - Missing YAML or no trigger terms:
-
-```yaml
-description: Helps with documents
+```bash
+scripts/init_skill.py <skill-name> --path <output-directory>
 ```
 
-✅ **RIGHT** - Specific, includes when to use:
+The script creates a template with proper frontmatter and example directories.
 
-```yaml
+After initialization, customize or remove the generated SKILL.md and example files as needed.
+
+### Step 4: Edit the Skill
+
+When editing the (newly-generated or existing) skill, remember that the skill is being created for another instance of Claude to use. Focus on including information that would be beneficial and non-obvious to Claude. Consider what procedural knowledge, domain-specific details, or reusable assets would help another Claude instance execute these tasks more effectively.
+
+#### Start with Reusable Skill Contents
+
+To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
+
+Also, delete any example files and directories not needed for the skill. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
+
+#### Update SKILL.md
+
+**Writing Style:** Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language (e.g., "To accomplish X, do Y" rather than "You should do X" or "If you need to do X"). This maintains consistency and clarity for AI consumption.
+
+To complete SKILL.md, answer the following questions:
+
+1. What is the purpose of the skill, in a few sentences?
+2. When should the skill be used?
+3. In practice, how should Claude use the skill? All reusable skill contents developed above should be referenced so that Claude knows how to use them.
+
+### Step 5: Packaging a Skill
+
+Once the skill is ready, it should be packaged into a distributable zip file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
+
+```bash
+scripts/package_skill.py <path/to/skill-folder>
+```
+
+Optional output directory specification:
+
+```bash
+scripts/package_skill.py <path/to/skill-folder> ./dist
+```
+
+The packaging script will:
+
+1. **Validate** the skill automatically, checking:
+   - YAML frontmatter format and required fields
+   - Skill naming conventions and directory structure
+   - Description completeness and quality
+   - File organization and resource references
+
+2. **Package** the skill if validation passes, creating a zip file named after the skill (e.g., `my-skill.zip`) that includes all files and maintains the proper directory structure for distribution.
+
+If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
+
+**Note:** For Warren's system, skills are typically not packaged as zip files but remain in place within the plugin directory structure.
+
+### Step 6: Iterate
+
+After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
+
+**Iteration workflow:**
+1. Use the skill on real tasks
+2. Notice struggles or inefficiencies
+3. Identify how SKILL.md or bundled resources should be updated
+4. Implement changes and test again
+
 ---
-name: Your Skill Name
-description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
----
-```
 
-**Why:** Description enables skill discovery and includes both what + when to use.
+## Snippet Integration (Warren's System)
 
-#### Step 3: Write Clear Instructions
+Skills in Warren's system can be enhanced with **snippet integration** for instant keyword activation. This allows skills to be triggered by specific keywords in user prompts, providing explicit control over when a skill loads.
 
-❌ **WRONG** - Too vague:
+### When to Add Snippet Integration
 
-```markdown
-## Instructions
+Add snippet integration when:
+- Skill needs instant activation by specific keyword (e.g., "USE SKILL_NAME")
+- Skill is used frequently in specific contexts
+- Want to bypass automatic skill discovery and ensure deterministic loading
 
-Process the data and generate output.
-```
+### How to Add Snippet Integration
 
-✅ **RIGHT** - Concrete, step-by-step:
+1. **Read the managing-snippets skill** for detailed instructions on snippet management
 
-````markdown
-## Instructions
-
-1. Load data from CSV using pandas:
-   ```python
-   import pandas as pd
-   df = pd.read_csv('data.csv')
+2. **Add entry to config.local.json** at:
    ```
-````
-
-2. Clean data:
-   - Remove null values
-   - Normalize formats
-
-3. Generate summary statistics:
-   ```python
-   summary = df.describe()
+   ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/config.local.json
    ```
 
-```
-
-#### Step 4: Keep SKILL.md Under 500 Lines
-
-Use **progressive disclosure** for large content:
-
-```
-
-my-skill/
-├── SKILL.md # Main (< 500 lines)
-├── reference.md # Detailed API docs
-└── examples.md # Usage patterns
-
-````
-
-**In SKILL.md**:
-```markdown
-## Quick Start
-[Brief overview]
-
-## Advanced Features
-For complete API documentation, see [reference.md](reference.md).
-````
-
-Claude loads additional files only when needed.
-
-#### Step 5: Test Your Skill
-
-Ask Claude a question matching your description:
-
-```
-Can you help me extract text from this PDF?
-```
-
-Claude should autonomously activate your skill if:
-
-- ✅ Description is specific (includes trigger terms)
-- ✅ YAML frontmatter is valid
-- ✅ Skill is in correct location
-- ✅ Claude Code has been restarted
-
-#### Step 6: Add Contributing Section (Optional)
-
-For skills that benefit from growing with real-world usage, add a "Contributing" section at the **end of SKILL.md**:
-
-```markdown
-## Contributing Patterns
-
-When you discover useful workflows or patterns using this skill:
-
-1. Create in `~/.claude/skills/my-skill/workflows/` with clear documentation
-2. Update this section with link and brief description
-3. Next session will have access to your discovery!
-
-### Available Patterns
-
-- **pattern-name.sh** - What it does, when to use it
-- **another-pattern.md** - What it does, when to use it
-
-See: `~/.claude/skills/my-skill/workflows/`
-```
-
-**Why:** Creates feedback loop where practical discoveries get captured. Skills become living documents that improve over time from real usage.
-
-**Example:** See `using-github-cli` skill for this pattern in action.
-
-#### HTML Summary (Optional)
-
-For visual verification:
-
-```bash
-cd ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts
-python3 generate-skill-html.py ../skills/my-skill > /tmp/my-skill-summary.html
-open /tmp/my-skill-summary.html
-```
-
-For complete guidance, see [creating.md](creating.md).
-
----
-
-### Reading Skills
-
-#### List All Available Skills
-
-**Ask Claude**:
-
-```
-What skills are available?
-```
-
-Or use filesystem:
-
-```bash
-# Personal skills
-ls ~/.claude/skills/
-
-# Project skills
-ls .claude/skills/
-
-# With descriptions
-head -n 10 ~/.claude/skills/*/SKILL.md
-```
-
-#### Inspect a Specific Skill
-
-```bash
-# View SKILL.md
-cat ~/.claude/skills/my-skill/SKILL.md
-
-# Check directory structure
-ls -la ~/.claude/skills/my-skill/
-
-# View referenced files
-ls ~/.claude/skills/my-skill/*.md
-```
-
-#### Find Skills by Keyword
-
-```bash
-# Find skills mentioning "PDF"
-grep -l "PDF" ~/.claude/skills/*/SKILL.md
-
-# Find by description
-grep "description:.*Excel" ~/.claude/skills/*/SKILL.md
-```
-
-#### Validate Skill Structure
-
-Check that a skill has required components:
-
-```bash
-# Verify SKILL.md exists
-test -f ~/.claude/skills/my-skill/SKILL.md && echo "✓ Found" || echo "✗ Missing"
-
-# Check YAML frontmatter
-head -n 10 ~/.claude/skills/my-skill/SKILL.md
-
-# Verify description length (max 1024 chars)
-grep "description:" ~/.claude/skills/my-skill/SKILL.md
-```
-
-For complete guidance, see [reading.md](reading.md).
-
----
-
-### Updating Skills
-
-#### Locate & Edit
-
-```bash
-# Personal
-code ~/.claude/skills/my-skill/SKILL.md
-
-# Project
-code .claude/skills/my-skill/SKILL.md
-```
-
-❌ **WRONG** - Changes don't appear:
-
-```
-Edit SKILL.md → Keep Claude Code running
-→ Changes don't load
-```
-
-✅ **RIGHT** - Always restart after editing:
-
-```
-Edit SKILL.md → Restart Claude Code → Changes load
-```
-
-#### Common Updates
-
-**Update Description**:
-
-❌ Generic:
-
-```yaml
-description: Helps with PDFs
-```
-
-✅ Specific:
-
-```yaml
-description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
-```
-
-**Add Examples**:
-
-````markdown
-## Examples
-
-**Example 1: Simple Extraction**
-Input: PDF with plain text
-Output:
-
-```python
-import pdfplumber
-with pdfplumber.open("document.pdf") as pdf:
-    text = pdf.pages[0].extract_text()
-```
-````
-
-```
-
-**Split Large Skills** (> 500 lines):
-
-```
-
-Before: SKILL.md with 800 lines
-After:
-├── SKILL.md (overview + quick start)
-├── reference.md (API documentation)
-└── examples.md (usage patterns)
-
-````
-
-#### Version Management
-
-Track updates:
-```markdown
-## Version History
-- v2.1.0 (2025-10-16): Added batch processing
-- v2.0.0 (2025-10-01): Breaking changes to API
-- v1.0.0 (2025-09-01): Initial release
-````
-
-#### Testing After Update
-
-1. **Verify YAML syntax**:
-
-   ```bash
-   head -n 10 SKILL.md
+3. **Example snippet pattern:**
+   ```json
+   {
+     "hooks": {
+       "user-prompt-submit": {
+         "enabled": true,
+         "order": 0,
+         "patterns": [
+           {
+             "regex": "\\bUSE MY-SKILL\\b",
+             "command": "~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts/read-skill.sh 'my-skill'"
+           }
+         ]
+       }
+     }
+   }
    ```
 
-   Check for: opening `---`, closing `---`, valid YAML
+4. **Test the snippet:**
+   - Type "USE MY-SKILL" in a prompt
+   - Verify the skill content loads
 
-2. **Test with relevant question**:
-   Ask Claude a question matching your updated description
+5. **Restart Claude Code** to activate the snippet
 
-3. **Check file references**:
-   ```bash
-   ls ~/.claude/skills/my-skill/*.md
-   ```
-   Verify all linked files exist
+### Snippet vs. Automatic Discovery
 
-For complete guidance, see [updating.md](updating.md).
+**Automatic Discovery:**
+- Claude decides when to load skill based on description
+- More flexible, adapts to varied user phrasings
+- Relies on good description metadata
+
+**Snippet Activation:**
+- User explicitly triggers skill with keyword
+- Deterministic loading every time
+- Useful for workflows where skill should always be active
+
+**Recommendation:** Use both approaches together. Let automatic discovery handle most cases, and provide snippet keywords for power users who want explicit control.
 
 ---
 
-### Deleting Skills
+## CHANGELOG
 
-#### Simple Deletion
+### Modified 2025-10-26 by Warren Zhu
 
-```bash
-# Create backup first
-cp -r ~/.claude/skills/my-skill ~/.claude/skills/my-skill.backup
+**Changes made to derivative work:**
 
-# Delete
-rm -rf ~/.claude/skills/my-skill
+1. **Added Warren's system configuration** (Section: "Warren's System Configuration")
+   - Specified default skill location for Warren's plugin
+   - Listed alternative skill locations
 
-# Verify
-ls ~/.claude/skills/
-```
+2. **Modified Step 3: Initializing the Skill**
+   - Added Warren-specific manual directory creation commands
+   - Noted that Anthropic's init_skill.py is for other systems
 
-#### For Project Skills (in git)
+3. **Modified Step 5: Packaging a Skill**
+   - Added note that Warren's system doesn't typically use zip packaging
+   - Skills remain in place within plugin directory
 
-```bash
-# Backup
-cp -r .claude/skills/my-skill ~/skill-backups/my-skill-backup
+4. **Added Section: "Snippet Integration (Warren's System)"**
+   - Explained when to add snippet integration
+   - Provided instructions for adding snippets
+   - Documented snippet vs. automatic discovery tradeoffs
+   - Referenced managing-snippets skill for details
 
-# Remove from git
-git rm -rf .claude/skills/my-skill
+5. **Updated YAML frontmatter**
+   - Modified description to mention Warren's system and snippet integration
+   - Renamed skill from "skill-creator" to "Managing Skills"
 
-# Commit
-git commit -m "Remove my-skill: no longer needed"
+6. **Added attribution, copyright, and license notices**
+   - Acknowledged Anthropic as original author
+   - Included Apache License 2.0 reference
 
-# Notify team to restart Claude Code
-```
+**Original work attribution:**
+- Source: https://github.com/anthropics/anthropic-agent-skills/tree/main/skill-creator
+- License: Apache License 2.0
+- Copyright: Anthropic
 
-#### Safety Checklist
-
-Before deleting a skill, ask:
-
-- [ ] Is anyone else using this skill?
-- [ ] Do I have a backup?
-- [ ] Is there a migration path for users?
-- [ ] Will this break any workflows?
-
-❌ **WRONG** - Delete without backup:
-
-```bash
-rm -rf ~/.claude/skills/my-skill  # Lost forever!
-```
-
-✅ **RIGHT** - Always backup first:
-
-```bash
-cp -r ~/.claude/skills/my-skill ~/skill-backups/
-rm -rf ~/.claude/skills/my-skill
-```
-
-#### Restore from Backup
-
-```bash
-# Restore entire skill
-cp -r ~/skill-backups/my-skill ~/.claude/skills/my-skill
-
-# Restart Claude Code
-```
-
-For complete guidance, see [deleting.md](deleting.md).
-
-## Snippet Configuration
-
-Skills can optionally have snippet entries in `config.local.json` for hook-based injection. This allows skills to be triggered by specific keywords in user prompts.
-
-If the managing-snippets skill is available, then read it to understand how to add snippets. You should always add snippet unless the user says otherwise.
-
-### Troubleshooting
-
-**Snippet not loading**:
-
-- Check pattern regex syntax
-- Verify file paths are relative to `scripts/` directory
-- Ensure `enabled: true`
-- Restart Claude Code
-
-**Pattern not matching**:
-
-- Test regex with Python: `python3 -c "import re; print(re.match(r'YOUR_PATTERN', 'test'))"`
-- Check for typos in ALL CAPS keyword
-- Verify `\\b` word boundaries are present
-
-## Testing Skills
-
-### Make Description Specific
-
-**Too vague**:
-
-```yaml
-description: Helps with documents
-```
-
-**Specific**:
-
-```yaml
-description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
-```
-
-### Verify File Structure
-
-**Personal Skills**: `~/.claude/skills/skill-name/SKILL.md`
-**Project Skills**: `.claude/skills/skill-name/SKILL.md`
-
-Check file exists:
-
-```bash
-ls ~/.claude/skills/my-skill/SKILL.md
-```
-
-### Check YAML Syntax
-
-Invalid YAML prevents skill loading:
-
-```bash
-cat SKILL.md | head -n 10
-```
-
-Ensure:
-
-- Opening `---` on line 1
-- Closing `---` before markdown content
-- Valid YAML (no tabs, correct indentation)
-
-## Troubleshooting
-
-### Claude Doesn't Use My Skill
-
-**Check**: Is the description specific enough?
-
-Include both what the skill does AND when to use it, with key terms users would mention.
-
-**Check**: Is YAML valid?
-
-Run validation:
-
-```bash
-cat ~/.claude/skills/my-skill/SKILL.md | head -n 15
-```
-
-**Check**: Is the skill in the correct location?
-
-```bash
-# Personal
-ls ~/.claude/skills/*/SKILL.md
-
-# Project
-ls .claude/skills/*/SKILL.md
-```
-
-**Check**: Did you restart Claude Code?
-
-Changes to skills require restarting Claude Code to take effect.
-
-### Multiple Skills Conflict
-
-Be specific in descriptions with distinct trigger terms:
-
-**Instead of**:
-
-```yaml
-# Skill 1
-description: For data analysis
-
-# Skill 2
-description: For analyzing data
-```
-
-**Use**:
-
-```yaml
-# Skill 1
-description: Analyze sales data in Excel files and CRM exports. Use for sales reports, pipeline analysis, revenue tracking.
-
-# Skill 2
-description: Analyze log files and system metrics. Use for performance monitoring, debugging, system diagnostics.
-```
-
-### YAML Frontmatter Errors
-
-**Common issues**:
-
-- Missing closing `---`
-- Tabs instead of spaces
-- Unquoted strings with colons
-- Incorrect indentation
-
-**Validation**:
-
-```bash
-cat SKILL.md | head -n 10
-```
-
-### Permission Issues
-
-**Check permissions**:
-
-```bash
-ls -la ~/.claude/skills/my-skill/SKILL.md
-```
-
-**Fix if needed**:
-
-```bash
-chmod 644 ~/.claude/skills/my-skill/SKILL.md
-```
-
-## External Resources
-
-- Official Docs: https://docs.claude.com/en/docs/claude-code/skills.md
-- Best Practices: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices.md
-- Quick Start: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/quickstart.md
-- Agent Skills Overview: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md
+All other content remains unchanged from the original Anthropic skill-creator.

@@ -17,7 +17,6 @@ from googleapiclient.errors import HttpError
 from .config import get_credentials_file, get_oauth_keys_file
 from .models import (
     Attachment,
-    BatchOperationResult,
     EmailAddress,
     EmailFull,
     EmailSummary,
@@ -1129,55 +1128,3 @@ class GmailClient:
 
         except HttpError as e:
             raise RuntimeError(f"Failed to delete email {message_id}: {e}")
-
-    def batch_modify_labels(
-        self,
-        message_ids: List[str],
-        add_labels: Optional[List[str]] = None,
-        remove_labels: Optional[List[str]] = None,
-    ) -> BatchOperationResult:
-        """Modify labels on multiple messages in batch.
-
-        Args:
-            message_ids: List of Gmail message IDs
-            add_labels: List of label IDs to add
-            remove_labels: List of label IDs to remove
-
-        Returns:
-            BatchOperationResult with success/failure counts
-        """
-        result = BatchOperationResult(total=len(message_ids))
-
-        for msg_id in message_ids:
-            try:
-                self.modify_labels(msg_id, add_labels, remove_labels)
-                result.successful.append(msg_id)
-            except (ValueError, RuntimeError, HttpError) as e:
-                result.failed[msg_id] = str(e)
-
-        return result
-
-    def batch_delete(
-        self,
-        message_ids: List[str],
-        permanent: bool = False,
-    ) -> BatchOperationResult:
-        """Delete multiple messages in batch.
-
-        Args:
-            message_ids: List of Gmail message IDs
-            permanent: If True, permanently delete. If False, move to trash
-
-        Returns:
-            BatchOperationResult with success/failure counts
-        """
-        result = BatchOperationResult(total=len(message_ids))
-
-        for msg_id in message_ids:
-            try:
-                self.delete_email(msg_id, permanent)
-                result.successful.append(msg_id)
-            except (RuntimeError, HttpError) as e:
-                result.failed[msg_id] = str(e)
-
-        return result

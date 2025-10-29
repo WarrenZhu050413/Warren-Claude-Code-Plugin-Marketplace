@@ -1,7 +1,6 @@
 ---
-description: Screenshot workflow for reading, organizing, and naming screenshots with date prefixes
-SNIPPET_NAME: using-screenshots
-ANNOUNCE_USAGE: false
+name: "Using Screenshots"
+description: "This snippet should be used when reading, organizing, and naming screenshots with date prefixes."
 ---
 
 # Screenshot Workflow
@@ -77,54 +76,24 @@ mv "Screenshot 2025-10-13 at 11.07.11 PM.png" destination.png
 
 **Lesson learned:** When moving files with complex filenames (spaces, special chars), prefer glob patterns with loops over manual escaping.
 
-## Handling Extreme Special Characters
+## Extreme Special Characters
 
-**CRITICAL**: Some screenshots have characters that **break the Read tool entirely**.
+**Problem**: Read tool fails on complex filenames (parentheses, Spanish characters, multiple periods)
 
-**Examples**:
-- Spanish macOS: `Captura de pantalla 2025-10-23 a la(s) 8.20.14 p.m..png`
-- Contains: Parentheses `()`, Spanish `á`, multiple periods, spaces
-- **Read tool fails even with correct path from Glob**
-
-### Solution: Move → Rename → Read (Direct to Final Location)
-
-**When Read tool fails on screenshots**:
+**Solution**: Move → Rename → Read
 
 ```bash
-# 1. Create organized directory
 mkdir -p ~/Desktop/claude_screenshots
-
-# 2. Move and rename directly to final location with simple names
 cd ~/Desktop
 i=1
 for f in "Captura de pantalla 2025-10-23 a la(s) 8.20"*.png; do
   [ -f "$f" ] && mv "$f" "claude_screenshots/2025-10-23-temp-$i.png" && i=$((i+1))
 done
-
-# 3. Read from organized location (simple names work!)
-# Read: ~/Desktop/claude_screenshots/2025-10-23-temp-1.png
-# Read: ~/Desktop/claude_screenshots/2025-10-23-temp-2.png
-# etc.
-
-# 4. After analyzing content, rename descriptively in place
-mv ~/Desktop/claude_screenshots/2025-10-23-temp-1.png \
-   ~/Desktop/claude_screenshots/2025-10-23-video-journaling-part1.png
-# Repeat for all files
+# Read from ~/Desktop/claude_screenshots/2025-10-23-temp-*.png
+# Then rename descriptively after analysis
 ```
 
-**Why this pattern**:
-1. **Direct move**: Files go straight to final location, no extra copy
-2. **Simple temp names**: Creates paths Read tool can handle
-3. **Read from organized location**: No special character issues
-4. **Rename after analysis**: Add descriptive names once you know content
-
-**Pattern recognition**:
-- If Glob finds files but Read fails → Use this workaround
-- Spanish macOS (`Captura de pantalla`) → Always use this
-- Parentheses in filename → Always use this
-- Multiple periods/dots → Always use this
-
-**Lesson learned**: The Read tool has limitations with complex special characters. When filenames that Glob finds but Read cannot open, immediately move to organized location with simple names, then rename descriptively after analysis.
+**Use when**: Glob finds files but Read fails, Spanish macOS, parentheses, multiple periods
 
 ## Playwright & Extension Screenshots
 

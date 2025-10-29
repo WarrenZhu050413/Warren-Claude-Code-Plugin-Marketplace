@@ -1,83 +1,121 @@
 ---
-description: Track TODOs in project-specific markdown files in ~/Desktop/TODO/
-SNIPPET_NAME: tracking-todos
-ANNOUNCE_USAGE: false
+name: "Tracking TODOs"
+description: "Track TODOs in project-specific markdown files in ~/Desktop/TODO/."
 ---
 
 # Tracking TODOs
 
-When the user mentions TODO or add-todo in conversation, you should:
+When user mentions TODO, add-todo, or asks to view/retrieve TODOs:
 
-## 1. Analyze the Context
-- Review the current conversation to understand what task/issue/feature needs to be tracked
-- Identify the project this TODO relates to (e.g., Nabokov, A2A_Confucius, etc.)
-- Determine the appropriate category:
-  - **New Features** - New functionality to implement
-  - **UI Improvements** - User interface enhancements
+## Retrieve/View TODOs
+
+**When user asks to see TODOs:**
+- "Show me my TODOs"
+- "What's on my TODO list?"
+- "List my pending tasks"
+- "Check {ProjectName} TODOs"
+
+**Actions:**
+1. List available TODO files:
+   ```bash
+   ls ~/Desktop/TODO/*.md
+   ```
+
+2. For specific project:
+   ```bash
+   cat ~/Desktop/TODO/{ProjectName}TODO.md
+   ```
+
+3. For all TODOs (summary):
+   ```bash
+   grep -h "^-" ~/Desktop/TODO/*.md | sort | uniq
+   ```
+
+4. Search TODOs by keyword:
+   ```bash
+   grep -r "keyword" ~/Desktop/TODO/
+   ```
+
+**Present TODOs clearly:**
+- Group by project
+- Show category headers
+- Highlight urgent/important items
+- Count total pending items
+
+## Add/Update TODOs
+
+When user mentions adding a TODO:
+
+## Analyze Context
+- Identify task/issue/feature to track
+- Identify project (e.g., Nabokov, A2A_Confucius)
+- Determine category:
+  - **New Features** - New functionality
+  - **UI Improvements** - Interface enhancements
   - **Prompt Engineering Improvements** - LLM/AI improvements
   - **Bug Fixes** - Issues to fix
   - **Research** - Investigation tasks
-  - Or create a new category if needed
 
-## 2. Check Existing TODO Files
-- List files in `~/Desktop/TODO/` to see existing TODO files
-- Naming convention: `{ProjectName}TODO.md` (e.g., `NabokovTODO.md`)
-- If a relevant project file exists, add to it
-- If not, create a new file following the naming convention
+## Check Files
+- List files in `~/Desktop/TODO/`
+- Naming: `{ProjectName}TODO.md` (e.g., `NabokovTODO.md`)
+- Add to existing file or create new file
 
-## 3. Format the TODO
-- TODOs are added as **bullet points** using `-` or numbered lists
-- Keep the format consistent with existing TODOs in that file
+## Format
+- Use bullet points with `-`
 - Be specific and actionable
-- Include relevant context or details from the conversation
+- Include relevant context
 
-## 4. Add or Update the File
-**To add to existing file:**
-- Read the file first to see the structure
-- Find the appropriate category section
-- Append your bullet point under that category
-- If the category doesn't exist, add it
+## Add/Update
+**Existing file:**
+- Read file first
+- Find category section
+- Append bullet under category
 
-**To create new file:**
-- Follow the structure of existing TODO files
-- Start with category headers (e.g., `# New Features`)
-- Add your TODO as a bullet point under the appropriate category
+**New file:**
+- Start with category header (`# New Features`)
+- Add TODO as bullet point
 
-## 5. Example Format
+## Example
 
 ```markdown
 # New Features
-
 - Implement feature X that does Y
-- Add ability to Z when user does W
 
 # UI Improvements
-
 - Fix layout issue with component A
-- Improve accessibility for B
 ```
 
-## Example Usage
+## Usage Examples
 
-**Conversation:**
+**Retrieving TODOs:**
+```
+User: Show me my TODOs
+→ [List all TODO files and display contents grouped by project]
+
+User: What's pending for Nabokov project?
+→ [Read and display TODO/NabokovTODO.md with category breakdown]
+
+User: Search TODOs for "dark mode"
+→ [grep -r "dark mode" ~/Desktop/TODO/]
+```
+
+**Adding TODOs:**
 ```
 User: We need to add dark mode support to the sidebar
-Assistant: [Reads TODO/NabokovTODO.md, finds UI Improvements section, adds:]
+→ [Read TODO/NabokovTODO.md, add:]
 - Add dark mode support to the sidebar
 ```
 
-**Conversation:**
 ```
 User: TODO: The new ProjectX needs a settings page
-Assistant: [Creates TODO/ProjectXTODO.md with:]
+→ [Create TODO/ProjectXTODO.md:]
 # New Features
-
 - Create settings page for ProjectX
 ```
 
-## Important Notes
-- Always **read** the TODO file first before editing
-- Use the **Edit** tool to append to existing files
-- Use the **Write** tool only for new files
-- Confirm with user after adding the TODO
-- Keep formatting consistent with existing TODOs
+## Notes
+- Always read TODO file before editing
+- Use Edit tool for existing files
+- Use Write tool for new files only
+- Confirm after adding TODO

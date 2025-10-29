@@ -1,30 +1,26 @@
 ---
-description: Writing Neovim plugins with Lua - type safety, modular architecture, and best practices
-SNIPPET_NAME: writing-lua
-ANNOUNCE_USAGE: false
+name: "Writing Lua"
+description: "This snippet should be used when writing Neovim plugins with Lua, focusing on type safety, modular architecture, and best practices."
 ---
 
-# Writing Neovim Plugins with Lua
+# Principles
 
-## Core Principles
+- **Type Safety**: Use LuaCATS annotations everywhere
+- **Modular Architecture**: Single Responsibility Principle - one module, one purpose
+- **Thin Orchestration**: Keep init.lua under 400 lines - it coordinates, doesn't implement
+- **Lazy Loading**: Minimize startup impact
+- **User Choice**: Provide `<Plug>` mappings, not forced keymaps
+- **0-indexed Internally**: LSP-style coordinates, convert to 1-indexed only for storage
+- **Test-Driven**: Write tests using Plenary
 
-1. **Type Safety**: Use LuaCATS annotations everywhere
-2. **Modular Architecture**: Single Responsibility Principle - one module, one purpose
-3. **Thin Orchestration**: Keep init.lua under 400 lines - it coordinates, doesn't implement
-4. **Lazy Loading**: Minimize startup impact
-5. **User Choice**: Provide `<Plug>` mappings, not forced keymaps
-6. **0-indexed Internally**: LSP-style coordinates, convert to 1-indexed only for storage
-7. **Test-Driven**: Write tests using Plenary
+## Module Organization
 
-## Module Organization (SRP)
-
-**When to Extract a Module:**
+**Extract when:**
 - Code block > 150 lines with distinct purpose
 - 3+ similar/duplicate functions
 - Complex logic needing isolated testing
-- Code that changes for different reasons
 
-**Target Structure:**
+**Target structure:**
 ```
 lua/plugin-name/
 ├── init.lua          -- ~300 lines: setup, coordination, public API
@@ -88,16 +84,12 @@ function M.show_annotation(view_mode)
 end
 ```
 
-## Type Safety with LuaCATS
+## Type Annotations
 
 ```lua
 ---@class Range
----@field start {line: integer, column: integer}  -- 0-indexed
----@field ["end"] {line: integer, column: integer}  -- exclusive
-
----@class PluginConfig
----@field enabled boolean
----@field timeout integer
+---@field start {line: integer, column: integer}
+---@field ["end"] {line: integer, column: integer}
 
 ---@param opts PluginConfig?
 ---@return PluginConfig
@@ -106,39 +98,21 @@ local function setup(opts)
 end
 ```
 
-## Configuration & Initialization
+## Configuration
 
 ```lua
--- Work out-of-box with defaults (don't require setup())
 local M = {}
 local default_config = { enabled = true, timeout = 5000 }
 M.config = vim.deepcopy(default_config)
 
----@param opts table?
 function M.setup(opts)
   M.config = vim.tbl_deep_extend("force", M.config, opts or {})
-end
-
--- Nested config access helper
----@param key string Dot-notation (e.g., "ui.border")
-function M.get_value(key)
-  local parts = vim.split(key, ".", { plain = true })
-  local value = M.config
-  for _, part in ipairs(parts) do
-    value = value[part]
-    if value == nil then return nil end
-  end
-  return value
 end
 ```
 
 ## Lazy Loading
 
 ```lua
--- Bad: Load immediately
-local heavy = require("heavy.module")
-
--- Good: Lazy-load on first use
 local heavy
 local function get_heavy()
   if not heavy then heavy = require("heavy.module") end
@@ -146,26 +120,21 @@ local function get_heavy()
 end
 
 function M.action()
-  local h = get_heavy()  -- Loads only when called
-  h.do_something()
+  get_heavy().do_something()
 end
 ```
 
 ## Keymaps
 
 ```lua
--- Provide <Plug> mappings (users choose their own keys)
 vim.keymap.set("n", "<Plug>(plugin-action)", function()
   require("plugin").action()
 end, { desc = "Plugin action" })
-
--- Document in README: vim.keymap.set("n", "<leader>p", "<Plug>(plugin-action)")
 ```
 
-## User Commands
+## Commands
 
 ```lua
--- Use scoped commands with subcommands
 local function dispatcher(opts)
   local cmds = { enable = enable, disable = disable, status = status }
   (cmds[opts.fargs[1]] or function()
@@ -182,18 +151,17 @@ vim.api.nvim_create_user_command("Plugin", dispatcher, {
 ## Coordinates
 
 ```lua
--- Use 0-indexed (LSP-style) internally
----@type Range
+-- 0-indexed internally (LSP-style)
 local range = {
-  start = { line = 0, column = 5 },   -- 0-indexed
-  ["end"] = { line = 0, column = 10 }  -- exclusive
+  start = { line = 0, column = 5 },
+  ["end"] = { line = 0, column = 10 }
 }
 
--- Convert to 1-indexed only for storage/display
+-- Convert to 1-indexed for storage
 local function to_storage(range)
   return {
-    start_line = range.start.line + 1,  -- 1-indexed for JSON
-    start_col = range.start.column,     -- Keep 0-indexed
+    start_line = range.start.line + 1,
+    start_col = range.start.column,
     end_line = range["end"].line + 1,
     end_col = range["end"].column
   }
@@ -203,30 +171,26 @@ end
 ## Testing
 
 ```lua
--- Plenary test structure
 describe("plugin", function()
   it("handles normal case", function()
     assert.are.equal("expected", plugin.function("input"))
   end)
 end)
 
--- Dependency injection for testability
+-- Dependency injection
 M._http_get = function(url) return vim.fn.system("curl " .. url) end
 function M.fetch() return M._http_get("https://api.example.com") end
--- In tests: M._http_get = function() return '{"mock": "data"}' end
 ```
 
 ## Error Handling
 
 ```lua
----@return string[]? lines, string? error
 local function read_file(path)
   local ok, result = pcall(vim.fn.readfile, path)
   if not ok then return nil, "Failed to read: " .. path end
   return result, nil
 end
 
--- Usage
 local lines, err = read_file("config.json")
 if err then
   vim.notify(err, vim.log.levels.ERROR)
@@ -239,16 +203,12 @@ end
 ```lua
 local ns_id = vim.api.nvim_create_namespace("plugin-name")
 
----@param bufnr integer
----@param line integer 0-indexed line
----@param col_start integer 0-indexed column
----@param col_end integer Exclusive end column
 function add_highlight(bufnr, line, col_start, col_end)
   return vim.api.nvim_buf_set_extmark(bufnr, ns_id, line, col_start, {
     end_col = col_end,
     hl_group = "PluginHighlight",
-    right_gravity = true,      -- Expand at start
-    end_right_gravity = false  -- Don't expand at end
+    right_gravity = true,
+    end_right_gravity = false
   })
 end
 
@@ -262,9 +222,7 @@ local augroup = vim.api.nvim_create_augroup("PluginName", { clear = true })
 
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
   group = augroup,
-  callback = function(args)
-    -- Setup buffer
-  end,
+  callback = function(args) end,
   desc = "Initialize plugin"
 })
 ```
@@ -272,17 +230,17 @@ vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
 ## Performance
 
 ```lua
--- 1. Cache expensive ops
+-- Cache expensive operations
 local cache = {}
 function M.get(key)
   if not cache[key] then cache[key] = expensive_op(key) end
   return cache[key]
 end
 
--- 2. Use vim.schedule for async
+-- Async with vim.schedule
 vim.schedule(function() slow_computation() end)
 
--- 3. Debounce frequent events
+-- Debounce
 local timer
 vim.api.nvim_create_autocmd("TextChanged", {
   callback = function()
@@ -290,32 +248,28 @@ vim.api.nvim_create_autocmd("TextChanged", {
     timer = vim.fn.timer_start(500, on_change)
   end
 })
-
--- 4. Local variables are 20x faster than globals
-local getcwd = vim.fn.getcwd  -- Cache once
-for i = 1, 1000000 do _ = getcwd() end  -- Fast
 ```
 
-## Common Pitfalls
+## Pitfalls
 
-1. **Monolithic init.lua**: Extract modules at 400-500 lines
-2. **Mark indexing**: Marks use 1-indexed lines, API uses 0-indexed
-3. **Buffer validity**: Always check `vim.api.nvim_buf_is_valid(buf)`
-4. **Global state**: Use module-local state
-5. **Blocking UI**: Never block main thread with long ops
-6. **Duplicate code**: Consolidate 3+ similar functions
+- **Monolithic init.lua**: Extract modules at 400-500 lines
+- **Mark indexing**: Marks use 1-indexed lines, API uses 0-indexed
+- **Buffer validity**: Always check `vim.api.nvim_buf_is_valid(buf)`
+- **Global state**: Use module-local state
+- **Blocking UI**: Never block main thread
+- **Duplicate code**: Consolidate 3+ similar functions
 
-## Code Review Checklist
+## Checklist
 
-- [ ] LuaCATS annotations on all public functions
-- [ ] init.lua < 500 lines (preferably < 400)
+- [ ] LuaCATS annotations on public functions
+- [ ] init.lua < 400 lines
 - [ ] No functions > 100 lines
-- [ ] No duplicate patterns (consolidate/extract)
+- [ ] No duplicate patterns
 - [ ] Modules follow SRP
-- [ ] Deep merge for config (`vim.tbl_deep_extend`)
+- [ ] Deep merge for config
 - [ ] Lazy loading for heavy deps
-- [ ] Error handling (pcall or nil, err pattern)
+- [ ] Error handling (pcall or nil, err)
 - [ ] 0-indexed internally, 1-indexed for storage
-- [ ] Autocommands use groups with clear = true
+- [ ] Autocommands use groups
 - [ ] Tests for core functionality
-- [ ] `<Plug>` mappings, not hardcoded keys
+- [ ] `<Plug>` mappings

@@ -70,24 +70,6 @@ class EmailSummary(BaseModel):
         "populate_by_name": True,
     }
 
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        # Build status indicators without emojis
-        status_parts = []
-        if self.is_unread:
-            status_parts.append("UNREAD")
-        if self.has_attachments:
-            status_parts.append("HAS ATTACHMENTS")
-        status = f" [{', '.join(status_parts)}]" if status_parts else ""
-
-        return (
-            f"**{self.subject}**{status}\n"
-            f"From: {self.from_}\n"
-            f"Date: {self.date.strftime('%Y-%m-%d %H:%M')}\n"
-            f"ID: {self.message_id}\n"
-            f"\n{self.snippet}\n"
-        )
-
 
 class EmailFull(BaseModel):
     """Complete email with body and attachments."""
@@ -112,43 +94,6 @@ class EmailFull(BaseModel):
         "populate_by_name": True,
     }
 
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        lines = [
-            f"# {self.subject}",
-            "",
-            f"From: {self.from_}",
-            f"To: {', '.join(str(addr) for addr in self.to)}",
-        ]
-
-        if self.cc:
-            lines.append(f"CC: {', '.join(str(addr) for addr in self.cc)}")
-
-        lines.append(f"Date: {self.date.strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append(f"Message ID: {self.message_id}")
-
-        if self.labels:
-            lines.append(f"Labels: {', '.join(self.labels)}")
-
-        if self.attachments:
-            lines.append(f"\nAttachments ({len(self.attachments)} files):")
-            for att in self.attachments:
-                lines.append(f"  • {att.filename} — {att.size_human}, {att.mime_type}")
-
-        lines.append("\n" + "─" * 80 + "\n")
-
-        # Prefer plain text body
-        body = self.body_plain if self.body_plain else self.body_html
-        if body:
-            # Truncate if too long (keep first MAX_BODY_CHARS chars for context efficiency)
-            if len(body) > MAX_BODY_CHARS:
-                lines.append(body[:MAX_BODY_CHARS])
-                lines.append(f"\n\n[Body truncated — {len(body)} total characters]")
-            else:
-                lines.append(body)
-
-        return "\n".join(lines)
-
 
 class SearchResult(BaseModel):
     """Paginated search results."""
@@ -157,35 +102,6 @@ class SearchResult(BaseModel):
     total_count: int
     next_page_token: Optional[str] = None
     query: str
-
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        lines = [
-            f'# Search Results: "{self.query}"',
-            "",
-            f"Found {self.total_count} emails. Showing {len(self.emails)}.",
-            "",
-        ]
-
-        for i, email in enumerate(self.emails, 1):
-            # Build status indicators
-            status_parts = []
-            if email.is_unread:
-                status_parts.append("UNREAD")
-            if email.has_attachments:
-                status_parts.append("HAS ATTACHMENTS")
-            status = f" [{', '.join(status_parts)}]" if status_parts else ""
-
-            lines.append(f"## {i}. {email.subject}{status}")
-            lines.append(f"From: {email.from_}")
-            lines.append(f"Date: {email.date.strftime('%Y-%m-%d %H:%M')}")
-            lines.append(f"ID: {email.message_id}")
-            lines.append(f"\n{email.snippet}\n")
-
-        if self.next_page_token:
-            lines.append(f"\nMore results available. Use next_page_token: {self.next_page_token}")
-
-        return "\n".join(lines)
 
 
 class Folder(BaseModel):
@@ -196,24 +112,6 @@ class Folder(BaseModel):
     type: str  # system or user
     message_count: Optional[int] = None
     unread_count: Optional[int] = None
-
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        parts = []
-
-        if self.message_count is not None:
-            parts.append(f"{self.message_count} messages")
-
-        if self.unread_count:
-            parts.append(f"{self.unread_count} unread")
-
-        # Use bullet point (•) and em dash (—) for better formatting
-        # Format: "• FOLDER_NAME — 123 messages, 5 unread, ID: `Label_1`"
-        if parts:
-            details = f" — {', '.join(parts)}, ID: `{self.id}`"
-        else:
-            details = f" — ID: `{self.id}`"
-        return f"• {self.name}{details}"
 
 
 class SendEmailRequest(BaseModel):
@@ -257,52 +155,3 @@ class SendEmailResponse(BaseModel):
     thread_id: str
     success: bool = True
     error: Optional[str] = None
-
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        if self.success:
-            return (
-                f"Email sent successfully!\n"
-                f"Message ID: {self.message_id}\n"
-                f"Thread ID: {self.thread_id}"
-            )
-        else:
-            return f"Failed to send email: {self.error}"
-
-
-class BatchOperationResult(BaseModel):
-    """Result of batch operations."""
-
-    successful: List[str] = Field(
-        default_factory=list, description="Successfully processed message IDs"
-    )
-    failed: Dict[str, str] = Field(
-        default_factory=dict, description="Failed message IDs with error messages"
-    )
-    total: int
-
-    @property
-    def success_rate(self) -> float:
-        """Calculate success rate."""
-        return len(self.successful) / self.total if self.total > 0 else 0.0
-
-    def to_markdown(self) -> str:
-        """Human-friendly markdown format."""
-        success_pct = self.success_rate * 100
-        lines = [
-            "# Batch Operation Results",
-            "",
-            f"Successful: {len(self.successful)}/{self.total} ({success_pct:.1f}%)",
-        ]
-
-        if self.failed:
-            lines.append(f"Failed: {len(self.failed)}")
-            lines.append("")
-            lines.append("## Failed Operations")
-            for msg_id, error in list(self.failed.items())[:MAX_FAILURES_SHOWN]:
-                lines.append(f"• {msg_id}: {error}")
-
-            if len(self.failed) > MAX_FAILURES_SHOWN:
-                lines.append(f"\n... and {len(self.failed) - MAX_FAILURES_SHOWN} more failures")
-
-        return "\n".join(lines)

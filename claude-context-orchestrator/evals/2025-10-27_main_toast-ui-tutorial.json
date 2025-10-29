@@ -1,0 +1,35 @@
+{
+  "date": "2025-10-27",
+  "session_name": "main",
+  "context": "Created TOAST UI Editor tutorial artifact, discovered Parcel bundling issues with complex content, successfully used Vite as primary bundling method",
+  "reproducible_prompt": "Create an ARTIFACT TUTORIAL of the Toast UI https://ui.toast.com/tui-editor. I want to go through real code examples, including advanced features, as well as integration with React.",
+  "skills_invoked": [
+    "building-artifacts",
+    "documentation-tutorial"
+  ],
+  "skill_effectiveness": {
+    "building-artifacts": {
+      "effectiveness": "partial",
+      "notes": "Init script worked perfectly. Parcel bundling failed with complex content. Vite fallback method succeeded. Should make Vite the primary method."
+    },
+    "documentation-tutorial": {
+      "effectiveness": "high",
+      "notes": "Principles worked excellently for structuring tutorial with code examples, tabs, mental models, and real scenarios. Code-first approach was perfect fit."
+    }
+  },
+  "outcomes": {
+    "success": true,
+    "artifacts_created": [
+      "/Users/wz/Desktop/Artifacts/toast-ui-tutorial/bundle.html (338KB)"
+    ],
+    "issues_encountered": [
+      "Parcel bundling failed with 'Unterminated string literal' error",
+      "TypeScript errors (unused imports, type assertions needed)"
+    ],
+    "solutions_applied": [
+      "Switched to Vite + vite-plugin-singlefile",
+      "Added proper build configuration with inlineDynamicImports",
+      "Fixed TypeScript errors"
+    ]
+  }
+}

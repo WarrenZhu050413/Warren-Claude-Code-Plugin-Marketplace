@@ -1,21 +1,19 @@
 """Tests for utils.py module."""
 
 import base64
+
 import pytest
-from pathlib import Path
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 from gmaillm.utils import (
-    parse_email_address,
-    format_email_address,
-    truncate_text,
     clean_snippet,
     create_mime_message,
     decode_base64,
     extract_body,
+    format_email_address,
     get_header,
+    parse_email_address,
     parse_label_ids,
+    truncate_text,
     validate_pagination_params,
 )
 

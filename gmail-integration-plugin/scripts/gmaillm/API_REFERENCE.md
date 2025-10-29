@@ -222,29 +222,6 @@ client.modify_labels(msg_id, remove_labels=['INBOX'])
 client.modify_labels(msg_id, add_labels=['TRASH'])
 ```
 
-#### batch_modify_labels()
-Modify labels on multiple emails at once.
-
-```python
-result = client.batch_modify_labels(
-    message_ids=['id1', 'id2', 'id3'],  # Required: list of message IDs
-    add_labels=['Label_5'],              # Optional: labels to add
-    remove_labels=['UNREAD']             # Optional: labels to remove
-)
-# Returns: BatchOperationResult
-```
-
-**Example:**
-```python
-# Mark all as read
-message_ids = [email.message_id for email in search_result.emails]
-result = client.batch_modify_labels(
-    message_ids,
-    remove_labels=['UNREAD']
-)
-print(f"Marked {len(result.successful)} emails as read")
-```
-
 #### delete_email()
 Delete a single email.
 
@@ -254,17 +231,6 @@ success = client.delete_email(
     permanent=False       # Optional: True = permanent, False = trash
 )
 # Returns: bool
-```
-
-#### batch_delete()
-Delete multiple emails at once.
-
-```python
-result = client.batch_delete(
-    message_ids=['id1', 'id2', 'id3'],  # Required: list
-    permanent=False                      # Optional: True = permanent
-)
-# Returns: BatchOperationResult
 ```
 
 ---
@@ -463,14 +429,6 @@ Email send result.
 - `thread_id: str` - Thread ID
 - `error: Optional[str]` - Error message if failed
 
-### BatchOperationResult
-Batch operation results.
-
-**Fields:**
-- `successful: List[str]` - Successful message IDs
-- `failed: List[str]` - Failed message IDs
-- `errors: Dict[str, str]` - Error messages by ID
-
 ---
 
 ## Gmail Search Syntax
@@ -606,9 +564,6 @@ response = client.reply_email(msg_id, body="Thanks!", reply_all=False)
 
 # Labels
 client.modify_labels(msg_id, add_labels=['STARRED'], remove_labels=['UNREAD'])
-
-# Batch
-client.batch_modify_labels(ids, remove_labels=['UNREAD'])
 ```
 
 ### CLI Cheat Sheet

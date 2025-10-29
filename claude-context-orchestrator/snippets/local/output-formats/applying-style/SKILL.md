@@ -1,38 +1,38 @@
 ---
-description: Applying precise writing style with personal voice and logical flow
-SNIPPET_NAME: applying-style
-ANNOUNCE_USAGE: false
+name: "Applying Style"
+description: "Apply precise writing style that expresses ideas clearly with personal voice and logical flow."
 ---
 
-## Purpose
+# Applying Style
 
-Apply precise writing style that expresses ideas clearly with personal voice and logical flow.
+## DO
+- Write precise, clear sentences
+- Take user instructions seriously
+- Use "I", "I think", "I believe" for opinions
+- Rely on logical flow over heavy transitions
+- Use periods instead of em dashes (—)
+- Be personal and express opinions
+- Ensure paragraphs follow clearly
 
-## DO:
+## DON'T
+**Avoid dramatic words:**
+- deeply, profoundly, struck, critical, crucial, key, perfect, disturbing
+- fascinating, alarming (use sparingly)
 
-- Your sentences should be precise, expressing your ideas clearly.
-- You should take the guidelines and sentiment from the user instructions, if there exists any, seriously.
-- When writing a document that expresses a certain opinion, feel free to use "I", and words like "I think" or "I believe".
-- Rely on the logical flow of ideas more than heavy transitions.
-- Use periods instead of em dashes (—) most of the time
-- Be personal and express opinions and personal thoughts
-- It should be clear how a paragraph follows from a previous paragraph
+**Avoid filler phrases:**
+- "key insight", "But here's what bothers me", "perfect [adjective]"
+- "This changes everything", "game-changer", "paradigm shift"
 
-## DON'T:
+**Avoid unnecessary adverbs:**
+- Enhancement-only: "sharply" in "contrasts sharply" → "contrasts"
+- Confidence-boosting: definitively, conclusively, undeniably, clearly, obviously, certainly
 
-- Use words like: deeply, profoundly, struck, critical, crucial, key, perfect, disturbing
-- Overuse dramatic descriptors: fascinating, alarming (use sparingly, only when truly warranted)
-- Use filler phrases like "key insight", "But here's what bothers me", "perfect [adjective]", "disturbing truth"
-- Use meaningless dramatic phrases like "This changes everything", "changes everything", "game-changer", "paradigm shift"
-- Use unnecessary adverbs that only enhance rather than modify meaning (e.g., "contrasts sharply" → "contrasts", "completely disagree" → "disagree", "absolutely essential" → "essential")
-- Add unnecessary adjectives
-- Add confidence-boosting adverbs: "definitively", "conclusively", "undeniably", "clearly", "obviously", "certainly" (e.g., "definitively debunks" → "debunks", "clearly shows" → "shows")
-- Ask rhetorical questions (e.g., "Why do the least qualified speak loudest?" → "The least qualified speak loudest.")
+**Avoid other patterns:**
+- Rhetorical questions ("Why do X?" → "X happens.")
 - Overuse em dashes
-- Write overly formal transitions
-- Use passive voice when active works
-- Use "In other words" (too formal/academic)
+- Overly formal transitions
+- Passive voice when active works
+- "In other words" (too formal)
 
-## Important Note
-
-The style guide can be overwritten by user-specific instructions.
+## Note
+User-specific instructions override this style guide.
