@@ -117,7 +117,8 @@ class TestShowGroup:
 
         assert result.exit_code == 1
         assert "not found" in result.stdout
-        assert "Available groups" in result.stdout
+        assert "Available:" in result.stdout
+        assert "gmail groups list" in result.stdout
 
     @patch("gmaillm.commands.groups.load_email_groups")
     def test_show_group_with_numbered_list(self, mock_load):
