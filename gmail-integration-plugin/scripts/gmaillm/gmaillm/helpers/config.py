@@ -70,8 +70,8 @@ def load_email_groups(groups_file: Optional[Path] = None) -> Dict[str, List[str]
         Dictionary mapping group names to email lists
     """
     if groups_file is None:
-        config_dir = get_plugin_config_dir()
-        groups_file = config_dir / "email-groups.json"
+        groups_dir = get_groups_dir()
+        groups_file = groups_dir / "groups.json"
 
     groups = load_json_config(groups_file)
     # Filter out metadata/comment keys
@@ -86,8 +86,8 @@ def save_email_groups(groups: Dict[str, List[str]], groups_file: Optional[Path] 
         groups_file: Optional path to groups file (for testing)
     """
     if groups_file is None:
-        config_dir = get_plugin_config_dir()
-        groups_file = config_dir / "email-groups.json"
+        groups_dir = get_groups_dir()
+        groups_file = groups_dir / "groups.json"
 
     save_json_config(groups_file, groups)
 
@@ -133,14 +133,26 @@ def expand_email_groups(recipients: List[str], groups: Optional[Dict[str, List[s
     return expanded
 
 
+def get_groups_dir() -> Path:
+    """Get the email groups directory path.
+
+    Returns:
+        Path to email groups directory
+    """
+    config_dir = get_plugin_config_dir()
+    groups_dir = config_dir / "email-groups"
+    groups_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+    return groups_dir
+
+
 def get_groups_file_path() -> Path:
     """Get path to email groups file.
 
     Returns:
-        Path to email-groups.json
+        Path to groups.json
     """
-    config_dir = get_plugin_config_dir()
-    return config_dir / "email-groups.json"
+    groups_dir = get_groups_dir()
+    return groups_dir / "groups.json"
 
 
 def get_styles_dir() -> Path:

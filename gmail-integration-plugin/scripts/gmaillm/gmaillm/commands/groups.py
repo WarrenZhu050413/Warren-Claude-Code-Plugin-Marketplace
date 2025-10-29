@@ -1,6 +1,5 @@
 """Gmail distribution groups management commands."""
 
-import json
 import os
 import subprocess
 from pathlib import Path
@@ -16,18 +15,26 @@ from gmaillm.helpers.config import (
     save_email_groups,
     create_backup
 )
-from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
+from gmaillm.helpers.typer_utils import HelpfulGroup
+from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
+from gmaillm.helpers.cli_utils import (
+    show_operation_preview,
+    confirm_or_force,
+    handle_command_error,
+    ensure_item_exists,
+    create_backup_with_message,
+    print_success
+)
 from gmaillm.validators.email import validate_email, validate_editor
 from gmaillm.validators.email_operations import (
     get_group_json_schema_string,
-    validate_group_json,
-    load_json_from_file
+    validate_group_json
 )
 
 # Initialize Typer app and console
 app = typer.Typer(
     help="Manage email distribution groups",
-    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+    cls=HelpfulGroup  # Show help on missing required args
 )
 console = Console()
 
@@ -39,17 +46,12 @@ def show_schema() -> None:
     This schema defines the structure required for creating groups
     via the --json-input flag in the 'create' command.
     """
-    try:
-        schema_str = get_group_json_schema_string(indent=2)
-        console.print("\n[bold cyan]Email Group JSON Schema[/bold cyan]")
-        console.print("[dim]Use this schema for programmatic group creation with --json-input[/dim]\n")
-        console.print_json(schema_str)
-        console.print("\n[bold]Usage Examples:[/bold]")
-        console.print("  Create from JSON file:")
-        console.print("    [cyan]gmail groups create --json-input group.json --force[/cyan]")
-    except Exception as e:
-        console.print(f"[red]✗ Error displaying schema: {e}[/red]")
-        raise typer.Exit(code=1)
+    display_schema_and_exit(
+        schema_getter=get_group_json_schema_string,
+        title="Email Group JSON Schema",
+        description="Use this schema for programmatic group creation with --json-input",
+        usage_example="gmail groups create --json-input group.json --force"
+    )
 
 
 @app.command("list")
@@ -156,21 +158,12 @@ def create_group(
         if json_input:
             console.print("[cyan]Creating group from JSON file...[/cyan]")
 
-            # Load JSON from file
-            try:
-                json_data = load_json_from_file(Path(json_input))
-            except (FileNotFoundError, ValueError) as e:
-                console.print(f"[red]✗ {e}[/red]")
-                raise typer.Exit(code=1)
-
-            # Validate JSON
-            validation_errors = validate_group_json(json_data)
-            if validation_errors:
-                console.print(f"[red]✗ Invalid JSON data:[/red]")
-                for err in validation_errors:
-                    console.print(f"  - {err}")
-                console.print("\nView schema: [cyan]gmail groups schema[/cyan]")
-                raise typer.Exit(code=1)
+            # Load and validate JSON
+            json_data = load_and_validate_json(
+                json_path_str=json_input,
+                validator_func=validate_group_json,
+                schema_help_command="gmail groups schema"
+            )
 
             # Extract from JSON
             group_name = json_data["name"]
@@ -328,44 +321,35 @@ def delete_group(
         groups = load_email_groups()
 
         # Check if exists
-        if name not in groups:
-            console.print(f"[red]✗ Group '{name}' not found[/red]")
-            raise typer.Exit(code=1)
+        ensure_item_exists(name, groups, "Group", "gmail groups list")
 
         # Show what will be deleted
-        console.print("=" * 60)
-        console.print("Deleting Email Group")
-        console.print("=" * 60)
-        console.print(f"Name: #{name}")
-        console.print(f"Members: {len(groups[name])}")
-        for email in groups[name]:
-            console.print(f"  - {email}")
-        console.print("=" * 60)
+        show_operation_preview(
+            "Deleting Email Group",
+            {
+                "Name": f"#{name}",
+                "Members": len(groups[name]),
+                "Emails": groups[name]
+            }
+        )
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\n⚠️  Delete this group? This cannot be undone.")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Deleting without confirmation[/yellow]")
+        if not confirm_or_force("\n⚠️  Delete this group? This cannot be undone.", force, "Deleting without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Create backup before deletion
         groups_file = get_groups_file_path()
-        if groups_file.exists():
-            backup_path = create_backup(groups_file)
-            console.print(f"Backup created: {backup_path}")
+        create_backup_with_message(groups_file, create_backup)
 
         # Delete
         del groups[name]
         save_email_groups(groups)
 
-        console.print(f"\n[green]✅ Group deleted: #{name}[/green]")
+        print_success(f"Group deleted: #{name}")
 
     except Exception as e:
-        console.print(f"[red]✗ Error deleting group: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("deleting group", e)
 
 
 @app.command("edit")

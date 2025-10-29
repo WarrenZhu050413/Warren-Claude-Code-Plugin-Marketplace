@@ -1,65 +1,84 @@
 """Utility classes and functions for Typer CLI customization."""
 
-import functools
-from typing import Callable
+import sys
 
 import click
 import typer
 
 
-def help_on_missing_args(func: Callable) -> Callable:
-    """Decorator that shows help when required arguments are missing.
+class HelpfulCommand(click.Command):
+    """Command that shows help when invoked without required arguments.
 
-    This wraps a Typer command function to catch MissingParameter exceptions
-    and display the command's help text instead of showing an error.
+    Overrides Click's exception formatting to show help text instead
+    of the default error message when required parameters are missing.
 
-    Args:
-        func: The command function to wrap
+    This uses Click's built-in show_default mechanism which is called
+    before sys.exit(), making it the most reliable approach.
 
-    Returns:
-        Wrapped function with help-on-missing-args behavior
+    Usage:
+        app = typer.Typer()
+        app.command(cls=HelpfulCommand)(my_function)
+
+        Or for a Typer group:
+        app = typer.Typer(cls=HelpfulGroup)
+    """
+
+    def make_context(self, info_name, args, parent=None, **extra):
+        """Override to customize error handling during context creation.
+
+        Args:
+            info_name: Command name
+            args: Arguments list
+            parent: Parent context
+            **extra: Extra context parameters
+
+        Returns:
+            Click context with custom error handling
+        """
+        try:
+            return super().make_context(info_name, args, parent, **extra)
+        except click.MissingParameter as e:
+            # Create a temporary context just to get help
+            ctx = click.Context(self, info_name=info_name, parent=parent)
+            click.echo(self.get_help(ctx), file=sys.stderr)
+            # Re-raise to maintain normal exit behavior
+            sys.exit(2)
+
+
+class HelpfulGroup(typer.core.TyperGroup):
+    """Typer group that uses HelpfulCommand for all commands.
+
+    All commands in this group will show help when required arguments
+    are missing, instead of showing Click's default error message.
 
     Example:
+        app = typer.Typer(cls=HelpfulGroup)
+
         @app.command()
-        @help_on_missing_args
         def read(message_id: str):
-            ...
+            # Shows full help if message_id is missing
+            pass
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except click.MissingParameter as e:
-            ctx = click.get_current_context()
-            click.echo(ctx.get_help())
-            ctx.exit(1)
-    return wrapper
 
-
-class HelpOnMissingArgsGroup(typer.core.TyperGroup):
-    """Custom Typer group that shows help on missing arguments for all commands.
-
-    This is a simpler alternative to the decorator approach. When used as the
-    `cls` parameter for a Typer app, all commands in that app will automatically
-    show help when required arguments are missing.
-
-    Note: Due to Click's error handling, this approach has limitations. The decorator
-    approach above may work better in some cases.
-    """
+    def command(self, *args, **kwargs):
+        """Override to use HelpfulCommand as default command class."""
+        kwargs.setdefault('cls', HelpfulCommand)
+        return super().command(*args, **kwargs)
 
     def add_command(self, cmd: click.Command, name: str = None):
-        """Override add_command to wrap each command with help-on-missing-args."""
-        if isinstance(cmd, click.Command):
-            # Wrap the callback
-            original_callback = cmd.callback
-            if original_callback:
-                @functools.wraps(original_callback)
-                def new_callback(*args, **kwargs):
-                    try:
-                        return original_callback(*args, **kwargs)
-                    except click.MissingParameter as e:
-                        ctx = click.get_current_context()
-                        click.echo(ctx.get_help())
-                        ctx.exit(1)
-                cmd.callback = new_callback
+        """Override to convert existing commands to HelpfulCommand."""
+        if isinstance(cmd, click.Command) and not isinstance(cmd, HelpfulCommand):
+            # Convert the command to use HelpfulCommand's make_context
+            original_make_context = cmd.make_context
+
+            def new_make_context(info_name, args, parent=None, **extra):
+                try:
+                    return original_make_context(info_name, args, parent, **extra)
+                except click.MissingParameter as e:
+                    ctx = click.Context(cmd, info_name=info_name, parent=parent)
+                    click.echo(cmd.get_help(ctx), file=sys.stderr)
+                    sys.exit(2)
+
+            cmd.make_context = new_make_context
+
         return super().add_command(cmd, name)

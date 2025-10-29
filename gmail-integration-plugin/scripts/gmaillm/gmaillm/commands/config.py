@@ -10,12 +10,12 @@ from gmaillm.helpers.config import (
     get_styles_dir,
     get_groups_file_path
 )
-from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
+from gmaillm.helpers.typer_utils import HelpfulGroup
 
 # Initialize Typer app and console
 app = typer.Typer(
     help="Manage Gmail integration configuration",
-    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+    cls=HelpfulGroup  # Show help on missing required args
 )
 console = Console()
 

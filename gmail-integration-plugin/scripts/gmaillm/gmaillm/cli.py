@@ -21,7 +21,8 @@ from gmaillm.helpers.config import (
     expand_email_groups,
     load_email_groups
 )
-from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
+from gmaillm.helpers.typer_utils import HelpfulGroup
+from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
 
 # Import validators
 from gmaillm.validators.email import (
@@ -47,7 +48,7 @@ app = typer.Typer(
     help="Gmail CLI with LLM-friendly operations and progressive disclosure patterns",
     add_completion=True,
     no_args_is_help=True,
-    # Note: We'll handle help-on-missing-args via a custom exception hook in main()
+    cls=HelpfulGroup,  # Show help when required args are missing
 )
 console = Console()
 formatter = RichFormatter(console)
@@ -362,41 +363,28 @@ def reply(
         # Display schema if requested
         if schema:
             from gmaillm.validators.email_operations import get_reply_email_json_schema_string
-            schema_str = get_reply_email_json_schema_string(indent=2)
-            console.print("\n[bold cyan]Reply Email JSON Schema[/bold cyan]")
-            console.print("[dim]Use this schema for programmatic replies with --json-input[/dim]\n")
-            console.print_json(schema_str)
-            console.print("\n[bold]Usage Example:[/bold]")
-            console.print("  [cyan]gmail reply <message_id> --json-input reply.json[/cyan]")
+            display_schema_and_exit(
+                schema_getter=get_reply_email_json_schema_string,
+                title="Reply Email JSON Schema",
+                description="Use this schema for programmatic replies with --json-input",
+                usage_example="gmail reply <message_id> --json-input reply.json"
+            )
             return
 
         client = GmailClient()
 
         # PROGRAMMATIC MODE: JSON input
         if json_input:
-            from pathlib import Path
-            from gmaillm.validators.email_operations import (
-                validate_reply_email_json,
-                load_json_from_file
-            )
+            from gmaillm.validators.email_operations import validate_reply_email_json
 
             console.print("[cyan]Sending reply from JSON file...[/cyan]")
 
-            # Load JSON from file
-            try:
-                json_data = load_json_from_file(Path(json_input))
-            except (FileNotFoundError, ValueError) as e:
-                console.print(f"[red]✗ {e}[/red]")
-                raise typer.Exit(code=1)
-
-            # Validate JSON
-            validation_errors = validate_reply_email_json(json_data)
-            if validation_errors:
-                console.print(f"[red]✗ Invalid JSON data:[/red]")
-                for err in validation_errors:
-                    console.print(f"  - {err}")
-                console.print("\nView schema: [cyan]gmail reply <message_id> --schema[/cyan]")
-                raise typer.Exit(code=1)
+            # Load and validate JSON
+            json_data = load_and_validate_json(
+                json_path_str=json_input,
+                validator_func=validate_reply_email_json,
+                schema_help_command="gmail reply <message_id> --schema"
+            )
 
             # Extract from JSON
             reply_body = json_data["body"]
@@ -486,41 +474,28 @@ def send(
         # Display schema if requested
         if schema:
             from gmaillm.validators.email_operations import get_send_email_json_schema_string
-            schema_str = get_send_email_json_schema_string(indent=2)
-            console.print("\n[bold cyan]Send Email JSON Schema[/bold cyan]")
-            console.print("[dim]Use this schema for programmatic email sending with --json-input[/dim]\n")
-            console.print_json(schema_str)
-            console.print("\n[bold]Usage Example:[/bold]")
-            console.print("  [cyan]gmail send --json-input email.json --yolo[/cyan]")
+            display_schema_and_exit(
+                schema_getter=get_send_email_json_schema_string,
+                title="Send Email JSON Schema",
+                description="Use this schema for programmatic email sending with --json-input",
+                usage_example="gmail send --json-input email.json --yolo"
+            )
             return
 
         client = GmailClient()
 
         # PROGRAMMATIC MODE: JSON input
         if json_input:
-            from pathlib import Path
-            from gmaillm.validators.email_operations import (
-                validate_send_email_json,
-                load_json_from_file
-            )
+            from gmaillm.validators.email_operations import validate_send_email_json
 
             console.print("[cyan]Sending email from JSON file...[/cyan]")
 
-            # Load JSON from file
-            try:
-                json_data = load_json_from_file(Path(json_input))
-            except (FileNotFoundError, ValueError) as e:
-                console.print(f"[red]✗ {e}[/red]")
-                raise typer.Exit(code=1)
-
-            # Validate JSON
-            validation_errors = validate_send_email_json(json_data)
-            if validation_errors:
-                console.print(f"[red]✗ Invalid JSON data:[/red]")
-                for err in validation_errors:
-                    console.print(f"  - {err}")
-                console.print("\nView schema: [cyan]gmail send --schema[/cyan]")
-                raise typer.Exit(code=1)
+            # Load and validate JSON
+            json_data = load_and_validate_json(
+                json_path_str=json_input,
+                validator_func=validate_send_email_json,
+                schema_help_command="gmail send --schema"
+            )
 
             # Extract from JSON
             to_list_raw = json_data["to"]
@@ -612,24 +587,12 @@ app.add_typer(config_commands.app, name="config")
 # ============ MAIN ENTRY POINT ============
 
 def main() -> None:
-    """Main entry point for the CLI with custom error handling.
+    """Main entry point for the CLI.
 
-    Wraps the app() call to catch MissingParameter errors and
-    show help instead of generic error messages.
+    Uses HelpfulGroup to automatically show help when required
+    arguments are missing, providing a better user experience.
     """
-    try:
-        app()
-    except click.MissingParameter as e:
-        # Show help for the command that failed
-        ctx = click.get_current_context()
-        click.echo(ctx.get_help())
-        ctx.exit(1)
-    except SystemExit:
-        # Let normal exits through
-        raise
-    except Exception as e:
-        # Let other exceptions through for normal error handling
-        raise
+    app()
 
 
 if __name__ == "__main__":

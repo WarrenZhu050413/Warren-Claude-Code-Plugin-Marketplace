@@ -56,7 +56,7 @@ class TestConfigDirFunctions:
         monkeypatch.setattr('gmaillm.helpers.config.get_plugin_config_dir', mock_config_dir)
 
         path = get_groups_file_path()
-        assert path == temp_dir / "email-groups.json"
+        assert path == temp_dir / "email-groups" / "groups.json"
 
 
 class TestJsonConfig:

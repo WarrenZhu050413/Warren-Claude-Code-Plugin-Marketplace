@@ -1,7 +1,6 @@
 """Gmail email styles management commands."""
 
 import builtins
-import json
 import os
 import subprocess
 from pathlib import Path
@@ -17,19 +16,21 @@ from gmaillm.helpers.config import (
     create_backup,
     create_style_from_template
 )
-from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
+from gmaillm.helpers.typer_utils import HelpfulGroup
+from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
 from gmaillm.validators.email import validate_editor
 from gmaillm.validators.styles import (
     validate_style_name,
     StyleLinter,
     get_style_json_schema_string,
-    create_style_from_json
+    create_style_from_json,
+    validate_json_against_schema
 )
 
 # Initialize Typer app and console
 app = typer.Typer(
     help="Manage email style templates",
-    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+    cls=HelpfulGroup  # Show help on missing required args
 )
 console = Console()
 
@@ -41,19 +42,12 @@ def show_schema() -> None:
     This schema defines the structure required for creating styles
     via the --json-input flag in the 'create' and 'edit' commands.
     """
-    try:
-        schema_str = get_style_json_schema_string(indent=2)
-        console.print("\n[bold cyan]Email Style JSON Schema[/bold cyan]")
-        console.print("[dim]Use this schema for programmatic style creation with --json-input[/dim]\n")
-        console.print_json(schema_str)
-        console.print("\n[bold]Usage Examples:[/bold]")
-        console.print("  Create from JSON file:")
-        console.print("    [cyan]gmail styles create my-style --json-input style.json --force[/cyan]")
-        console.print("\n  Edit from JSON file:")
-        console.print("    [cyan]gmail styles edit my-style -j updated.json --force[/cyan]")
-    except Exception as e:
-        console.print(f"[red]✗ Error displaying schema: {e}[/red]")
-        raise typer.Exit(code=1)
+    display_schema_and_exit(
+        schema_getter=get_style_json_schema_string,
+        title="Email Style JSON Schema",
+        description="Use this schema for programmatic style creation with --json-input",
+        usage_example="gmail styles create my-style --json-input style.json --force"
+    )
 
 
 @app.command("list")
@@ -167,27 +161,12 @@ def create_style(
         if json_input:
             console.print("[cyan]Creating style from JSON file...[/cyan]")
 
-            # Load JSON from file
-            json_path = Path(json_input)
-            if not json_path.exists():
-                console.print(f"[red]✗ File not found: {json_path}[/red]")
-                raise typer.Exit(code=1)
-
-            if not json_path.is_file():
-                console.print(f"[red]✗ Not a file: {json_path}[/red]")
-                raise typer.Exit(code=1)
-
-            try:
-                console.print(f"Reading JSON from: {json_path}")
-                with open(json_path) as f:
-                    json_data = json.load(f)
-            except json.JSONDecodeError as e:
-                console.print(f"[red]✗ Invalid JSON in {json_path}: {e}[/red]")
-                console.print("\nView schema: [cyan]gmail styles schema[/cyan]")
-                raise typer.Exit(code=1)
-            except Exception as e:
-                console.print(f"[red]✗ Error reading file: {e}[/red]")
-                raise typer.Exit(code=1)
+            # Load and validate JSON
+            json_data = load_and_validate_json(
+                json_path_str=json_input,
+                validator_func=validate_json_against_schema,
+                schema_help_command="gmail styles schema"
+            )
 
             # Create backup if overwriting
             if style_file.exists():
@@ -312,27 +291,12 @@ def edit_style(
             backup_path = create_backup(style_file)
             console.print(f"Backup created: {backup_path}")
 
-            # Load JSON from file
-            json_path = Path(json_input)
-            if not json_path.exists():
-                console.print(f"[red]✗ File not found: {json_path}[/red]")
-                raise typer.Exit(code=1)
-
-            if not json_path.is_file():
-                console.print(f"[red]✗ Not a file: {json_path}[/red]")
-                raise typer.Exit(code=1)
-
-            try:
-                console.print(f"Reading JSON from: {json_path}")
-                with open(json_path) as f:
-                    json_data = json.load(f)
-            except json.JSONDecodeError as e:
-                console.print(f"[red]✗ Invalid JSON in {json_path}: {e}[/red]")
-                console.print("\nView schema: [cyan]gmail styles schema[/cyan]")
-                raise typer.Exit(code=1)
-            except Exception as e:
-                console.print(f"[red]✗ Error reading file: {e}[/red]")
-                raise typer.Exit(code=1)
+            # Load and validate JSON
+            json_data = load_and_validate_json(
+                json_path_str=json_input,
+                validator_func=validate_json_against_schema,
+                schema_help_command="gmail styles schema"
+            )
 
             # Replace content
             try:
