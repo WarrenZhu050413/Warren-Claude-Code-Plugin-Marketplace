@@ -40,3 +40,20 @@
 3. **Rebuild** - Run `make install` or `make dev` to rebuild
 4. **Verify** - Test the feature manually if applicable
 5. **Commit** - Create git commit with descriptive message
+
+### Installation and Build Issues
+
+**Stale Build Cache:**
+- **Symptom:** `make install` doesn't show latest code changes
+- **Cause:** Python's build system caches a wheel snapshot (non-editable installs)
+- **Solution:** `make install` includes `clean` dependency to force fresh builds
+- **Alternative:** Use `make dev` + `uv run gmail` for instant changes (no rebuild needed)
+
+**When Global Install Doesn't Match `uv run`:**
+- `uv run gmail` uses local source (after `uv sync` creates local environment)
+- `gmail` (global) uses cached wheel in `~/.local/share/uv/tools/`
+- If they differ, run `make install` to rebuild global tool
+
+**Installation Modes:**
+- **Production install:** `make install` - Builds cached wheel, requires reinstall after changes
+- **Local environment:** `make dev` then `uv run gmail` - Always uses current source (recommended for development)

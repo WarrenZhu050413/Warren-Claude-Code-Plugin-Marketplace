@@ -423,6 +423,7 @@ def reply(
         "-j",
         help="Path to JSON file for programmatic reply"
     ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be sent without actually sending"),
     schema: bool = typer.Option(False, "--schema", help="Display JSON schema and exit"),
 ) -> None:
     """Reply to an email from CLI args or JSON file.
@@ -495,6 +496,12 @@ def reply(
         console.print(f"\n{reply_body}\n")
         console.print("=" * 60)
 
+        # Dry run mode - show preview and exit
+        if dry_run:
+            console.print("\n[yellow]🔍 DRY RUN - Reply would be sent with the above details[/yellow]")
+            console.print("[dim]Use without --dry-run to actually send[/dim]")
+            return
+
         # Confirm
         if not confirm_or_force("\nSend this reply?", False):
             console.print("Cancelled.")
@@ -527,6 +534,7 @@ def send(
         help="Path to JSON file for programmatic email sending"
     ),
     yolo: bool = typer.Option(False, "--yolo", help="Send without confirmation"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be sent without actually sending"),
     schema: bool = typer.Option(False, "--schema", help="Display JSON schema and exit"),
 ) -> None:
     """Send a new email from CLI args or JSON file.
@@ -625,6 +633,12 @@ def send(
             for att in validated_attachments:
                 console.print(f"  - {att}")
         console.print("=" * 60)
+
+        # Dry run mode - show preview and exit
+        if dry_run:
+            console.print("\n[yellow]🔍 DRY RUN - Email would be sent with the above details[/yellow]")
+            console.print("[dim]Use without --dry-run to actually send[/dim]")
+            return
 
         # Confirm unless yolo
         if not confirm_or_force("\nSend this email?", yolo, "YOLO mode: Sending without confirmation..."):

@@ -3,6 +3,7 @@
 from gmaillm.helpers.domain.groups import (
     expand_email_groups,
     load_email_groups,
+    normalize_group_name,
     save_email_groups,
 )
 from gmaillm.helpers.domain.styles import (
@@ -16,6 +17,7 @@ __all__ = [
     "load_email_groups",
     "save_email_groups",
     "expand_email_groups",
+    "normalize_group_name",
     # Email styles
     "load_all_styles",
     "extract_style_metadata",

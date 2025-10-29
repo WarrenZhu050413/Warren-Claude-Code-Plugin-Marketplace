@@ -281,10 +281,18 @@ gmail search --help
 
 ## Documentation
 
-See the skill documentation for complete reference, style guide system, and workflows.
+### User Guides
+- **[Email Styles Guide](docs/email-styles.md)** - Creating and managing email writing styles
+- **[Email Groups Guide](docs/email-groups.md)** - Managing email distribution groups
+
+### Technical Documentation
+- **[Testing Guide](TESTING.md)** - Running and writing tests
+- **[API Reference](API_REFERENCE.md)** - Complete API documentation
+- **[Changelog](CHANGELOG.md)** - Version history and changes
 
 ## Testing
 
 ```bash
-python3 -m pytest tests/
+make test                 # Run full test suite with coverage
+uv run pytest tests/      # Run tests directly
 ```

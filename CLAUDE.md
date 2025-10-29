@@ -566,6 +566,38 @@ After editing plugins, MUST restart Claude Code or reload plugin to see changes.
 
 ## Testing Before Installation
 
+### Understanding Installation Modes
+
+**Python Package Installation Modes:**
+
+**Editable Install:**
+- Changes to source code reflect immediately
+- Best for: Active development
+- Command: `uv tool install --editable .` or `pip install -e .`
+- How it works: Creates symlinks to source directory
+
+**Production Install:**
+- Builds cached wheel snapshot
+- Best for: Stable releases, production deployments
+- Command: `uv tool install .` or `pip install .`
+- Requires: Reinstall after code changes
+- Common issue: Stale build cache if not cleaned first
+
+**Local Environment (Recommended for Development):**
+- No global install needed
+- Command: `uv sync` then `uv run <command>`
+- Always uses current source code
+- Best for: Fastest iteration cycle
+
+**Preventing Stale Builds:**
+```makefile
+install: clean
+	uv tool install --force .
+
+clean:
+	rm -rf build/ dist/ *.egg-info
+```
+
 ### 1. Create Local Test Marketplace
 
 ```bash

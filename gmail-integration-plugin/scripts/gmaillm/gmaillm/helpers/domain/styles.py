@@ -18,10 +18,14 @@ def load_all_styles(styles_dir: Path) -> List[Dict[str, Any]]:
         styles_dir: Directory containing style files
 
     Returns:
-        List of style metadata dictionaries
+        List of style metadata dictionaries (excludes backup files)
     """
     styles = []
     for style_file in styles_dir.glob("*.md"):
+        # Skip backup files (*.backup.*.md)
+        if ".backup." in style_file.name:
+            continue
+
         try:
             metadata = extract_style_metadata(style_file)
             styles.append({

@@ -41,6 +41,66 @@ app = typer.Typer(
 console = Console()
 
 
+@app.command("examples")
+def show_examples() -> None:
+    """Show example usage and workflows for email styles."""
+    console.print("\n[bold cyan]Email Styles - Example Usage[/bold cyan]\n")
+
+    console.print("[bold]📋 LISTING STYLES[/bold]")
+    console.print("  [dim]$ gmail styles list[/dim]")
+    console.print("  [dim]$ gmail styles list --output-format json[/dim]")
+    console.print("  [dim]$ gmail styles list --no-paths  # Hide file paths[/dim]")
+    console.print()
+
+    console.print("[bold]👁️  VIEWING STYLE CONTENT[/bold]")
+    console.print("  [dim]$ gmail styles show professional-formal[/dim]")
+    console.print("  [dim]$ gmail styles show casual-friendly --output-format json[/dim]")
+    console.print()
+
+    console.print("[bold]➕ CREATING STYLES[/bold]")
+    console.print("  [dim]# Interactive mode (opens editor)[/dim]")
+    console.print("  [dim]$ gmail styles create my-style[/dim]")
+    console.print()
+    console.print("  [dim]# Programmatic mode from JSON[/dim]")
+    console.print("  [dim]$ gmail styles create --json-input-path style.json[/dim]")
+    console.print("  [dim]$ gmail styles schema  # See JSON format[/dim]")
+    console.print()
+
+    console.print("[bold]✏️  EDITING STYLES[/bold]")
+    console.print("  [dim]# Interactive mode (opens editor)[/dim]")
+    console.print("  [dim]$ gmail styles edit professional-formal[/dim]")
+    console.print()
+    console.print("  [dim]# Programmatic mode from JSON[/dim]")
+    console.print("  [dim]$ gmail styles edit professional-formal --json-input-path updated-style.json --force[/dim]")
+    console.print()
+
+    console.print("[bold]✓ VALIDATING STYLES[/bold]")
+    console.print("  [dim]$ gmail styles validate              # Validate all styles[/dim]")
+    console.print("  [dim]$ gmail styles validate my-style     # Validate specific style[/dim]")
+    console.print()
+
+    console.print("[bold]🗑️  DELETING STYLES[/bold]")
+    console.print("  [dim]$ gmail styles delete my-style       # Prompts for confirmation[/dim]")
+    console.print("  [dim]$ gmail styles delete my-style --force  # Skip confirmation[/dim]")
+    console.print()
+
+    console.print("[bold yellow]💡 WORKFLOWS[/bold yellow]")
+    console.print("  [dim]1. Create a new style for client emails:[/dim]")
+    console.print("     [dim]gmail styles create client-formal[/dim]")
+    console.print("     [dim]# (Edit template in your editor)[/dim]")
+    console.print()
+    console.print("  [dim]2. Validate the style format:[/dim]")
+    console.print("     [dim]gmail styles validate client-formal[/dim]")
+    console.print()
+    console.print("  [dim]3. Use the style when composing:[/dim]")
+    console.print("     [dim]# Reference it in your workflow or LLM prompts[/dim]")
+    console.print("     [dim]gmail styles show client-formal[/dim]")
+    console.print()
+    console.print("  [dim]4. Update existing style:[/dim]")
+    console.print("     [dim]gmail styles edit client-formal[/dim]")
+    console.print()
+
+
 @app.command("schema")
 def show_schema() -> None:
     """Display JSON schema for programmatic style creation.

@@ -11,6 +11,24 @@ from gmaillm.helpers.core.paths import get_groups_dir
 console = Console()
 
 
+def normalize_group_name(name: str) -> str:
+    """Normalize group name by removing # prefix if present.
+
+    Args:
+        name: Group name with or without # prefix
+
+    Returns:
+        Group name without # prefix
+
+    Examples:
+        >>> normalize_group_name("#team")
+        'team'
+        >>> normalize_group_name("team")
+        'team'
+    """
+    return name.lstrip('#')
+
+
 def load_email_groups(groups_file: Optional[Path] = None) -> Dict[str, List[str]]:
     """Load email distribution groups from config.
 

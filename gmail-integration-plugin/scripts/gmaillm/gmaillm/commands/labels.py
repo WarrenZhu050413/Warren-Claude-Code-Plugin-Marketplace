@@ -26,6 +26,41 @@ console = Console()
 formatter = RichFormatter(console)
 
 
+@app.command("examples")
+def show_examples() -> None:
+    """Show example usage and workflows for Gmail labels."""
+    console.print("\n[bold cyan]Gmail Labels - Example Usage[/bold cyan]\n")
+
+    console.print("[bold]📋 LISTING LABELS[/bold]")
+    console.print("  [dim]$ gmail labels list[/dim]")
+    console.print("  [dim]$ gmail labels list --output-format json[/dim]")
+    console.print()
+
+    console.print("[bold]➕ CREATING LABELS[/bold]")
+    console.print("  [dim]$ gmail labels create Projects/ClientA[/dim]")
+    console.print("  [dim]$ gmail labels create Urgent --force  # Skip confirmation[/dim]")
+    console.print()
+
+    console.print("[bold]🗑️  DELETING LABELS[/bold]")
+    console.print("  [dim]$ gmail labels delete Projects/ClientA[/dim]")
+    console.print("  [dim]$ gmail labels delete Urgent --force[/dim]")
+    console.print()
+
+    console.print("[bold yellow]💡 WORKFLOWS[/bold yellow]")
+    console.print("  [dim]1. Create project labels:[/dim]")
+    console.print("     [dim]gmail labels create Projects/Alpha[/dim]")
+    console.print("     [dim]gmail labels create Projects/Beta[/dim]")
+    console.print()
+    console.print("  [dim]2. Use labels for filtering:[/dim]")
+    console.print("     [dim]gmail list --query \"label:Projects/Alpha\"[/dim]")
+    console.print("     [dim]gmail search \"label:Urgent\" --max 20[/dim]")
+    console.print()
+    console.print("  [dim]3. Organize with nested labels:[/dim]")
+    console.print("     [dim]gmail labels create Work/Meetings[/dim]")
+    console.print("     [dim]gmail labels create Work/Tasks[/dim]")
+    console.print()
+
+
 @app.command("list")
 def list_labels(
     output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),

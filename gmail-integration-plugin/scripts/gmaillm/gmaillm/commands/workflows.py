@@ -28,6 +28,48 @@ console = Console()
 formatter = RichFormatter(console)
 
 
+@app.command("examples")
+def show_examples() -> None:
+    """Show example usage and workflows for email workflows."""
+    console.print("\n[bold cyan]Email Workflows - Example Usage[/bold cyan]\n")
+
+    console.print("[bold]📋 LISTING WORKFLOWS[/bold]")
+    console.print("  [dim]$ gmail workflows list[/dim]")
+    console.print("  [dim]$ gmail workflows list --output-format json[/dim]")
+    console.print()
+
+    console.print("[bold]👁️  VIEWING WORKFLOW DETAILS[/bold]")
+    console.print("  [dim]$ gmail workflows show clear[/dim]")
+    console.print()
+
+    console.print("[bold]▶️  RUNNING WORKFLOWS[/bold]")
+    console.print("  [dim]$ gmail workflows run clear           # Run named workflow[/dim]")
+    console.print("  [dim]$ gmail workflows run \"is:unread\"     # Run ad-hoc query[/dim]")
+    console.print()
+
+    console.print("[bold]➕ CREATING WORKFLOWS[/bold]")
+    console.print("  [dim]$ gmail workflows create daily --query \"is:unread in:inbox\" --auto-read[/dim]")
+    console.print("  [dim]$ gmail workflows create review --query \"label:review\" --name \"Code Reviews\"[/dim]")
+    console.print()
+
+    console.print("[bold]🗑️  DELETING WORKFLOWS[/bold]")
+    console.print("  [dim]$ gmail workflows delete daily[/dim]")
+    console.print("  [dim]$ gmail workflows delete review --force[/dim]")
+    console.print()
+
+    console.print("[bold yellow]💡 WORKFLOWS[/bold yellow]")
+    console.print("  [dim]1. Create a daily inbox clearing workflow:[/dim]")
+    console.print("     [dim]gmail workflows create daily-clear --query \"is:unread in:inbox\" --auto-read[/dim]")
+    console.print()
+    console.print("  [dim]2. Run it every morning:[/dim]")
+    console.print("     [dim]gmail workflows run daily-clear[/dim]")
+    console.print()
+    console.print("  [dim]3. Create project-specific workflows:[/dim]")
+    console.print("     [dim]gmail workflows create proj-alpha --query \"label:Projects/Alpha is:unread\"[/dim]")
+    console.print("     [dim]gmail workflows run proj-alpha[/dim]")
+    console.print()
+
+
 @app.command("list")
 def list_workflows(
     output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),

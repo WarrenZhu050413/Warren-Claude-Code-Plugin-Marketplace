@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from gmaillm.helpers.core import get_groups_file_path, create_backup
-from gmaillm.helpers.domain import load_email_groups, save_email_groups
+from gmaillm.helpers.domain import load_email_groups, normalize_group_name, save_email_groups
 from gmaillm.helpers.cli import (
     HelpfulGroup,
     OutputFormat,
@@ -35,6 +35,64 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]}
 )
 console = Console()
+
+
+@app.command("examples")
+def show_examples() -> None:
+    """Show example usage and workflows for email groups."""
+    console.print("\n[bold cyan]Email Groups - Example Usage[/bold cyan]\n")
+
+    console.print("[bold]📋 LISTING GROUPS[/bold]")
+    console.print("  [dim]$ gmail groups list[/dim]")
+    console.print("  [dim]$ gmail groups list --output-format json[/dim]")
+    console.print()
+
+    console.print("[bold]👁️  VIEWING GROUP DETAILS[/bold]")
+    console.print("  [dim]$ gmail groups show team[/dim]")
+    console.print("  [dim]$ gmail groups show #team          # Also accepts # prefix[/dim]")
+    console.print()
+
+    console.print("[bold]➕ CREATING GROUPS[/bold]")
+    console.print("  [dim]# Interactive mode[/dim]")
+    console.print("  [dim]$ gmail groups create team --emails user1@example.com --emails user2@example.com[/dim]")
+    console.print()
+    console.print("  [dim]# Programmatic mode from JSON[/dim]")
+    console.print("  [dim]$ gmail groups create --json-input-path team.json[/dim]")
+    console.print("  [dim]$ gmail groups schema  # See JSON format[/dim]")
+    console.print()
+
+    console.print("[bold]👤 MANAGING MEMBERS[/bold]")
+    console.print("  [dim]$ gmail groups add team user3@example.com[/dim]")
+    console.print("  [dim]$ gmail groups add #team user4@example.com  # Also accepts # prefix[/dim]")
+    console.print("  [dim]$ gmail groups remove team user1@example.com[/dim]")
+    console.print()
+
+    console.print("[bold]✓ VALIDATING GROUPS[/bold]")
+    console.print("  [dim]$ gmail groups validate             # Validate all groups[/dim]")
+    console.print("  [dim]$ gmail groups validate team        # Validate specific group[/dim]")
+    console.print()
+
+    console.print("[bold]🗑️  DELETING GROUPS[/bold]")
+    console.print("  [dim]$ gmail groups delete team          # Prompts for confirmation[/dim]")
+    console.print("  [dim]$ gmail groups delete team --force  # Skip confirmation[/dim]")
+    console.print()
+
+    console.print("[bold]📧 USING GROUPS IN EMAILS[/bold]")
+    console.print("  [dim]$ gmail send --to #team --subject \"Meeting\" --body \"Let's meet tomorrow\"[/dim]")
+    console.print("  [dim]$ gmail send --to user@example.com --cc #team --subject \"FYI\"[/dim]")
+    console.print()
+
+    console.print("[bold yellow]💡 WORKFLOWS[/bold yellow]")
+    console.print("  [dim]1. Create a project team:[/dim]")
+    console.print("     [dim]gmail groups create project-alpha --emails dev1@corp.com --emails dev2@corp.com[/dim]")
+    console.print()
+    console.print("  [dim]2. Add stakeholders:[/dim]")
+    console.print("     [dim]gmail groups add project-alpha manager@corp.com[/dim]")
+    console.print("     [dim]gmail groups add project-alpha designer@corp.com[/dim]")
+    console.print()
+    console.print("  [dim]3. Send updates:[/dim]")
+    console.print("     [dim]gmail send --to #project-alpha --subject \"Weekly Update\" --body \"...\"[/dim]")
+    console.print()
 
 
 @app.command("schema")
@@ -107,7 +165,7 @@ def list_groups(
 
 @app.command("show")
 def show_group(
-    name: str = typer.Argument(..., help="Name of the group to show"),
+    name: str = typer.Argument(..., help="Name of the group to show (with or without # prefix)"),
     output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Show detailed information about a group.
@@ -115,9 +173,13 @@ def show_group(
     \b
     EXAMPLES:
       $ gmail groups show team
+      $ gmail groups show #team
       $ gmail groups show team --output-format json
     """
     try:
+        # Normalize group name (accept # prefix)
+        name = normalize_group_name(name)
+
         groups = load_email_groups()
         ensure_item_exists(name, groups, "Group", "gmail groups list")
 
@@ -210,7 +272,7 @@ def create_group(
                 console.print("\nUsage: [cyan]gmail groups create {name} --emails <email> ...[/cyan]")
                 raise typer.Exit(code=1)
 
-            group_name = name
+            group_name = normalize_group_name(name)
             member_emails = emails
 
         # Check if group already exists
@@ -260,11 +322,14 @@ def create_group(
 
 @app.command("add")
 def add_member(
-    group: str = typer.Argument(..., help="Group name"),
+    group: str = typer.Argument(..., help="Group name (with or without # prefix)"),
     email: str = typer.Argument(..., help="Email address to add"),
 ) -> None:
     """Add a member to an existing group."""
     try:
+        # Normalize group name (accept # prefix)
+        group = normalize_group_name(group)
+
         groups = load_email_groups()
 
         # Check if group exists
@@ -297,11 +362,14 @@ def add_member(
 
 @app.command("remove")
 def remove_member(
-    group: str = typer.Argument(..., help="Group name"),
+    group: str = typer.Argument(..., help="Group name (with or without # prefix)"),
     email: str = typer.Argument(..., help="Email address to remove"),
 ) -> None:
     """Remove a member from a group."""
     try:
+        # Normalize group name (accept # prefix)
+        group = normalize_group_name(group)
+
         groups = load_email_groups()
 
         # Check if group exists
@@ -338,11 +406,14 @@ def remove_member(
 
 @app.command("delete")
 def delete_group(
-    name: str = typer.Argument(..., help="Name of the group to delete"),
+    name: str = typer.Argument(..., help="Name of the group to delete (with or without # prefix)"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ) -> None:
     """Delete an email distribution group."""
     try:
+        # Normalize group name (accept # prefix)
+        name = normalize_group_name(name)
+
         groups = load_email_groups()
 
         # Check if exists
@@ -379,7 +450,7 @@ def delete_group(
 
 @app.command("validate")
 def validate_group(
-    name: Optional[str] = typer.Argument(None, help="Group name to validate (validates all if not specified)"),
+    name: Optional[str] = typer.Argument(None, help="Group name to validate (with or without # prefix, validates all if not specified)"),
     output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Validate group(s) for email format and duplicates.
@@ -388,8 +459,13 @@ def validate_group(
     EXAMPLES:
       $ gmail groups validate
       $ gmail groups validate team
+      $ gmail groups validate #team
     """
     try:
+        # Normalize group name if provided (accept # prefix)
+        if name:
+            name = normalize_group_name(name)
+
         groups = load_email_groups()
 
         if name:

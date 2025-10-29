@@ -21,6 +21,29 @@ app = typer.Typer(
 console = Console()
 
 
+@app.command("examples")
+def show_examples() -> None:
+    """Show example usage for configuration management."""
+    console.print("\n[bold cyan]Configuration - Example Usage[/bold cyan]\n")
+
+    console.print("[bold]👁️  VIEWING CONFIGURATION[/bold]")
+    console.print("  [dim]$ gmail config show[/dim]")
+    console.print("  [dim]$ gmail config show --output-format json[/dim]")
+    console.print()
+
+    console.print("[bold yellow]💡 COMMON TASKS[/bold yellow]")
+    console.print("  [dim]1. Find where styles are stored:[/dim]")
+    console.print("     [dim]gmail config show[/dim]")
+    console.print("     [dim]# Look for \"Email Styles\" path[/dim]")
+    console.print()
+    console.print("  [dim]2. Check current editor:[/dim]")
+    console.print("     [dim]gmail config show | grep Editor[/dim]")
+    console.print()
+    console.print("  [dim]3. Get all config as JSON for automation:[/dim]")
+    console.print("     [dim]gmail config show --output-format json[/dim]")
+    console.print()
+
+
 @app.command("show")
 def show_config(
     output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
