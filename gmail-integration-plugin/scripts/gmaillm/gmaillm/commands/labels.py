@@ -48,20 +48,15 @@ def create_label(
         client = GmailClient()
 
         # Show preview
-        console.print("=" * 60)
-        console.print("Creating Label")
-        console.print("=" * 60)
-        console.print(f"Name: {name}")
-        console.print("=" * 60)
+        show_operation_preview(
+            "Creating Label",
+            {"Name": name}
+        )
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\nCreate this label?")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Creating without confirmation[/yellow]")
+        if not confirm_or_force("\nCreate this label?", force, "Creating without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Create label
         label = client.create_label(name)
@@ -70,8 +65,7 @@ def create_label(
         console.print(f"   ID: {label.id}")
 
     except Exception as e:
-        console.print(f"[red]✗ Error creating label: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("creating label", e)
 
 
 @app.command("delete")
@@ -97,23 +91,19 @@ def delete_label(
             raise typer.Exit(code=1)
 
         # Show preview
-        console.print("=" * 60)
-        console.print("Deleting Label")
-        console.print("=" * 60)
-        console.print(f"Name: {name}")
-        console.print(f"Type: {label.type}")
+        details = {
+            "Name": name,
+            "Type": label.type
+        }
         if label.message_count:
-            console.print(f"Messages: {label.message_count}")
-        console.print("=" * 60)
+            details["Messages"] = label.message_count
+
+        show_operation_preview("Deleting Label", details)
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\n⚠️  Delete this label? This cannot be undone.")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Deleting without confirmation[/yellow]")
+        if not confirm_or_force("\n⚠️  Delete this label? This cannot be undone.", force, "Deleting without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Delete label using the Gmail API
         # Note: GmailClient needs a delete_label method added

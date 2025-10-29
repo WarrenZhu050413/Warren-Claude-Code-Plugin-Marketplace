@@ -23,6 +23,10 @@ from gmaillm.helpers.config import (
 )
 from gmaillm.helpers.typer_utils import HelpfulGroup
 from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
+from gmaillm.helpers.cli_utils import (
+    show_operation_preview,
+    confirm_or_force
+)
 
 # Import validators
 from gmaillm.validators.email import (
@@ -406,19 +410,19 @@ def reply(
         original = client.read_email(message_id, format="summary")
 
         # Show preview
-        console.print("=" * 60)
-        console.print("Reply Preview")
-        console.print("=" * 60)
-        console.print(f"To: {original.from_.email}")
+        reply_details = {
+            "To": original.from_.email,
+            "Subject": f"Re: {original.subject}"
+        }
+
+        show_operation_preview("Reply Preview", reply_details)
         if do_reply_all:
             console.print("[yellow](Reply All mode)[/yellow]")
-        console.print(f"Subject: Re: {original.subject}")
-        console.print(f"\n{reply_body}")
+        console.print(f"\n{reply_body}\n")
         console.print("=" * 60)
 
         # Confirm
-        response = typer.confirm("\nSend this reply?")
-        if not response:
+        if not confirm_or_force("\nSend this reply?", False):
             console.print("Cancelled.")
             return
 
@@ -537,30 +541,28 @@ def send(
         validated_attachments = validate_attachment_paths(attachment_list)
 
         # Show preview
-        console.print("=" * 60)
-        console.print("Email Preview")
-        console.print("=" * 60)
-        console.print(f"To: {', '.join(to_list)}")
+        preview_details = {
+            "To": ', '.join(to_list),
+            "Subject": email_subject
+        }
         if cc_list:
-            console.print(f"Cc: {', '.join(cc_list)}")
+            preview_details["Cc"] = ', '.join(cc_list)
         if bcc_list:
-            console.print(f"Bcc: {', '.join(bcc_list)}")
-        console.print(f"Subject: {email_subject}")
-        console.print(f"\n{email_body}")
+            preview_details["Bcc"] = ', '.join(bcc_list)
+
+        show_operation_preview("Email Preview", preview_details)
+        console.print(f"\n{email_body}\n")
+
         if validated_attachments:
-            console.print(f"\nAttachments: {len(validated_attachments)} file(s)")
+            console.print(f"Attachments: {len(validated_attachments)} file(s)")
             for att in validated_attachments:
                 console.print(f"  - {att}")
         console.print("=" * 60)
 
         # Confirm unless yolo
-        if not yolo:
-            response = typer.confirm("\nSend this email?")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]YOLO mode: Sending without confirmation...[/yellow]")
+        if not confirm_or_force("\nSend this email?", yolo, "YOLO mode: Sending without confirmation..."):
+            console.print("Cancelled.")
+            return
 
         # Send email
         request = SendEmailRequest(

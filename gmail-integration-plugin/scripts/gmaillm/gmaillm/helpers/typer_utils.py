@@ -12,9 +12,6 @@ class HelpfulCommand(click.Command):
     Overrides Click's exception formatting to show help text instead
     of the default error message when required parameters are missing.
 
-    This uses Click's built-in show_default mechanism which is called
-    before sys.exit(), making it the most reliable approach.
-
     Usage:
         app = typer.Typer()
         app.command(cls=HelpfulCommand)(my_function)
@@ -23,26 +20,14 @@ class HelpfulCommand(click.Command):
         app = typer.Typer(cls=HelpfulGroup)
     """
 
-    def make_context(self, info_name, args, parent=None, **extra):
-        """Override to customize error handling during context creation.
-
-        Args:
-            info_name: Command name
-            args: Arguments list
-            parent: Parent context
-            **extra: Extra context parameters
-
-        Returns:
-            Click context with custom error handling
-        """
+    def parse_args(self, ctx, args):
+        """Override parse_args to intercept missing arguments."""
         try:
-            return super().make_context(info_name, args, parent, **extra)
-        except click.MissingParameter as e:
-            # Create a temporary context just to get help
-            ctx = click.Context(self, info_name=info_name, parent=parent)
+            return super().parse_args(ctx, args)
+        except (click.MissingParameter, click.exceptions.UsageError) as e:
+            # Show help instead of error
             click.echo(self.get_help(ctx), file=sys.stderr)
-            # Re-raise to maintain normal exit behavior
-            sys.exit(2)
+            ctx.exit(2)
 
 
 class HelpfulGroup(typer.core.TyperGroup):
@@ -79,17 +64,16 @@ class HelpfulGroup(typer.core.TyperGroup):
     def add_command(self, cmd: click.Command, name: str = None):
         """Override to convert existing commands to HelpfulCommand."""
         if isinstance(cmd, click.Command) and not isinstance(cmd, HelpfulCommand):
-            # Convert the command to use HelpfulCommand's make_context
-            original_make_context = cmd.make_context
+            # Convert the command to use HelpfulCommand's parse_args override
+            original_parse_args = cmd.parse_args
 
-            def new_make_context(info_name, args, parent=None, **extra):
+            def new_parse_args(ctx, args):
                 try:
-                    return original_make_context(info_name, args, parent, **extra)
-                except click.MissingParameter as e:
-                    ctx = click.Context(cmd, info_name=info_name, parent=parent)
+                    return original_parse_args(ctx, args)
+                except (click.MissingParameter, click.exceptions.UsageError) as e:
                     click.echo(cmd.get_help(ctx), file=sys.stderr)
-                    sys.exit(2)
+                    ctx.exit(2)
 
-            cmd.make_context = new_make_context
+            cmd.parse_args = new_parse_args
 
         return super().add_command(cmd, name)
