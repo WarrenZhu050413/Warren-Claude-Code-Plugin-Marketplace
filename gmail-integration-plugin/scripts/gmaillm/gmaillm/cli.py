@@ -367,17 +367,17 @@ def send(
     try:
         client = GmailClient()
 
-        # Validate email addresses
-        validate_email_list(to, "recipient")
-        if cc:
-            validate_email_list(cc, "CC")
+        # Expand email groups first (#groupname -> actual emails)
+        to_list = expand_email_groups(to)
+        cc_list = expand_email_groups(cc) if cc else None
+
+        # Validate expanded email addresses
+        validate_email_list(to_list, "recipient")
+        if cc_list:
+            validate_email_list(cc_list, "CC")
 
         # Validate attachments
         validated_attachments = validate_attachment_paths(attachments)
-
-        # Expand email groups (@groupname -> actual emails)
-        to_list = expand_email_groups(to)
-        cc_list = expand_email_groups(cc) if cc else None
 
         # Show preview
         console.print("=" * 60)
