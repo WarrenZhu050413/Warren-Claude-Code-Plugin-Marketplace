@@ -5,12 +5,12 @@ import os
 import typer
 from rich.console import Console
 
-from gmaillm.helpers.config import (
+from gmaillm.helpers.core import (
     get_plugin_config_dir,
     get_styles_dir,
     get_groups_file_path
 )
-from gmaillm.helpers.typer_utils import HelpfulGroup
+from gmaillm.helpers.cli import HelpfulGroup
 
 # Initialize Typer app and console
 app = typer.Typer(

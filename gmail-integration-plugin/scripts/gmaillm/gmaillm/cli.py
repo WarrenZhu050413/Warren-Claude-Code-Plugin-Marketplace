@@ -17,13 +17,11 @@ from gmaillm import GmailClient, SendEmailRequest
 from gmaillm.formatters import RichFormatter
 
 # Import helper utilities
-from gmaillm.helpers.config import (
-    expand_email_groups,
-    load_email_groups
-)
-from gmaillm.helpers.typer_utils import HelpfulGroup
-from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
-from gmaillm.helpers.cli_utils import (
+from gmaillm.helpers.domain import expand_email_groups, load_email_groups
+from gmaillm.helpers.cli import (
+    HelpfulGroup,
+    load_and_validate_json,
+    display_schema_and_exit,
     show_operation_preview,
     confirm_or_force
 )

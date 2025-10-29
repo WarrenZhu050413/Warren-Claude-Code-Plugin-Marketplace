@@ -10,18 +10,14 @@ from rich.table import Table
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
 from gmaillm.workflow_config import WorkflowManager, WorkflowConfig
-from gmaillm.helpers.cli_utils import (
+from gmaillm.helpers.cli import (
     show_operation_preview,
     confirm_or_force,
-    handle_command_error
+    handle_command_error,
+    OutputFormat,
+    parse_output_format,
+    output_json_or_rich
 )
-
-
-# Output format enum (duplicated to avoid circular import)
-class OutputFormat(str, Enum):
-    """Output format for CLI commands."""
-    RICH = "rich"  # Rich terminal output (default)
-    JSON = "json"  # Raw JSON output
 
 # Initialize Typer app and console
 app = typer.Typer(

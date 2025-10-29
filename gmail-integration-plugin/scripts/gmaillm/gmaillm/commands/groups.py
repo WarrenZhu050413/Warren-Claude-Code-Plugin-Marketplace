@@ -6,21 +6,21 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from gmaillm.helpers.config import (
-    get_groups_file_path,
-    load_email_groups,
-    save_email_groups,
-    create_backup
-)
-from gmaillm.helpers.typer_utils import HelpfulGroup
-from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
-from gmaillm.helpers.cli_utils import (
+from gmaillm.helpers.core import get_groups_file_path, create_backup
+from gmaillm.helpers.domain import load_email_groups, save_email_groups
+from gmaillm.helpers.cli import (
+    HelpfulGroup,
+    OutputFormat,
+    parse_output_format,
+    load_and_validate_json,
+    display_schema_and_exit,
     show_operation_preview,
     confirm_or_force,
     handle_command_error,
     ensure_item_exists,
     create_backup_with_message,
-    print_success
+    print_success,
+    output_json_or_rich
 )
 from gmaillm.validators.email import validate_email
 from gmaillm.validators.email_operations import (
@@ -60,30 +60,19 @@ def list_groups(
       $ gmail groups list --output-format json
     """
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         groups = load_email_groups()
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            # Convert to list format for JSON
-            groups_list = [
-                {"name": name, "members": emails, "member_count": len(emails)}
-                for name, emails in sorted(groups.items())
-            ]
-            console.print_json(data=groups_list)
-        else:  # RICH
+        # Prepare JSON data
+        groups_list = [
+            {"name": name, "members": emails, "member_count": len(emails)}
+            for name, emails in sorted(groups.items())
+        ]
+
+        # Define rich output function
+        def print_rich():
             if not groups:
                 console.print("[yellow]No groups found[/yellow]")
                 console.print(f"\nCreate a group: [cyan]gmail groups create <name> --emails email@example.com[/cyan]")
@@ -108,6 +97,9 @@ def list_groups(
             console.print(f"\n[dim]Total: {len(groups)} group(s)[/dim]")
             console.print(f"\nUsage: [cyan]gmail send --to #groupname --subject \"...\" --body \"...\"[/cyan]")
 
+        # Output in appropriate format
+        output_json_or_rich(format_enum, groups_list, print_rich)
+
     except Exception as e:
         console.print(f"[red]✗ Error listing groups: {e}[/red]")
         raise typer.Exit(code=1)
@@ -126,33 +118,23 @@ def show_group(
       $ gmail groups show team --output-format json
     """
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         groups = load_email_groups()
         ensure_item_exists(name, groups, "Group", "gmail groups list")
 
         emails = groups[name]
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            group_data = {
-                "name": name,
-                "members": emails,
-                "member_count": len(emails)
-            }
-            console.print_json(data=group_data)
-        else:  # RICH
+        # Prepare JSON data
+        group_data = {
+            "name": name,
+            "members": emails,
+            "member_count": len(emails)
+        }
+
+        # Define rich output function
+        def print_rich():
             console.print("=" * 60)
             console.print(f"Group: #{name}")
             console.print("=" * 60)
@@ -164,6 +146,9 @@ def show_group(
 
             console.print()
             console.print(f"Usage: [cyan]gmail send --to #{name} ...[/cyan]")
+
+        # Output in appropriate format
+        output_json_or_rich(format_enum, group_data, print_rich)
 
     except Exception as e:
         handle_command_error("showing group", e)
@@ -405,13 +390,6 @@ def validate_group(
       $ gmail groups validate team
     """
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         groups = load_email_groups()
 
         if name:
@@ -426,11 +404,7 @@ def validate_group(
             groups_to_validate = groups
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
         errors_found = False
         validation_results = []

@@ -5,11 +5,14 @@ from rich.console import Console
 
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
-from gmaillm.helpers.typer_utils import HelpfulGroup
-from gmaillm.helpers.cli_utils import (
+from gmaillm.helpers.cli import (
+    HelpfulGroup,
+    OutputFormat,
+    parse_output_format,
     show_operation_preview,
     confirm_or_force,
-    handle_command_error
+    handle_command_error,
+    output_json_or_rich
 )
 from gmaillm.validators.email import validate_label_name
 
@@ -35,27 +38,16 @@ def list_labels(
       $ gmail labels list --output-format json
     """
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         client = GmailClient()
         folders = client.get_folders()
 
-        # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
-
-        if format_enum == OutputFormat.JSON:
-            console.print_json(data=[f.model_dump(mode='json') for f in folders])
-        else:  # RICH
-            formatter.print_folder_list(folders, "Gmail Labels")
+        # Parse and handle output format
+        format_enum = parse_output_format(output_format, console)
+        output_json_or_rich(
+            format_enum,
+            json_data=[f.model_dump(mode='json') for f in folders],
+            rich_func=lambda: formatter.print_folder_list(folders, "Gmail Labels")
+        )
 
     except Exception as e:
         console.print(f"[red]✗ Error listing labels: {e}[/red]")

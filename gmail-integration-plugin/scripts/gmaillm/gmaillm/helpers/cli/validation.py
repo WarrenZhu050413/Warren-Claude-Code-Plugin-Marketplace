@@ -1,8 +1,8 @@
-"""Common utilities for JSON file input handling across commands."""
+"""Input validation helpers for CLI commands."""
 
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
 import typer
 from rich.console import Console

@@ -7,12 +7,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from gmaillm.cli import (
-    expand_email_groups,
-    load_email_groups,
-    main,
-)
-from gmaillm.helpers.config import get_plugin_config_dir
+from gmaillm.cli import main
+from gmaillm.helpers.core import get_plugin_config_dir
+from gmaillm.helpers.domain import expand_email_groups, load_email_groups
 from gmaillm.models import EmailAddress, EmailSummary
 
 

@@ -4,19 +4,21 @@ import json
 import pytest
 from pathlib import Path
 
-from gmaillm.helpers.config import (
+from gmaillm.helpers.core import (
     get_plugin_config_dir,
     load_json_config,
     save_json_config,
-    load_email_groups,
-    save_email_groups,
-    expand_email_groups,
     get_groups_file_path,
     get_styles_dir,
     get_style_file_path,
+    create_backup
+)
+from gmaillm.helpers.domain import (
+    load_email_groups,
+    save_email_groups,
+    expand_email_groups,
     load_all_styles,
     extract_style_metadata,
-    create_backup,
     create_style_from_template
 )
 
