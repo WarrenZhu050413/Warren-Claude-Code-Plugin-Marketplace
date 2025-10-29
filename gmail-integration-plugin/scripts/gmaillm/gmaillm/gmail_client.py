@@ -6,6 +6,7 @@ import logging
 import os
 import re
 from datetime import datetime
+from email.utils import getaddresses
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
@@ -75,13 +76,14 @@ class GmailClient:
         Raises:
             FileNotFoundError: If file does not exist
             RuntimeError: If file cannot be accessed or is empty
+
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"{file_type} file not found: {file_path}")
 
         try:
             file_size = os.path.getsize(file_path)
-        except (OSError, IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             raise RuntimeError(f"Cannot access {file_type} file: {file_path}\nError: {e}")
 
         if file_size == 0:
@@ -111,6 +113,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If file cannot be read or parsed
+
         """
         try:
             with open(file_path, encoding="utf-8") as f:
@@ -125,7 +128,7 @@ class GmailClient:
             else:
                 error_msg += "Please ensure the file contains valid JSON."
             raise RuntimeError(error_msg)
-        except (OSError, IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             raise RuntimeError(f"Error reading {file_type} file: {file_path}\nError: {e}")
 
     def _load_oauth_keys(self) -> Dict[str, Any]:
@@ -136,6 +139,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If file validation or loading fails
+
         """
         self._validate_file_exists_and_nonempty(self.oauth_keys_file, "OAuth keys")
         oauth_keys = self._load_json_file(self.oauth_keys_file, "OAuth keys")
@@ -153,6 +157,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If file validation or loading fails
+
         """
         self._validate_file_exists_and_nonempty(self.credentials_file, "Credentials")
         return self._load_json_file(self.credentials_file, "Credentials")
@@ -165,6 +170,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If credential refresh fails
+
         """
         if creds and creds.expired and creds.refresh_token:
             try:
@@ -189,7 +195,7 @@ class GmailClient:
                     except OSError:
                         pass
 
-            except (OSError, IOError, PermissionError) as e:
+            except (OSError, PermissionError) as e:
                 raise RuntimeError(
                     f"Failed to save refreshed credentials: {e}\n"
                     f"Check file permissions for {self.credentials_file}"
@@ -206,6 +212,7 @@ class GmailClient:
         Raises:
             RuntimeError: If authentication fails
             KeyError: If required OAuth fields are missing
+
         """
         # Load OAuth keys and credentials
         oauth_keys = self._load_oauth_keys()
@@ -242,6 +249,7 @@ class GmailClient:
 
         Returns:
             EmailSummary object
+
         """
         msg_id = msg_data["id"]
         thread_id = msg_data["threadId"]
@@ -300,6 +308,7 @@ class GmailClient:
 
         Returns:
             EmailFull object
+
         """
         msg_id = msg_data["id"]
         thread_id = msg_data["threadId"]
@@ -336,21 +345,40 @@ class GmailClient:
             date = datetime.now()
 
         # Parse email addresses
+        # Use email.utils.getaddresses to properly handle commas in quoted names
         from_parsed = parse_email_address(from_header)
+
+        # Parse To addresses
+        to_addresses = getaddresses([to_header]) if to_header else []
         to_list = [
-            EmailAddress(**parse_email_address(addr.strip()))
-            for addr in to_header.split(",")
-            if addr.strip()
+            EmailAddress(
+                email=email.strip(),
+                name=name.strip() if name else None
+            )
+            for name, email in to_addresses
+            if email.strip()
         ]
+
+        # Parse CC addresses
+        cc_addresses = getaddresses([cc_header]) if cc_header else []
         cc_list = [
-            EmailAddress(**parse_email_address(addr.strip()))
-            for addr in cc_header.split(",")
-            if addr.strip()
+            EmailAddress(
+                email=email.strip(),
+                name=name.strip() if name else None
+            )
+            for name, email in cc_addresses
+            if email.strip()
         ]
+
+        # Parse BCC addresses
+        bcc_addresses = getaddresses([bcc_header]) if bcc_header else []
         bcc_list = [
-            EmailAddress(**parse_email_address(addr.strip()))
-            for addr in bcc_header.split(",")
-            if addr.strip()
+            EmailAddress(
+                email=email.strip(),
+                name=name.strip() if name else None
+            )
+            for name, email in bcc_addresses
+            if email.strip()
         ]
 
         # Extract body
@@ -391,6 +419,7 @@ class GmailClient:
 
         Returns:
             True if message has attachments, False otherwise
+
         """
 
         def check_part(part: Dict[str, Any]) -> bool:
@@ -410,6 +439,7 @@ class GmailClient:
 
         Returns:
             List of Attachment objects
+
         """
         attachments: List[Attachment] = []
 
@@ -447,6 +477,7 @@ class GmailClient:
 
         Raises:
             ValueError: If query is invalid or potentially malicious
+
         """
         if not query:
             return
@@ -472,6 +503,7 @@ class GmailClient:
 
         Raises:
             ValueError: If label name is invalid
+
         """
         if not name:
             raise ValueError("Label name cannot be empty")
@@ -496,6 +528,7 @@ class GmailClient:
 
         Raises:
             ValueError: If any label ID is invalid
+
         """
         if not label_ids:
             return
@@ -529,6 +562,7 @@ class GmailClient:
         Raises:
             ValueError: If query is invalid
             RuntimeError: If API request fails
+
         """
         max_results = validate_pagination_params(max_results)
 
@@ -572,7 +606,7 @@ class GmailClient:
                 # Track results and errors
                 batch_results: Dict[str, Any] = {}
 
-                def make_callback(msg_id: str):
+                def make_callback(msg_id: str) -> Any:
                     """Create callback for this specific message."""
                     def callback(request_id: str, response: Any, exception: Exception) -> None:
                         if exception:
@@ -653,6 +687,7 @@ class GmailClient:
         Raises:
             ValueError: If format is invalid
             RuntimeError: If API request fails
+
         """
         try:
             msg_data = (
@@ -697,6 +732,7 @@ class GmailClient:
         Raises:
             ValueError: If query is invalid
             RuntimeError: If API request fails
+
         """
         return self.list_emails(
             folder=folder,
@@ -713,6 +749,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If API request fails
+
         """
         try:
             # First, get the list of all labels
@@ -733,7 +770,7 @@ class GmailClient:
                 # Track results
                 batch_results: Dict[str, Any] = {}
 
-                def make_callback(label_id: str, label_name: str, label_type: str):
+                def make_callback(label_id: str, label_name: str, label_type: str) -> Any:
                     """Create callback for this specific label."""
                     def callback(request_id: str, response: Any, exception: Exception) -> None:
                         if exception:
@@ -793,6 +830,7 @@ class GmailClient:
         Raises:
             ValueError: If label name is invalid
             RuntimeError: If API request fails
+
         """
         # Validate label name
         self._validate_label_name(name)
@@ -829,6 +867,7 @@ class GmailClient:
                 'inbox_accessible': bool,
                 'errors': List[str]
             }
+
         """
         results: Dict[str, Any] = {
             "auth": False,
@@ -854,7 +893,7 @@ class GmailClient:
 
         except HttpError as e:
             results["errors"].append(f"Gmail API error: {str(e)}")
-        except (OSError, IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             results["errors"].append(f"File access error: {str(e)}")
         except Exception as e:
             results["errors"].append(f"Unexpected error: {str(e)}")
@@ -872,6 +911,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If API request fails
+
         """
         try:
             # First get the message to find its thread_id
@@ -909,6 +949,7 @@ class GmailClient:
 
         Returns:
             SendEmailResponse with message ID and status
+
         """
         try:
             # Create MIME message
@@ -949,7 +990,7 @@ class GmailClient:
                 success=False,
                 error=f"Gmail API error: {str(e)}",
             )
-        except (OSError, IOError) as e:
+        except OSError as e:
             return SendEmailResponse(
                 message_id="",
                 thread_id="",
@@ -972,6 +1013,7 @@ class GmailClient:
 
         Returns:
             SendEmailResponse with draft ID and status
+
         """
         try:
             # Create MIME message
@@ -1013,7 +1055,7 @@ class GmailClient:
                 success=False,
                 error=f"Gmail API error: {str(e)}",
             )
-        except (OSError, IOError) as e:
+        except OSError as e:
             return SendEmailResponse(
                 message_id="",
                 thread_id="",
@@ -1045,6 +1087,7 @@ class GmailClient:
 
         Returns:
             SendEmailResponse with sent message ID
+
         """
         try:
             # Get original message
@@ -1119,6 +1162,7 @@ class GmailClient:
         Raises:
             ValueError: If label IDs are invalid
             RuntimeError: If API request fails
+
         """
         # Validate label IDs
         if add_labels:
@@ -1156,6 +1200,7 @@ class GmailClient:
 
         Raises:
             RuntimeError: If API request fails
+
         """
         try:
             if permanent:
