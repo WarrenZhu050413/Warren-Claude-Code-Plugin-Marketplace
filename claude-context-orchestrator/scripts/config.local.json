@@ -301,6 +301,13 @@
       "enabled": true
     },
     {
+      "name": "gmaillm",
+      "pattern": "\\b(GMAILLM)\\b[.,;:!?]?",
+      "snippet": ["../snippets/gmaillm-usage.md"],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
       "name": "tutoring-report",
       "pattern": "\\b(TEACHREPORT)\\b[.,;:!?]?",
       "snippet": ["../snippets/local/communication/tutoring-report/SNIPPET.md"],
