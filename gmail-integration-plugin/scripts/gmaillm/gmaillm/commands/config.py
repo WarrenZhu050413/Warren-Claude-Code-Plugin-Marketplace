@@ -69,7 +69,7 @@ def show_config(
     console.print("  [cyan]gmail styles list[/cyan]            # List all email styles")
     console.print("  [cyan]gmail styles create <name>[/cyan]   # Create new style")
     console.print("  [cyan]gmail styles edit <name>[/cyan]     # Edit style")
-    console.print("  [cyan]gmail styles validate-all[/cyan]    # Validate all styles")
+    console.print("  [cyan]gmail styles validate [name][/cyan] # Validate style(s)")
     console.print("\nGroup Commands:")
     console.print("  [cyan]gmail groups list[/cyan]            # List all groups")
     console.print("  [cyan]gmail groups create <name>[/cyan]   # Create new group")

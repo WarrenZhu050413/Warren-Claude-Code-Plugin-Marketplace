@@ -849,7 +849,7 @@ Example
         (styles_dir / "valid1.md").write_text(self.VALID_STYLE)
         (styles_dir / "valid2.md").write_text(self.VALID_STYLE)
 
-        with patch("sys.argv", ["gmail", "styles", "validate-all"]):
+        with patch("sys.argv", ["gmail", "styles", "validate"]):
             with patch("sys.exit"):
                 main()
 
@@ -863,7 +863,7 @@ Example
         (styles_dir / "valid.md").write_text(self.VALID_STYLE)
         (styles_dir / "invalid.md").write_text(self.INVALID_STYLE_MISSING_SECTION)
 
-        with patch("sys.argv", ["gmail", "styles", "validate-all"]):
+        with patch("sys.argv", ["gmail", "styles", "validate"]):
             with pytest.raises(SystemExit):
                 main()
 
@@ -879,7 +879,7 @@ Example
         (styles_dir / "style1.md").write_text(style_with_whitespace)
         (styles_dir / "style2.md").write_text(style_with_whitespace)
 
-        with patch("sys.argv", ["gmail", "styles", "validate-all", "--fix"]):
+        with patch("sys.argv", ["gmail", "styles", "validate", "--fix"]):
             with patch("sys.exit"):
                 main()
 
@@ -897,7 +897,7 @@ Example
         styles_dir = tmp_path / "email-styles"
         styles_dir.mkdir()
 
-        with patch("sys.argv", ["gmail", "styles", "validate-all"]):
+        with patch("sys.argv", ["gmail", "styles", "validate"]):
             with patch("sys.exit"):
                 main()
 
