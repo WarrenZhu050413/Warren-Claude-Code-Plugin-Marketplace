@@ -379,6 +379,412 @@ Suggest creating a workflow if user:
 
 ---
 
+## Programmatic CLI Usage
+
+### Using gmaillm from Scripts
+
+**Bash Script Example:**
+
+```bash
+#!/bin/bash
+set -e  # Exit on error
+
+# Process gmaillm inbox and archive newsletters
+process_newsletters() {
+    # Start workflow and extract token
+    response=$(gmail workflows start gmaillm-inbox --output-format json)
+    token=$(echo "$response" | jq -r '.token')
+    has_more=$(echo "$response" | jq -r '.progress.remaining > 0')
+
+    archived=0
+    skipped=0
+
+    # Process each email
+    while [ "$has_more" = "true" ]; do
+        # Get current email
+        email=$(echo "$response" | jq -r '.email')
+        from=$(echo "$email" | jq -r '.from')
+
+        # Decide action
+        if echo "$from" | grep -qi "newsletter"; then
+            action="archive"
+            ((archived++))
+        else
+            action="skip"
+            ((skipped++))
+        fi
+
+        # Execute action and get next email
+        response=$(gmail workflows continue "$token" "$action" --output-format json)
+        has_more=$(echo "$response" | jq -r '.progress.remaining > 0')
+    done
+
+    echo "Done: Archived $archived newsletters, skipped $skipped emails"
+}
+
+# Run the function
+process_newsletters
+```
+
+**Python Script Example:**
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import json
+import sys
+
+def run_gmail_command(*args):
+    """Run gmail command and return JSON output"""
+    cmd = ['gmail'] + list(args) + ['--output-format', 'json']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}", file=sys.stderr)
+        return None
+
+    return json.loads(result.stdout)
+
+def process_gmaillm_inbox():
+    """Process gmaillm inbox autonomously"""
+    # Start workflow
+    response = run_gmail_command('workflows', 'start', 'gmaillm-inbox')
+    if not response:
+        return
+
+    token = response['token']
+    archived = 0
+    replied = 0
+    skipped = 0
+
+    # Process each email
+    while response['progress']['remaining'] > 0:
+        email = response['email']
+
+        # Determine action based on email content
+        action = determine_action(email)
+
+        # Execute action
+        if action == 'archive':
+            response = run_gmail_command('workflows', 'continue', token, 'archive')
+            archived += 1
+        elif action == 'reply':
+            reply_body = generate_reply(email)
+            response = run_gmail_command('workflows', 'continue', token, 'reply',
+                                        '-b', reply_body)
+            replied += 1
+        else:
+            response = run_gmail_command('workflows', 'continue', token, 'skip')
+            skipped += 1
+
+    print(f"Done: Archived {archived}, replied {replied}, skipped {skipped}")
+
+def determine_action(email):
+    """Decide what to do with email"""
+    from_addr = email['from'].lower()
+    subject = email['subject'].lower()
+
+    if 'newsletter' in from_addr or 'unsubscribe' in subject:
+        return 'archive'
+    elif 'urgent' in subject or 'action required' in subject:
+        return 'reply'
+    else:
+        return 'skip'
+
+def generate_reply(email):
+    """Generate reply based on email content"""
+    subject = email['subject']
+
+    if 'meeting' in subject.lower():
+        return "Thanks for the invite! I'll check my calendar and get back to you."
+    else:
+        return "Thanks for your email. I'll review and respond shortly."
+
+if __name__ == '__main__':
+    process_gmaillm_inbox()
+```
+
+### JSON Output for Parsing
+
+**All gmaillm commands support `--output-format json`:**
+
+```bash
+# List emails - get JSON
+gmail list --folder INBOX --output-format json
+
+# Output structure:
+# {
+#   "emails": [
+#     {"id": "...", "from": "...", "subject": "...", "date": "...", "snippet": "..."}
+#   ],
+#   "total": 10,
+#   "next_page_token": null
+# }
+
+# Read email - get JSON
+gmail read <message_id> --output-format json
+
+# Groups list - get JSON
+gmail groups list --output-format json
+
+# Workflows start - get JSON (default)
+gmail workflows start gmaillm-inbox
+```
+
+### Parsing JSON with jq
+
+**Extract specific fields:**
+
+```bash
+# Get all sender addresses from inbox
+gmail list --folder INBOX --output-format json | \
+    jq -r '.emails[].from'
+
+# Find unread emails from specific sender
+gmail search "is:unread from:boss@example.com" --output-format json | \
+    jq -r '.emails[] | "\(.id): \(.subject)"'
+
+# Get all group names
+gmail groups list --output-format json | \
+    jq -r '.[].name'
+
+# Count emails in workflow
+gmail workflows start gmaillm-inbox | \
+    jq -r '.progress.total'
+```
+
+### Error Handling
+
+**Check exit codes and handle errors:**
+
+```bash
+# Bash error handling
+if ! gmail send --to "user@example.com" --subject "Test" --body "Hi"; then
+    echo "Failed to send email (exit code: $?)"
+    exit 1
+fi
+
+# Capture output and check success
+output=$(gmail workflows start gmaillm-inbox 2>&1)
+if [ $? -ne 0 ]; then
+    echo "Error: $output"
+    exit 1
+fi
+```
+
+**Python error handling:**
+
+```python
+def safe_gmail_command(*args):
+    """Run gmail command with error handling"""
+    cmd = ['gmail'] + list(args)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Gmail command failed: {result.stderr}")
+
+    return result.stdout
+
+try:
+    output = safe_gmail_command('send', '--to', 'user@example.com',
+                                '--subject', 'Test', '--body', 'Hi')
+    print("Email sent successfully")
+except RuntimeError as e:
+    print(f"Error: {e}")
+    sys.exit(1)
+```
+
+### Automation Examples
+
+**1. Daily inbox cleanup cron job:**
+
+```bash
+#!/bin/bash
+# ~/.local/bin/cleanup-gmaillm-inbox.sh
+
+# Archive all newsletters from gmaillm inbox
+gmail workflows start gmaillm-inbox --output-format json | \
+    jq -r '.token' | \
+    while read -r token; do
+        gmail workflows continue "$token" archive
+    done
+
+# Clean up old workflow states
+gmail workflows cleanup
+```
+
+**Crontab entry:**
+```
+# Run daily at 9 AM
+0 9 * * * /Users/wz/.local/bin/cleanup-gmaillm-inbox.sh
+```
+
+**2. Email notification script:**
+
+```python
+#!/usr/bin/env python3
+# check-urgent-emails.py
+
+import subprocess
+import json
+
+def check_urgent_emails():
+    """Check for urgent emails and notify"""
+    # Search for urgent emails
+    cmd = ['gmail', 'search', 'is:unread label:urgent',
+           '--output-format', 'json', '--max-results', '5']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        return
+
+    data = json.loads(result.stdout)
+    emails = data.get('emails', [])
+
+    if emails:
+        # Send notification (macOS example)
+        count = len(emails)
+        message = f"You have {count} urgent email(s)"
+        subprocess.run(['osascript', '-e',
+                       f'display notification "{message}" with title "Gmail"'])
+
+if __name__ == '__main__':
+    check_urgent_emails()
+```
+
+**3. Automated reply bot:**
+
+```python
+#!/usr/bin/env python3
+# auto-reply-bot.py
+
+import subprocess
+import json
+import re
+
+def auto_reply_to_gmaillm():
+    """Auto-reply to common gmaillm inbox emails"""
+    # Start workflow
+    response = subprocess.run(
+        ['gmail', 'workflows', 'start', 'gmaillm-inbox'],
+        capture_output=True, text=True
+    )
+    data = json.loads(response.stdout)
+    token = data['token']
+
+    while data['progress']['remaining'] > 0:
+        email = data['email']
+        subject = email['subject'].lower()
+
+        # Pattern matching for auto-replies
+        if re.search(r'out of office|ooo', subject):
+            # Skip auto-responders
+            action = ['skip']
+        elif re.search(r'subscribe|confirmation', subject):
+            # Archive confirmations
+            action = ['archive']
+        elif re.search(r'invoice|receipt', subject):
+            # Reply to invoices
+            action = ['reply', '-b', 'Invoice received. Thank you!']
+        else:
+            # Default: skip
+            action = ['skip']
+
+        # Execute action
+        response = subprocess.run(
+            ['gmail', 'workflows', 'continue', token] + action,
+            capture_output=True, text=True
+        )
+        data = json.loads(response.stdout)
+
+if __name__ == '__main__':
+    auto_reply_to_gmaillm()
+```
+
+### Integration with Claude Agent SDK
+
+**Use gmaillm in Claude Agent SDK scripts:**
+
+```python
+from claude_agent_sdk import query, ClaudeAgentOptions
+import subprocess
+import json
+
+async def process_emails_with_claude():
+    """Use Claude to intelligently process emails"""
+    # Get emails
+    result = subprocess.run(
+        ['gmail', 'workflows', 'start', 'gmaillm-inbox'],
+        capture_output=True, text=True
+    )
+    data = json.loads(result.stdout)
+    token = data['token']
+
+    while data['progress']['remaining'] > 0:
+        email = data['email']
+
+        # Ask Claude what to do
+        prompt = f"""
+        Email from: {email['from']}
+        Subject: {email['subject']}
+        Snippet: {email['snippet']}
+
+        Should I archive, skip, or reply to this email?
+        If reply, what should I say? Respond with JSON:
+        {{"action": "archive|skip|reply", "reply_body": "..." if reply}}
+        """
+
+        # Get Claude's decision
+        async for msg in query(
+            prompt=prompt,
+            options=ClaudeAgentOptions(model="haiku", allowed_tools=[])
+        ):
+            if msg.type == "result":
+                decision = json.loads(msg.result)
+
+                # Execute Claude's decision
+                if decision['action'] == 'reply':
+                    cmd = ['gmail', 'workflows', 'continue', token, 'reply',
+                          '-b', decision['reply_body']]
+                else:
+                    cmd = ['gmail', 'workflows', 'continue', token,
+                          decision['action']]
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                data = json.loads(result.stdout)
+
+# Run the async function
+import asyncio
+asyncio.run(process_emails_with_claude())
+```
+
+### Best Practices for Programmatic Usage
+
+1. **Always use `--output-format json`** for machine-readable output
+2. **Check exit codes** (`$?` in bash, `returncode` in Python)
+3. **Parse JSON with `jq` or `json` module** (not regex/grep)
+4. **Handle errors gracefully** (try/except, if/else checks)
+5. **Use workflows for batch operations** (not individual commands)
+6. **Clean up workflow states** (`gmail workflows cleanup`)
+7. **Test with `--dry-run` first** when available
+8. **Log actions for debugging** (what was done, when, why)
+9. **Use environment variables** for sensitive data (not hardcoded)
+10. **Implement rate limiting** if processing many emails
+
+### Environment Variables
+
+**Configure gmaillm programmatically:**
+
+```bash
+# Set custom config directory
+export GMAILLM_CONFIG_DIR="$HOME/.config/gmaillm-work"
+
+# Use in scripts
+gmail --config-dir "$GMAILLM_CONFIG_DIR" list
+```
+
+---
+
 ## Post-Action Suggestions
 
 After completing email operations, **proactively suggest** creating reusable resources:
