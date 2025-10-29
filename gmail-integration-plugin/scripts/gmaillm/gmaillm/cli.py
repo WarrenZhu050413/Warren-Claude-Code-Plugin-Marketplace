@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import typer
 from rich.console import Console
+from rich.panel import Panel
 
 from gmaillm import GmailClient, SendEmailRequest
 from gmaillm.formatters import RichFormatter
