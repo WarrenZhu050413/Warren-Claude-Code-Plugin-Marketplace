@@ -6,6 +6,11 @@ from rich.console import Console
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
 from gmaillm.helpers.typer_utils import HelpfulGroup
+from gmaillm.helpers.cli_utils import (
+    show_operation_preview,
+    confirm_or_force,
+    handle_command_error
+)
 from gmaillm.validators.email import validate_label_name
 
 # Initialize Typer app and console

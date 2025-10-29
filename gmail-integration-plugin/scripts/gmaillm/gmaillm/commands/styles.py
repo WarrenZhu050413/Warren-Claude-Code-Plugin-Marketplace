@@ -18,6 +18,12 @@ from gmaillm.helpers.config import (
 )
 from gmaillm.helpers.typer_utils import HelpfulGroup
 from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
+from gmaillm.helpers.cli_utils import (
+    show_operation_preview,
+    confirm_or_force,
+    create_backup_with_message,
+    handle_command_error
+)
 from gmaillm.validators.email import validate_editor
 from gmaillm.validators.styles import (
     validate_style_name,
@@ -187,26 +193,21 @@ def create_style(
         # INTERACTIVE MODE: Template-based
         else:
             # Show preview
-            console.print("=" * 60)
-            console.print("Creating Email Style")
-            console.print("=" * 60)
-            console.print(f"Name: {name}")
-            console.print(f"Location: {style_file}")
-            console.print("=" * 60)
+            show_operation_preview(
+                "Creating Email Style",
+                {
+                    "Name": name,
+                    "Location": str(style_file)
+                }
+            )
 
             # Confirm (unless --force)
-            if not force:
-                response = typer.confirm("\nCreate this style?")
-                if not response:
-                    console.print("Cancelled.")
-                    return
-            else:
-                console.print("\n[yellow]--force: Creating without confirmation[/yellow]")
+            if not confirm_or_force("\nCreate this style?", force, "Creating without confirmation"):
+                console.print("Cancelled.")
+                return
 
             # Create backup if overwriting
-            if style_file.exists():
-                backup_path = create_backup(style_file)
-                console.print(f"Backup created: {backup_path}")
+            create_backup_with_message(style_file, create_backup)
 
             # Create from template
             create_style_from_template(name, style_file)
@@ -355,25 +356,21 @@ def delete_style(
             raise typer.Exit(code=1)
 
         # Show what will be deleted
-        console.print("=" * 60)
-        console.print("Deleting Email Style")
-        console.print("=" * 60)
-        console.print(f"Name: {name}")
-        console.print(f"Location: {style_file}")
-        console.print("=" * 60)
+        show_operation_preview(
+            "Deleting Email Style",
+            {
+                "Name": name,
+                "Location": str(style_file)
+            }
+        )
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\n⚠️  Delete this style? This cannot be undone.")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Deleting without confirmation[/yellow]")
+        if not confirm_or_force("\n⚠️  Delete this style? This cannot be undone.", force, "Deleting without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Create backup before deletion
-        backup_path = create_backup(style_file)
-        console.print(f"Backup created: {backup_path}")
+        create_backup_with_message(style_file, create_backup)
 
         # Delete
         style_file.unlink()
@@ -381,8 +378,7 @@ def delete_style(
         console.print(f"\n[green]✅ Style deleted: {name}[/green]")
 
     except Exception as e:
-        console.print(f"[red]✗ Error deleting style: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("deleting style", e)
 
 
 @app.command("validate")

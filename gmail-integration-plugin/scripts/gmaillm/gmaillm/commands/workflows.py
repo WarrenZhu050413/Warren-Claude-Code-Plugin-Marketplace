@@ -10,6 +10,11 @@ from rich.table import Table
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
 from gmaillm.workflow_config import WorkflowManager, WorkflowConfig
+from gmaillm.helpers.cli_utils import (
+    show_operation_preview,
+    confirm_or_force,
+    handle_command_error
+)
 
 
 # Output format enum (duplicated to avoid circular import)
@@ -149,10 +154,13 @@ def run_workflow(
         console.print(f"Found: {len(result.emails)} email(s)\n")
 
         # Process each email interactively
-        for i, email in enumerate(result.emails, 1):
+        for i, email_summary in enumerate(result.emails, 1):
             console.print("=" * 60)
             console.print(f"Email {i} of {len(result.emails)}")
             console.print("=" * 60)
+
+            # Fetch full email details
+            email = client.read_email(email_summary.message_id, format="full")
 
             # Display email
             formatter.print_email_full(email)
@@ -283,22 +291,19 @@ def delete_workflow(
             raise typer.Exit(code=1)
 
         # Show what will be deleted
-        console.print("=" * 60)
-        console.print("Deleting Workflow")
-        console.print("=" * 60)
-        console.print(f"ID: {workflow_id}")
-        console.print(f"Name: {config.name}")
-        console.print(f"Query: {config.query}")
-        console.print("=" * 60)
+        show_operation_preview(
+            "Deleting Workflow",
+            {
+                "ID": workflow_id,
+                "Name": config.name,
+                "Query": config.query
+            }
+        )
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\n⚠️  Delete this workflow?")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Deleting without confirmation[/yellow]")
+        if not confirm_or_force("\n⚠️  Delete this workflow?", force, "Deleting without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Delete
         manager.delete_workflow(workflow_id)
@@ -306,5 +311,4 @@ def delete_workflow(
         console.print(f"\n[green]✅ Workflow deleted: {workflow_id}[/green]")
 
     except Exception as e:
-        console.print(f"[red]✗ Error deleting workflow: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("deleting workflow", e)

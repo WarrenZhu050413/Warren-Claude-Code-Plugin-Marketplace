@@ -51,6 +51,8 @@ class HelpfulGroup(typer.core.TyperGroup):
     All commands in this group will show help when required arguments
     are missing, instead of showing Click's default error message.
 
+    Also shows help when no subcommand is provided to a group.
+
     Example:
         app = typer.Typer(cls=HelpfulGroup)
 
@@ -59,6 +61,15 @@ class HelpfulGroup(typer.core.TyperGroup):
             # Shows full help if message_id is missing
             pass
     """
+
+    def invoke(self, ctx):
+        """Override to show help when no subcommand is provided."""
+        # Check if this is a group invocation with no subcommand
+        if ctx.protected_args + ctx.args == [] and ctx.invoked_subcommand is None:
+            # Show help instead of error
+            click.echo(ctx.get_help(), file=sys.stderr)
+            ctx.exit(0)
+        return super().invoke(ctx)
 
     def command(self, *args, **kwargs):
         """Override to use HelpfulCommand as default command class."""
