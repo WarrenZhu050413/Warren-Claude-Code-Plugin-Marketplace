@@ -1,6 +1,5 @@
 """Gmail workflow management commands."""
 
-from enum import Enum
 from typing import Optional
 
 import typer
@@ -9,14 +8,19 @@ from rich.table import Table
 
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
-from gmaillm.workflow_config import WorkflowManager, WorkflowConfig
 from gmaillm.helpers.cli import (
-    show_operation_preview,
+    OutputFormat,
     confirm_or_force,
     handle_command_error,
-    OutputFormat,
+    output_json_or_rich,
     parse_output_format,
-    output_json_or_rich
+    show_operation_preview,
+)
+from gmaillm.workflow_config import WorkflowConfig, WorkflowManager
+from gmaillm.workflow_state import (
+    WorkflowAction,
+    WorkflowResponse,
+    WorkflowStateManager,
 )
 
 # Initialize Typer app and console
@@ -42,9 +46,16 @@ def show_examples() -> None:
     console.print("  [dim]$ gmail workflows show clear[/dim]")
     console.print()
 
-    console.print("[bold]▶️  RUNNING WORKFLOWS[/bold]")
+    console.print("[bold]▶️  RUNNING WORKFLOWS (Interactive)[/bold]")
     console.print("  [dim]$ gmail workflows run clear           # Run named workflow[/dim]")
     console.print("  [dim]$ gmail workflows run \"is:unread\"     # Run ad-hoc query[/dim]")
+    console.print()
+
+    console.print("[bold]🤖 LLM-FRIENDLY WORKFLOWS (Programmatic)[/bold]")
+    console.print("  [dim]$ gmail workflows start clear         # Start workflow, get token[/dim]")
+    console.print("  [dim]$ gmail workflows continue <token> archive   # Archive current email[/dim]")
+    console.print("  [dim]$ gmail workflows continue <token> skip      # Skip to next email[/dim]")
+    console.print("  [dim]$ gmail workflows continue <token> reply -b \"Thanks!\"  # Reply and archive[/dim]")
     console.print()
 
     console.print("[bold]➕ CREATING WORKFLOWS[/bold]")
@@ -95,7 +106,7 @@ def list_workflows(
         ]
 
         # Define rich output function
-        def print_rich():
+        def print_rich() -> None:
             if not workflows:
                 console.print("[yellow]No workflows configured[/yellow]")
                 console.print("\nCreate a workflow: [cyan]gmail workflows create <id> --query \"...\"[/cyan]")
@@ -119,7 +130,7 @@ def list_workflows(
 
             console.print(table)
             console.print(f"\n[dim]Total: {len(workflows)} workflow(s)[/dim]")
-            console.print(f"\nUsage: [cyan]gmail workflows run <id>[/cyan]")
+            console.print("\nUsage: [cyan]gmail workflows run <id>[/cyan]")
 
         # Output in appropriate format
         output_json_or_rich(format_enum, workflows_list, print_rich)
@@ -152,7 +163,7 @@ def show_workflow(
         }
 
         # Define rich output function
-        def print_rich():
+        def print_rich() -> None:
             console.print("=" * 60)
             console.print(f"Workflow: {workflow_id}")
             console.print("=" * 60)
@@ -301,7 +312,7 @@ def run_workflow(
                 console.print(f"[red]Invalid action: {action}[/red]")
                 console.print("[yellow]Skipping this email[/yellow]")
 
-        console.print(f"\n[green]✅ Workflow complete![/green]")
+        console.print("\n[green]✅ Workflow complete![/green]")
 
     except KeyError as e:
         console.print(f"[red]✗ {e}[/red]")
@@ -335,12 +346,12 @@ def create_workflow(
 
         # Check if exists
         try:
-            existing = manager.get_workflow(workflow_id)
+            manager.get_workflow(workflow_id)
             if not force:
                 console.print(f"[red]✗ Workflow '{workflow_id}' already exists[/red]")
                 console.print("\nUse --force to overwrite")
                 raise typer.Exit(code=1)
-            console.print(f"[yellow]--force: Overwriting existing workflow[/yellow]")
+            console.print("[yellow]--force: Overwriting existing workflow[/yellow]")
         except KeyError:
             pass  # Doesn't exist, OK to create
 
@@ -404,3 +415,298 @@ def delete_workflow(
 
     except Exception as e:
         handle_command_error("deleting workflow", e)
+
+
+@app.command("start")
+def start_workflow(
+    workflow_id: Optional[str] = typer.Argument(None, help="Workflow ID to start"),
+    query: Optional[str] = typer.Option(None, "--query", "-q", help="Ad-hoc query (instead of named workflow)"),
+    max_results: int = typer.Option(100, "--max", "-n", help="Maximum emails to process"),
+) -> None:
+    """Start a workflow and get continuation token (LLM-friendly).
+
+    Returns JSON with first email and continuation token for programmatic processing.
+
+    \b
+    EXAMPLES:
+      $ gmail workflows start clear
+      $ gmail workflows start --query "is:unread"
+    """
+    try:
+        client = GmailClient()
+        state_manager = WorkflowStateManager()
+
+        # Determine query and settings
+        if workflow_id:
+            manager = WorkflowManager()
+            config = manager.get_workflow(workflow_id)
+            search_query = config.query
+            auto_mark_read = config.auto_mark_read
+            workflow_name = config.name
+        elif query:
+            search_query = query
+            auto_mark_read = True
+            workflow_id = "adhoc"
+            workflow_name = "Ad-hoc Workflow"
+        else:
+            response = WorkflowResponse(
+                success=False,
+                message="Either workflow ID or --query is required",
+                progress={"total": 0, "processed": 0, "remaining": 0}
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            raise typer.Exit(code=1)
+
+        # Execute search
+        result = client.search_emails(query=search_query, folder="", max_results=max_results)
+
+        if not result.emails:
+            response = WorkflowResponse(
+                success=True,
+                message=f"No emails found for query: {search_query}",
+                progress={"total": 0, "processed": 0, "remaining": 0},
+                completed=True
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            return
+
+        # Create workflow state
+        email_ids = [email.message_id for email in result.emails]
+        state = state_manager.create_state(
+            workflow_id=workflow_id,
+            query=search_query,
+            email_ids=email_ids,
+            auto_mark_read=auto_mark_read
+        )
+
+        # Get first email
+        first_email = client.read_email(state.current_email_id, format="full")
+
+        # Build response
+        response = WorkflowResponse(
+            success=True,
+            token=state.token,
+            email=first_email.model_dump(mode='json'),
+            message=f"Started workflow: {workflow_name}",
+            progress={
+                "total": len(email_ids),
+                "processed": 0,
+                "remaining": len(email_ids),
+                "current": 1
+            }
+        )
+
+        console.print_json(data=response.model_dump(mode='json'))
+
+    except Exception as e:
+        response = WorkflowResponse(
+            success=False,
+            message=f"Error starting workflow: {e}",
+            progress={"total": 0, "processed": 0, "remaining": 0}
+        )
+        console.print_json(data=response.model_dump(mode='json'))
+        raise typer.Exit(code=1)
+
+
+@app.command("continue")
+def continue_workflow(
+    token: str = typer.Argument(..., help="Continuation token from previous step"),
+    action: str = typer.Argument(..., help="Action: view, reply, archive, skip, quit"),
+    reply_body: Optional[str] = typer.Option(None, "--reply-body", "-b", help="Reply body (for 'reply' action)"),
+) -> None:
+    """Continue workflow with action on current email (LLM-friendly).
+
+    Returns JSON with next email and new continuation token.
+
+    \b
+    ACTIONS:
+      view     - Return full email body in response
+      reply    - Send reply (requires --reply-body) and archive
+      archive  - Archive email and move to next
+      skip     - Skip email (optionally mark as read) and move to next
+      quit     - End workflow session
+
+    \b
+    EXAMPLES:
+      $ gmail workflows continue <token> archive
+      $ gmail workflows continue <token> reply --reply-body "Thanks!"
+      $ gmail workflows continue <token> skip
+    """
+    try:
+        client = GmailClient()
+        state_manager = WorkflowStateManager()
+
+        # Load state
+        try:
+            state = state_manager.load_state(token)
+        except ValueError as e:
+            response = WorkflowResponse(
+                success=False,
+                message=str(e),
+                progress={"total": 0, "processed": 0, "remaining": 0}
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            raise typer.Exit(code=1)
+
+        # Get current email
+        current_email = client.read_email(state.current_email_id, format="full")
+
+        # Process action
+        action = action.lower().strip()
+
+        if action == "view":
+            # Return email with full body
+            response = WorkflowResponse(
+                success=True,
+                token=state.token,  # Same token, no state change
+                email=current_email.model_dump(mode='json'),
+                message="Email body returned",
+                progress={
+                    "total": len(state.email_ids),
+                    "processed": state.processed,
+                    "remaining": len(state.email_ids) - state.current_index,
+                    "current": state.current_index + 1
+                }
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            return
+
+        elif action == "reply":
+            if not reply_body or not reply_body.strip():
+                response = WorkflowResponse(
+                    success=False,
+                    token=state.token,
+                    message="--reply-body is required for 'reply' action",
+                    progress={
+                        "total": len(state.email_ids),
+                        "processed": state.processed,
+                        "remaining": len(state.email_ids) - state.current_index,
+                        "current": state.current_index + 1
+                    }
+                )
+                console.print_json(data=response.model_dump(mode='json'))
+                raise typer.Exit(code=1)
+
+            # Send reply
+            client.reply_email(message_id=state.current_email_id, body=reply_body)
+
+            # Archive
+            client.modify_labels(state.current_email_id, remove_labels=["INBOX", "UNREAD"])
+
+            # Advance state
+            state.advance()
+            action_message = "Reply sent and archived"
+
+        elif action == "archive":
+            # Archive
+            client.modify_labels(state.current_email_id, remove_labels=["INBOX", "UNREAD"])
+
+            # Advance state
+            state.advance()
+            action_message = "Archived"
+
+        elif action == "skip":
+            # Mark as read if configured
+            if state.auto_mark_read:
+                client.modify_labels(state.current_email_id, remove_labels=["UNREAD"])
+                action_message = "Skipped (marked as read)"
+            else:
+                action_message = "Skipped"
+
+            # Advance state
+            state.advance()
+
+        elif action == "quit":
+            # Delete state and exit
+            state_manager.delete_state(token)
+            response = WorkflowResponse(
+                success=True,
+                message=f"Workflow ended (processed {state.processed} of {len(state.email_ids)})",
+                progress={
+                    "total": len(state.email_ids),
+                    "processed": state.processed,
+                    "remaining": len(state.email_ids) - state.processed,
+                },
+                completed=True
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            return
+
+        else:
+            response = WorkflowResponse(
+                success=False,
+                token=state.token,
+                message=f"Invalid action: {action}. Use: view, reply, archive, skip, quit",
+                progress={
+                    "total": len(state.email_ids),
+                    "processed": state.processed,
+                    "remaining": len(state.email_ids) - state.current_index,
+                    "current": state.current_index + 1
+                }
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            raise typer.Exit(code=1)
+
+        # Check if workflow is complete
+        if not state.has_more:
+            state_manager.delete_state(token)
+            response = WorkflowResponse(
+                success=True,
+                message=f"{action_message}. Workflow complete! Processed {state.processed} emails.",
+                progress={
+                    "total": len(state.email_ids),
+                    "processed": state.processed,
+                    "remaining": 0
+                },
+                completed=True
+            )
+            console.print_json(data=response.model_dump(mode='json'))
+            return
+
+        # Save updated state
+        state_manager.save_state(state)
+
+        # Get next email
+        next_email = client.read_email(state.current_email_id, format="full")
+
+        # Build response
+        response = WorkflowResponse(
+            success=True,
+            token=state.token,
+            email=next_email.model_dump(mode='json'),
+            message=action_message,
+            progress={
+                "total": len(state.email_ids),
+                "processed": state.processed,
+                "remaining": len(state.email_ids) - state.current_index,
+                "current": state.current_index + 1
+            }
+        )
+
+        console.print_json(data=response.model_dump(mode='json'))
+
+    except Exception as e:
+        response = WorkflowResponse(
+            success=False,
+            message=f"Error continuing workflow: {e}",
+            progress={"total": 0, "processed": 0, "remaining": 0}
+        )
+        console.print_json(data=response.model_dump(mode='json'))
+        raise typer.Exit(code=1)
+
+
+@app.command("cleanup")
+def cleanup_states() -> None:
+    """Clean up expired workflow states.
+
+    Removes workflow state files that have expired (older than 1 hour).
+    """
+    try:
+        state_manager = WorkflowStateManager()
+        deleted = state_manager.cleanup_expired()
+
+        console.print(f"[green]✅ Cleaned up {deleted} expired workflow state(s)[/green]")
+
+    except Exception as e:
+        console.print(f"[red]✗ Error cleaning up states: {e}[/red]")
+        raise typer.Exit(code=1)
