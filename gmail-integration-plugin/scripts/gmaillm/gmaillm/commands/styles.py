@@ -17,6 +17,7 @@ from gmaillm.helpers.config import (
     create_backup,
     create_style_from_template
 )
+from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
 from gmaillm.validators.email import validate_editor
 from gmaillm.validators.styles import (
     validate_style_name,
@@ -26,7 +27,10 @@ from gmaillm.validators.styles import (
 )
 
 # Initialize Typer app and console
-app = typer.Typer(help="Manage email style templates")
+app = typer.Typer(
+    help="Manage email style templates",
+    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+)
 console = Console()
 
 

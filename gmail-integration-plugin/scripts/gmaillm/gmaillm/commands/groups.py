@@ -1,5 +1,6 @@
 """Gmail distribution groups management commands."""
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -15,11 +16,40 @@ from gmaillm.helpers.config import (
     save_email_groups,
     create_backup
 )
+from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
 from gmaillm.validators.email import validate_email, validate_editor
+from gmaillm.validators.email_operations import (
+    get_group_json_schema_string,
+    validate_group_json,
+    load_json_from_file
+)
 
 # Initialize Typer app and console
-app = typer.Typer(help="Manage email distribution groups")
+app = typer.Typer(
+    help="Manage email distribution groups",
+    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+)
 console = Console()
+
+
+@app.command("schema")
+def show_schema() -> None:
+    """Display JSON schema for programmatic group creation.
+
+    This schema defines the structure required for creating groups
+    via the --json-input flag in the 'create' command.
+    """
+    try:
+        schema_str = get_group_json_schema_string(indent=2)
+        console.print("\n[bold cyan]Email Group JSON Schema[/bold cyan]")
+        console.print("[dim]Use this schema for programmatic group creation with --json-input[/dim]\n")
+        console.print_json(schema_str)
+        console.print("\n[bold]Usage Examples:[/bold]")
+        console.print("  Create from JSON file:")
+        console.print("    [cyan]gmail groups create --json-input group.json --force[/cyan]")
+    except Exception as e:
+        console.print(f"[red]✗ Error displaying schema: {e}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command("list")
@@ -91,22 +121,89 @@ def show_group(
 
 @app.command("create")
 def create_group(
-    name: str = typer.Argument(..., help="Name of the group to create"),
-    emails: List[str] = typer.Option(..., "--emails", "-e", help="Email addresses to add"),
+    name: Optional[str] = typer.Argument(None, help="Name of the group to create (required unless using --json-input)"),
+    emails: Optional[List[str]] = typer.Option(None, "--emails", "-e", help="Email addresses to add"),
+    json_input: Optional[str] = typer.Option(
+        None,
+        "--json-input",
+        "-j",
+        help="Path to JSON file for programmatic creation"
+    ),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ) -> None:
-    """Create a new email distribution group."""
+    """Create a new email distribution group from CLI args or JSON file.
+
+    \b
+    MODES:
+      1. Interactive (default): Provide name and emails via CLI
+      2. Programmatic (--json-input): Create from JSON file
+
+    \b
+    EXAMPLES:
+      Interactive creation:
+        $ gmail groups create team --emails user1@example.com --emails user2@example.com
+
+      From JSON file:
+        $ gmail groups create --json-input group.json --force
+
+      View schema:
+        $ gmail groups schema
+    """
     try:
         groups = load_email_groups()
 
+        # PROGRAMMATIC MODE: JSON input
+        if json_input:
+            console.print("[cyan]Creating group from JSON file...[/cyan]")
+
+            # Load JSON from file
+            try:
+                json_data = load_json_from_file(Path(json_input))
+            except (FileNotFoundError, ValueError) as e:
+                console.print(f"[red]✗ {e}[/red]")
+                raise typer.Exit(code=1)
+
+            # Validate JSON
+            validation_errors = validate_group_json(json_data)
+            if validation_errors:
+                console.print(f"[red]✗ Invalid JSON data:[/red]")
+                for err in validation_errors:
+                    console.print(f"  - {err}")
+                console.print("\nView schema: [cyan]gmail groups schema[/cyan]")
+                raise typer.Exit(code=1)
+
+            # Extract from JSON
+            group_name = json_data["name"]
+            member_emails = json_data["members"]
+
+        # INTERACTIVE MODE: CLI arguments
+        else:
+            if name is None:
+                console.print("[red]✗ Group name is required (or use --json-input)[/red]")
+                console.print("\nUsage: [cyan]gmail groups create <name> --emails <email> ...[/cyan]")
+                console.print("   Or: [cyan]gmail groups create --json-input group.json[/cyan]")
+                raise typer.Exit(code=1)
+
+            if emails is None or len(emails) == 0:
+                console.print("[red]✗ At least one email is required (or use --json-input)[/red]")
+                console.print("\nUsage: [cyan]gmail groups create {name} --emails <email> ...[/cyan]")
+                raise typer.Exit(code=1)
+
+            group_name = name
+            member_emails = emails
+
         # Check if group already exists
-        if name in groups:
-            console.print(f"[red]✗ Group '{name}' already exists[/red]")
-            console.print(f"\nUse: [cyan]gmail groups add {name} <email>[/cyan]")
-            raise typer.Exit(code=1)
+        if group_name in groups:
+            console.print(f"[red]✗ Group '{group_name}' already exists[/red]")
+            if not force:
+                console.print(f"\nUse: [cyan]gmail groups add {group_name} <email>[/cyan]")
+                console.print(f"Or: [cyan]gmail groups create ... --force[/cyan] to overwrite")
+                raise typer.Exit(code=1)
+            else:
+                console.print("[yellow]--force: Overwriting existing group[/yellow]")
 
         # Validate email addresses
-        for email in emails:
+        for email in member_emails:
             if not validate_email(email):
                 console.print(f"[red]✗ Invalid email address: {email}[/red]")
                 raise typer.Exit(code=1)
@@ -115,9 +212,9 @@ def create_group(
         console.print("=" * 60)
         console.print("Creating Email Group")
         console.print("=" * 60)
-        console.print(f"Name: #{name}")
-        console.print(f"Members: {len(emails)}")
-        for email in emails:
+        console.print(f"Name: #{group_name}")
+        console.print(f"Members: {len(member_emails)}")
+        for email in member_emails:
             console.print(f"  - {email}")
         console.print("=" * 60)
 
@@ -131,12 +228,12 @@ def create_group(
             console.print("\n[yellow]--force: Creating without confirmation[/yellow]")
 
         # Create group
-        groups[name] = emails
+        groups[group_name] = member_emails
         save_email_groups(groups)
 
-        console.print(f"\n[green]✅ Group created: #{name}[/green]")
-        console.print(f"   Members: {len(emails)}")
-        console.print(f"\nUsage: [cyan]gmail send --to #{name} ...[/cyan]")
+        console.print(f"\n[green]✅ Group created: #{group_name}[/green]")
+        console.print(f"   Members: {len(member_emails)}")
+        console.print(f"\nUsage: [cyan]gmail send --to #{group_name} ...[/cyan]")
 
     except Exception as e:
         console.print(f"[red]✗ Error creating group: {e}[/red]")

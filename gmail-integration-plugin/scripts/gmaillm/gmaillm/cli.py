@@ -8,6 +8,7 @@
 from enum import Enum
 from typing import List, Optional
 
+import click
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -20,6 +21,7 @@ from gmaillm.helpers.config import (
     expand_email_groups,
     load_email_groups
 )
+from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
 
 # Import validators
 from gmaillm.validators.email import (
@@ -30,12 +32,22 @@ from gmaillm.validators.email import (
 # Import command modules
 from gmaillm.commands import labels, styles, groups, config as config_commands
 
+
+# Custom callback to print help on errors
+def custom_abort_if_false(ctx, param, value):
+    """Custom callback for validation that shows help on failure."""
+    if not value:
+        click.echo(ctx.parent.get_help() if ctx.parent else ctx.get_help())
+        ctx.exit(1)
+
+
 # Initialize Typer app and console
 app = typer.Typer(
     name="gmaillm",
     help="Gmail CLI with LLM-friendly operations and progressive disclosure patterns",
     add_completion=True,
     no_args_is_help=True,
+    # Note: We'll handle help-on-missing-args via a custom exception hook in main()
 )
 console = Console()
 formatter = RichFormatter(console)
@@ -434,8 +446,24 @@ app.add_typer(config_commands.app, name="config")
 # ============ MAIN ENTRY POINT ============
 
 def main() -> None:
-    """Main entry point for the CLI."""
-    app()
+    """Main entry point for the CLI with custom error handling.
+
+    Wraps the app() call to catch MissingParameter errors and
+    show help instead of generic error messages.
+    """
+    try:
+        app()
+    except click.MissingParameter as e:
+        # Show help for the command that failed
+        ctx = click.get_current_context()
+        click.echo(ctx.get_help())
+        ctx.exit(1)
+    except SystemExit:
+        # Let normal exits through
+        raise
+    except Exception as e:
+        # Let other exceptions through for normal error handling
+        raise
 
 
 if __name__ == "__main__":

@@ -5,10 +5,14 @@ from rich.console import Console
 
 from gmaillm import GmailClient
 from gmaillm.formatters import RichFormatter
+from gmaillm.helpers.typer_utils import HelpOnMissingArgsGroup
 from gmaillm.validators.email import validate_label_name
 
 # Initialize Typer app and console
-app = typer.Typer(help="Manage Gmail labels")
+app = typer.Typer(
+    help="Manage Gmail labels",
+    cls=HelpOnMissingArgsGroup  # Show help on missing required args
+)
 console = Console()
 formatter = RichFormatter(console)
 
