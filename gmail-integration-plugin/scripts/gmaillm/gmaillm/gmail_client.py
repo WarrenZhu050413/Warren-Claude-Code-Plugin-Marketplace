@@ -35,11 +35,7 @@ from .utils import (
     validate_pagination_params,
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+# Get logger for this module (don't call basicConfig - let application configure it)
 logger = logging.getLogger(__name__)
 
 # Constants
@@ -563,24 +559,51 @@ class GmailClient:
             next_page = result.get("nextPageToken")
             total_estimate = result.get("resultSizeEstimate", len(messages))
 
-            # Fetch full message data for summaries
+            # Fetch full message data for summaries using batch API
             summaries: List[EmailSummary] = []
-            for msg in messages:
-                try:
-                    msg_data = (
+
+            if not messages:
+                # No messages to fetch
+                pass
+            else:
+                # Use batch request to fetch all messages at once
+                batch = self.service.new_batch_http_request()
+
+                # Track results and errors
+                batch_results: Dict[str, Any] = {}
+
+                def make_callback(msg_id: str):
+                    """Create callback for this specific message."""
+                    def callback(request_id: str, response: Any, exception: Exception) -> None:
+                        if exception:
+                            logger.warning(f"Failed to fetch message {msg_id}: {exception}")
+                        else:
+                            batch_results[msg_id] = response
+                    return callback
+
+                # Add all message fetch requests to batch
+                for msg in messages:
+                    msg_id = msg["id"]
+                    batch.add(
                         self.service.users()
                         .messages()
                         .get(
                             userId="me",
-                            id=msg["id"],
-                            format="full",
-                        )
-                        .execute()
+                            id=msg_id,
+                            format="metadata",
+                            metadataHeaders=["From", "To", "Cc", "Subject", "Date"],
+                        ),
+                        callback=make_callback(msg_id),
                     )
-                    summaries.append(self._parse_message_to_summary(msg_data))
-                except HttpError as e:
-                    logger.warning(f"Failed to fetch message {msg['id']}: {e}")
-                    continue  # Skip messages that can't be fetched
+
+                # Execute all requests in one batch
+                batch.execute()
+
+                # Parse results in original order
+                for msg in messages:
+                    msg_id = msg["id"]
+                    if msg_id in batch_results:
+                        summaries.append(self._parse_message_to_summary(batch_results[msg_id]))
 
             return SearchResult(
                 emails=summaries,
@@ -698,37 +721,59 @@ class GmailClient:
 
             folders: List[Folder] = []
 
-            # For each label, fetch full details to get message counts
-            # Note: labels.list() does NOT return messagesTotal/messagesUnread
-            # We need to call labels.get() for each label to get counts
-            for label in labels:
-                try:
-                    # Get full label details including message counts
-                    full_label = self.service.users().labels().get(
-                        userId="me",
-                        id=label["id"]
-                    ).execute()
+            if not labels:
+                # No labels to fetch
+                pass
+            else:
+                # Use batch request to fetch all label details at once
+                # Note: labels.list() does NOT return messagesTotal/messagesUnread
+                # We need to call labels.get() for each label to get counts
+                batch = self.service.new_batch_http_request()
 
-                    folder = Folder(
-                        id=full_label["id"],
-                        name=full_label["name"],
-                        type=full_label["type"].lower(),
-                        message_count=full_label.get("messagesTotal"),
-                        unread_count=full_label.get("messagesUnread"),
+                # Track results
+                batch_results: Dict[str, Any] = {}
+
+                def make_callback(label_id: str, label_name: str, label_type: str):
+                    """Create callback for this specific label."""
+                    def callback(request_id: str, response: Any, exception: Exception) -> None:
+                        if exception:
+                            logger.warning(f"Failed to get details for label {label_name}: {exception}")
+                            # Store fallback data
+                            batch_results[label_id] = {
+                                "id": label_id,
+                                "name": label_name,
+                                "type": label_type,
+                                "messagesTotal": None,
+                                "messagesUnread": None,
+                            }
+                        else:
+                            batch_results[label_id] = response
+                    return callback
+
+                # Add all label fetch requests to batch
+                for label in labels:
+                    label_id = label["id"]
+                    batch.add(
+                        self.service.users().labels().get(userId="me", id=label_id),
+                        callback=make_callback(label_id, label.get("name", "unknown"), label.get("type", "user")),
                     )
-                    folders.append(folder)
-                except HttpError as e:
-                    # If we can't get details for a specific label, log and skip it
-                    logger.warning(f"Failed to get details for label {label.get('name', 'unknown')}: {e}")
-                    # Fallback: add label without counts
-                    folder = Folder(
-                        id=label["id"],
-                        name=label["name"],
-                        type=label["type"].lower(),
-                        message_count=None,
-                        unread_count=None,
-                    )
-                    folders.append(folder)
+
+                # Execute all requests in one batch
+                batch.execute()
+
+                # Parse results in original order
+                for label in labels:
+                    label_id = label["id"]
+                    if label_id in batch_results:
+                        full_label = batch_results[label_id]
+                        folder = Folder(
+                            id=full_label["id"],
+                            name=full_label["name"],
+                            type=full_label["type"].lower(),
+                            message_count=full_label.get("messagesTotal"),
+                            unread_count=full_label.get("messagesUnread"),
+                        )
+                        folders.append(folder)
 
             return folders
 

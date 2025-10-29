@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Command-line interface for gmaillm using Typer."""
 
+# Note: You may see an INFO message about "file_cache is only supported with oauth2client<4.0.0"
+# This is harmless and can be safely ignored. It's from the Google API client library
+# indicating that disk caching isn't available with the newer google-auth library.
+
 from enum import Enum
 from typing import List, Optional
 

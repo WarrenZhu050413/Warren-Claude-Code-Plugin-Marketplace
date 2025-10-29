@@ -157,25 +157,50 @@ class TestListEmails:
             "resultSizeEstimate": 2,
         }
 
-        # Mock message details
-        def mock_get_message(userId, id, format):
-            return Mock(
-                execute=lambda: {
-                    "id": id,
-                    "threadId": f"thread_{id}",
-                    "payload": {
-                        "headers": [
-                            {"name": "From", "value": "sender@example.com"},
-                            {"name": "Subject", "value": f"Email {id}"},
-                            {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
-                        ],
-                    },
-                    "snippet": f"Snippet for {id}",
-                    "labelIds": ["INBOX"],
-                }
-            )
+        # Mock batch request for messages.get()
+        message_details = {
+            "msg1": {
+                "id": "msg1",
+                "threadId": "thread_msg1",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender@example.com"},
+                        {"name": "Subject", "value": "Email msg1"},
+                        {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
+                    ],
+                },
+                "snippet": "Snippet for msg1",
+                "labelIds": ["INBOX"],
+            },
+            "msg2": {
+                "id": "msg2",
+                "threadId": "thread_msg2",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender@example.com"},
+                        {"name": "Subject", "value": "Email msg2"},
+                        {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
+                    ],
+                },
+                "snippet": "Snippet for msg2",
+                "labelIds": ["INBOX"],
+            },
+        }
 
-        mock_gmail_service.users().messages().get.side_effect = mock_get_message
+        mock_batch = MagicMock()
+        callbacks = []
+
+        def mock_add(request, callback):
+            callbacks.append((request, callback))
+
+        def execute_batch():
+            for i, (request, callback) in enumerate(callbacks):
+                msg_id = list(message_details.keys())[i]
+                callback(None, message_details[msg_id], None)
+
+        mock_batch.add = mock_add
+        mock_batch.execute = execute_batch
+        mock_gmail_service.new_batch_http_request.return_value = mock_batch
 
         result = gmail_client.list_emails(folder="INBOX", max_results=10)
 
@@ -282,19 +307,37 @@ class TestSearchEmails:
             "resultSizeEstimate": 1,
         }
 
-        mock_gmail_service.users().messages().get().execute.return_value = {
-            "id": "msg1",
-            "threadId": "thread1",
-            "payload": {
-                "headers": [
-                    {"name": "From", "value": "sender@example.com"},
-                    {"name": "Subject", "value": "Search Result"},
-                    {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
-                ],
-            },
-            "snippet": "Matching content",
-            "labelIds": ["INBOX"],
+        # Mock batch request for messages.get()
+        message_details = {
+            "msg1": {
+                "id": "msg1",
+                "threadId": "thread1",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender@example.com"},
+                        {"name": "Subject", "value": "Search Result"},
+                        {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
+                    ],
+                },
+                "snippet": "Matching content",
+                "labelIds": ["INBOX"],
+            }
         }
+
+        mock_batch = MagicMock()
+        callbacks = []
+
+        def mock_add(request, callback):
+            callbacks.append((request, callback))
+
+        def execute_batch():
+            for i, (request, callback) in enumerate(callbacks):
+                msg_id = list(message_details.keys())[i]
+                callback(None, message_details[msg_id], None)
+
+        mock_batch.add = mock_add
+        mock_batch.execute = execute_batch
+        mock_gmail_service.new_batch_http_request.return_value = mock_batch
 
         result = gmail_client.search_emails("test query")
 
@@ -555,28 +598,60 @@ class TestGetFolders:
         }
 
         # Mock labels.get() to return full label details with message counts
-        def mock_labels_get(userId, id):
-            label_details = {
-                "INBOX": {
-                    "id": "INBOX",
-                    "name": "INBOX",
-                    "type": "system",
-                    "messagesTotal": 100,
-                    "messagesUnread": 5,
-                },
-                "Label_1": {
-                    "id": "Label_1",
-                    "name": "Work",
-                    "type": "user",
-                    "messagesTotal": 50,
-                    "messagesUnread": 2,
-                },
-            }
-            mock_result = MagicMock()
-            mock_result.execute.return_value = label_details[id]
-            return mock_result
+        label_details = {
+            "INBOX": {
+                "id": "INBOX",
+                "name": "INBOX",
+                "type": "system",
+                "messagesTotal": 100,
+                "messagesUnread": 5,
+            },
+            "Label_1": {
+                "id": "Label_1",
+                "name": "Work",
+                "type": "user",
+                "messagesTotal": 50,
+                "messagesUnread": 2,
+            },
+        }
 
-        mock_gmail_service.users().labels().get.side_effect = mock_labels_get
+        # Mock batch request for labels.get()
+        mock_batch = MagicMock()
+        callbacks = []
+
+        def mock_add(request, callback):
+            # Extract label_id from the request
+            callbacks.append((request, callback))
+
+        def mock_execute():
+            # Execute all callbacks with the appropriate response
+            for request, callback in callbacks:
+                # Get the label_id from the mock request
+                label_id = request._mock_name.split('_')[-1] if '_' in request._mock_name else None
+                # Try to extract from actual get call
+                if hasattr(request, 'get') and hasattr(request.get, 'call_args'):
+                    label_id = request.get.call_args[1].get('id')
+                # Fallback: check if request has been called with specific id
+                for lid in label_details.keys():
+                    # Call the callback with the response
+                    pass
+                # Since we can't easily extract label_id from mock, call callback for each label
+                for lid, details in label_details.items():
+                    callback(None, details, None)
+                    break  # Only call once per add
+
+        mock_batch.add = mock_add
+        mock_batch.execute = mock_execute
+        mock_gmail_service.new_batch_http_request.return_value = mock_batch
+
+        # Since batch mocking is complex, let's use a simpler approach
+        # We'll make execute call all callbacks immediately
+        def execute_batch():
+            for i, (request, callback) in enumerate(callbacks):
+                label_id = list(label_details.keys())[i]
+                callback(None, label_details[label_id], None)
+
+        mock_batch.execute = execute_batch
 
         folders = gmail_client.get_folders()
 
@@ -601,19 +676,31 @@ class TestGetFolders:
             ],
         }
 
-        # Mock labels.get() - with message counts
-        def mock_labels_get(userId, id):
-            mock_result = MagicMock()
-            mock_result.execute.return_value = {
+        # Mock batch request for labels.get()
+        label_details = {
+            "INBOX": {
                 "id": "INBOX",
                 "name": "INBOX",
                 "type": "system",
                 "messagesTotal": 10,
                 "messagesUnread": 3,  # Non-zero unread count
             }
-            return mock_result
+        }
 
-        mock_gmail_service.users().labels().get.side_effect = mock_labels_get
+        mock_batch = MagicMock()
+        callbacks = []
+
+        def mock_add(request, callback):
+            callbacks.append((request, callback))
+
+        def execute_batch():
+            for i, (request, callback) in enumerate(callbacks):
+                label_id = list(label_details.keys())[i]
+                callback(None, label_details[label_id], None)
+
+        mock_batch.add = mock_add
+        mock_batch.execute = execute_batch
+        mock_gmail_service.new_batch_http_request.return_value = mock_batch
 
         folders = gmail_client.get_folders()
 
