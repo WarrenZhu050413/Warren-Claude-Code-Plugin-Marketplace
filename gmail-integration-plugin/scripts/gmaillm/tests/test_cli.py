@@ -19,20 +19,23 @@ from gmaillm.models import EmailAddress, EmailSummary
 class TestGetPluginConfigDir:
     """Tests for get_plugin_config_dir function."""
 
-    @patch.dict("os.environ", {"CLAUDE_PLUGIN_ROOT": "/test/plugin/root"})
-    def test_with_env_variable(self):
-        """Test getting config dir from environment variable."""
-        result = get_plugin_config_dir()
-        assert result == Path("/test/plugin/root/config")
-
-    @patch.dict("os.environ", {}, clear=True)
     @patch("pathlib.Path.home")
-    def test_without_env_variable(self, mock_home):
-        """Test getting config dir without environment variable."""
-        mock_home.return_value = Path("/home/user")
+    def test_returns_home_gmaillm(self, mock_home, tmp_path):
+        """Test that config dir is always ~/.gmaillm."""
+        mock_home.return_value = tmp_path
         result = get_plugin_config_dir()
-        # Should fall back to a default location
-        assert isinstance(result, Path)
+        assert result == tmp_path / ".gmaillm"
+        assert result.exists()
+
+    @patch("pathlib.Path.home")
+    def test_creates_directory_if_not_exists(self, mock_home, tmp_path):
+        """Test that config dir is created if it doesn't exist."""
+        mock_home.return_value = tmp_path
+        config_dir = tmp_path / ".gmaillm"
+        assert not config_dir.exists()
+        result = get_plugin_config_dir()
+        assert result.exists()
+        assert result.is_dir()
 
 
 class TestLoadEmailGroups:

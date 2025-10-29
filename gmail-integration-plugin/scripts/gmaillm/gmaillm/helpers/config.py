@@ -15,21 +15,14 @@ console = Console()
 def get_plugin_config_dir() -> Path:
     """Get the plugin config directory path.
 
-    Uses CLAUDE_PLUGIN_ROOT environment variable when available (set by Claude Code),
-    otherwise falls back to relative path for development.
+    Always uses ~/.gmaillm/ for consistency with credentials storage.
 
     Returns:
-        Path to config directory
+        Path to config directory (~/.gmaillm/)
     """
-    # Primary: Use CLAUDE_PLUGIN_ROOT environment variable (set by Claude Code)
-    plugin_root = os.getenv("CLAUDE_PLUGIN_ROOT")
-    if plugin_root:
-        return Path(plugin_root) / "config"
-
-    # Fallback: Use relative path (for development/testing)
-    cli_dir = Path(__file__).parent.resolve()
-    plugin_dir = cli_dir.parent.parent.parent
-    return plugin_dir / "config"
+    config_dir = Path.home() / ".gmaillm"
+    config_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+    return config_dir
 
 
 def load_json_config(file_path: Path) -> Dict[str, Any]:
