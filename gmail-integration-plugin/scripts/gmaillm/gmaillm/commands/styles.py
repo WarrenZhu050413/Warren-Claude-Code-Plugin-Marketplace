@@ -9,27 +9,27 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from gmaillm.helpers.core import get_styles_dir, get_style_file_path, create_backup
-from gmaillm.helpers.domain import load_all_styles, create_style_from_template
 from gmaillm.helpers.cli import (
     HelpfulGroup,
     OutputFormat,
-    parse_output_format,
-    output_json_or_rich,
-    load_and_validate_json,
-    display_schema_and_exit,
-    show_operation_preview,
     confirm_or_force,
     create_backup_with_message,
-    handle_command_error
+    display_schema_and_exit,
+    handle_command_error,
+    load_and_validate_json,
+    output_json_or_rich,
+    parse_output_format,
+    show_operation_preview,
 )
+from gmaillm.helpers.core import create_backup, get_style_file_path, get_styles_dir
+from gmaillm.helpers.domain import create_style_from_template, load_all_styles
 from gmaillm.validators.email import validate_editor
 from gmaillm.validators.styles import (
-    validate_style_name,
     StyleLinter,
-    get_style_json_schema_string,
     create_style_from_json,
-    validate_json_against_schema
+    get_style_json_schema_string,
+    validate_json_against_schema,
+    validate_style_name,
 )
 
 # Initialize Typer app and console
@@ -99,6 +99,30 @@ def show_examples() -> None:
     console.print("  [dim]4. Update existing style:[/dim]")
     console.print("     [dim]gmail styles edit client-formal[/dim]")
     console.print()
+    console.print("[bold green]🤖 LLM USE[/bold green]")
+    console.print("  [dim]If you are an LLM helping compose emails:[/dim]")
+    console.print()
+    console.print("  [dim]1. Determine relevant style from user context:[/dim]")
+    console.print("     [dim]# User: \"Draft a formal email to my client about the project delay\"[/dim]")
+    console.print("     [dim]# → Identify: formal tone, client audience, professional context[/dim]")
+    console.print("     [dim]# → Choose: 'professional-formal' or 'client-formal' style[/dim]")
+    console.print()
+    console.print("  [dim]2. Retrieve the style guidelines:[/dim]")
+    console.print("     [dim]gmail styles show professional-formal[/dim]")
+    console.print()
+    console.print("  [dim]3. Apply style guidelines when composing:[/dim]")
+    console.print("     [dim]# Follow: greeting patterns (e.g., 'Dear [Name]' vs 'Hi [Name]')[/dim]")
+    console.print("     [dim]# Follow: body structure (clear paragraphs, professional tone)[/dim]")
+    console.print("     [dim]# Follow: closing conventions (e.g., 'Best regards' vs 'Best')[/dim]")
+    console.print("     [dim]# Follow: do/don't rules from style[/dim]")
+    console.print()
+    console.print("  [dim]4. Match style to context:[/dim]")
+    console.print("     [dim]# Client communication → professional-formal[/dim]")
+    console.print("     [dim]# Team updates → professional-friendly[/dim]")
+    console.print("     [dim]# Casual check-ins → casual-friendly[/dim]")
+    console.print()
+    console.print("  [dim]💡 TIP: Use 'gmail styles list' to see all available styles and their descriptions[/dim]")
+    console.print()
 
 
 @app.command("schema")
@@ -145,14 +169,14 @@ def list_styles(
             styles_json.append(style_data)
 
         # Define rich output function
-        def print_rich():
+        def print_rich() -> None:
             console.print("=" * 60)
             console.print(f"Email Styles ({len(styles)})")
             console.print("=" * 60)
 
             if not styles:
                 console.print("\n[yellow]No styles found[/yellow]")
-                console.print(f"\nCreate a new style with: [cyan]gmail styles create <name>[/cyan]")
+                console.print("\nCreate a new style with: [cyan]gmail styles create <name>[/cyan]")
                 return
 
             for style in styles:
@@ -164,7 +188,7 @@ def list_styles(
                     console.print(f"   [dim]Path: {style_path}[/dim]")
 
             console.print(f"\n[dim]Total: {len(styles)} style(s)[/dim]")
-            console.print(f"\nUsage: [cyan]gmail styles show <name>[/cyan]")
+            console.print("\nUsage: [cyan]gmail styles show <name>[/cyan]")
 
         # Output in appropriate format
         output_json_or_rich(format_enum, styles_json, print_rich)
@@ -185,7 +209,7 @@ def show_style(
 
         if not style_file.exists():
             console.print(f"[red]✗ Style '{name}' not found[/red]")
-            console.print(f"\nAvailable styles: [cyan]gmail styles list[/cyan]")
+            console.print("\nAvailable styles: [cyan]gmail styles list[/cyan]")
             raise typer.Exit(code=1)
 
         content = style_file.read_text()
@@ -322,11 +346,11 @@ def create_style(
                 console.print(f"\nEdit to fix: [cyan]gmail styles edit {name}[/cyan]")
                 console.print(f"Or auto-fix: [cyan]gmail styles validate {name} --fix[/cyan]")
             else:
-                console.print(f"[green]✅ Style validated successfully[/green]")
+                console.print("[green]✅ Style validated successfully[/green]")
 
         # Next steps (interactive mode only)
         if not json_input_path:
-            console.print(f"\nNext steps:")
+            console.print("\nNext steps:")
             console.print(f"  1. Edit: [cyan]gmail styles edit {name}[/cyan]")
             console.print(f"  2. Validate: [cyan]gmail styles validate {name}[/cyan]")
 
@@ -427,7 +451,7 @@ def edit_style(
                 console.print(f"\nFix errors: [cyan]gmail styles edit {name}[/cyan]")
                 console.print(f"Or auto-fix: [cyan]gmail styles validate {name} --fix[/cyan]")
             else:
-                console.print(f"\n[green]✅ Style validated successfully[/green]")
+                console.print("\n[green]✅ Style validated successfully[/green]")
 
     except Exception as e:
         console.print(f"[red]✗ Error editing style: {e}[/red]")
@@ -580,7 +604,7 @@ def validate_style(
                     console.print(f"Fixing {style_name}...")
                     console.print("[green]✅ Auto-fixed formatting issues[/green]")
                     if errors:
-                        console.print(f"\n[yellow]⚠️  Remaining validation errors:[/yellow]")
+                        console.print("\n[yellow]⚠️  Remaining validation errors:[/yellow]")
                         for error in errors:
                             console.print(f"   {error}")
                     else:
@@ -621,7 +645,7 @@ def validate_style(
                 console.print(f"\nResults: [green]{valid_count} valid[/green], [red]{invalid_count} invalid[/red]")
 
                 if invalid_count > 0 and not fix:
-                    console.print(f"\nAuto-fix all: [cyan]gmail styles validate --fix[/cyan]")
+                    console.print("\nAuto-fix all: [cyan]gmail styles validate --fix[/cyan]")
 
         # Exit with error if any validation failed
         if any(not r["valid"] for r in results):
