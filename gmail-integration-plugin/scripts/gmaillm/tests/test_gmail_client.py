@@ -1,17 +1,14 @@
 """Tests for gmail_client.py module."""
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch, mock_open
-from datetime import datetime
-from pathlib import Path
 import json
+from unittest.mock import MagicMock, Mock, mock_open, patch
+
+import pytest
 
 from gmaillm.gmail_client import GmailClient
 from gmaillm.models import (
     EmailFormat,
-    EmailAddress,
     SendEmailRequest,
-    SendEmailResponse,
 )
 
 
@@ -35,10 +32,6 @@ def mock_gmail_service():
 @pytest.fixture
 def gmail_client(mock_credentials, mock_gmail_service):
     """Create GmailClient with mocked dependencies."""
-    mock_oauth_keys = {
-        "client_id": "mock_client_id",
-        "client_secret": "mock_client_secret",
-    }
 
     mock_creds_data = {
         "token": "mock_token",
@@ -47,11 +40,15 @@ def gmail_client(mock_credentials, mock_gmail_service):
         "client_secret": "mock_client_secret",
     }
 
-    with patch("gmaillm.gmail_client.os.path.exists") as mock_exists, \
-         patch("gmaillm.gmail_client.os.path.getsize") as mock_getsize, \
-         patch("builtins.open", mock_open(read_data=json.dumps(mock_creds_data))) as mock_file, \
-         patch("gmaillm.gmail_client.Credentials") as mock_creds_class, \
-         patch("gmaillm.gmail_client.build") as mock_build:
+    with patch("gmaillm.gmail_client.os.path.exists") as mock_exists, patch(
+        "gmaillm.gmail_client.os.path.getsize"
+    ) as mock_getsize, patch(
+        "builtins.open", mock_open(read_data=json.dumps(mock_creds_data))
+    ), patch(
+        "gmaillm.gmail_client.Credentials"
+    ) as mock_creds_class, patch(
+        "gmaillm.gmail_client.build"
+    ) as mock_build:
 
         # Mock file existence checks
         mock_exists.return_value = True
@@ -71,25 +68,46 @@ def gmail_client(mock_credentials, mock_gmail_service):
 class TestGmailClientInit:
     """Tests for GmailClient initialization."""
 
-    @patch("gmaillm.gmail_client.Credentials")
-    @patch("gmaillm.gmail_client.build")
-    @patch("pathlib.Path.exists")
-    def test_init_with_valid_credentials(self, mock_exists, mock_build, mock_creds):
+    def test_init_with_valid_credentials(self, tmp_path):
         """Test initialization with valid credentials."""
-        mock_exists.return_value = True
-        mock_creds.from_authorized_user_file.return_value = Mock(valid=True)
-        mock_build.return_value = Mock()
+        # Create temporary credential files
+        creds_file = tmp_path / "credentials.json"
+        oauth_file = tmp_path / "oauth-keys.json"
 
-        client = GmailClient()
-        assert client.service is not None
+        creds_data = {
+            "token": "mock_token",
+            "refresh_token": "mock_refresh_token",
+        }
+        oauth_data = {
+            "client_id": "mock_client_id",
+            "client_secret": "mock_client_secret",
+        }
 
-    @patch("pathlib.Path.exists")
-    def test_init_without_credentials_file(self, mock_exists):
+        creds_file.write_text(json.dumps(creds_data))
+        oauth_file.write_text(json.dumps(oauth_data))
+
+        with patch("gmaillm.gmail_client.Credentials") as mock_creds_class, \
+             patch("gmaillm.gmail_client.build") as mock_build:
+
+            mock_creds = Mock()
+            mock_creds.valid = True
+            mock_creds.expired = False
+            mock_creds_class.from_authorized_user_info.return_value = mock_creds
+            mock_build.return_value = Mock()
+
+            client = GmailClient(
+                credentials_file=str(creds_file),
+                oauth_keys_file=str(oauth_file)
+            )
+            assert client.service is not None
+
+    def test_init_without_credentials_file(self):
         """Test initialization fails without credentials file."""
-        mock_exists.return_value = False
-
         with pytest.raises(FileNotFoundError):
-            GmailClient()
+            GmailClient(
+                credentials_file="/nonexistent/credentials.json",
+                oauth_keys_file="/nonexistent/oauth-keys.json"
+            )
 
 
 class TestVerifySetup:
@@ -104,19 +122,25 @@ class TestVerifySetup:
             "threadsTotal": 500,
         }
 
-        result = gmail_client.verify_setup()
-        assert result["success"] is True
-        assert result["email"] == "user@gmail.com"
-        assert result["total_messages"] == 1000
-        assert result["total_threads"] == 500
+        # Mock get_folders
+        with patch.object(gmail_client, 'get_folders', return_value=[Mock(), Mock()]):
+            # Mock list_emails
+            with patch.object(gmail_client, 'list_emails', return_value=Mock()):
+                result = gmail_client.verify_setup()
+                assert result["auth"] is True
+                assert result["email_address"] == "user@gmail.com"
+                assert result["folders"] == 2
+                assert result["inbox_accessible"] is True
+                assert result["errors"] == []
 
     def test_verify_setup_failure(self, gmail_client, mock_gmail_service):
         """Test setup verification with API error."""
         mock_gmail_service.users().getProfile().execute.side_effect = Exception("API Error")
 
         result = gmail_client.verify_setup()
-        assert result["success"] is False
-        assert "API Error" in result["error"]
+        assert result["auth"] is False
+        assert len(result["errors"]) > 0
+        assert any("API Error" in error for error in result["errors"])
 
 
 class TestListEmails:
@@ -135,27 +159,32 @@ class TestListEmails:
 
         # Mock message details
         def mock_get_message(userId, id, format):
-            return Mock(execute=lambda: {
-                "id": id,
-                "threadId": f"thread_{id}",
-                "payload": {
-                    "headers": [
-                        {"name": "From", "value": "sender@example.com"},
-                        {"name": "Subject", "value": f"Email {id}"},
-                        {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
-                    ],
-                },
-                "snippet": f"Snippet for {id}",
-                "labelIds": ["INBOX"],
-            })
+            return Mock(
+                execute=lambda: {
+                    "id": id,
+                    "threadId": f"thread_{id}",
+                    "payload": {
+                        "headers": [
+                            {"name": "From", "value": "sender@example.com"},
+                            {"name": "Subject", "value": f"Email {id}"},
+                            {"name": "Date", "value": "Mon, 15 Jan 2025 10:30:00 +0000"},
+                        ],
+                    },
+                    "snippet": f"Snippet for {id}",
+                    "labelIds": ["INBOX"],
+                }
+            )
 
         mock_gmail_service.users().messages().get.side_effect = mock_get_message
 
-        emails = gmail_client.list_emails(folder="INBOX", max_results=10)
+        result = gmail_client.list_emails(folder="INBOX", max_results=10)
 
-        assert len(emails) == 2
-        assert emails[0].message_id == "msg1"
-        assert emails[1].message_id == "msg2"
+        # list_emails now returns SearchResult, not a list
+        assert isinstance(result.emails, list)
+        assert len(result.emails) == 2
+        assert result.emails[0].message_id == "msg1"
+        assert result.emails[1].message_id == "msg2"
+        assert result.total_count == 2
 
     def test_list_emails_with_pagination(self, gmail_client, mock_gmail_service):
         """Test email listing with pagination token."""
@@ -179,7 +208,7 @@ class TestListEmails:
             "labelIds": ["INBOX"],
         }
 
-        emails = gmail_client.list_emails(page_token="token123")
+        gmail_client.list_emails(page_token="token123")
 
         # Verify page token was used
         call_args = mock_gmail_service.users().messages().list.call_args
@@ -214,6 +243,7 @@ class TestReadEmail:
     def test_read_email_full(self, gmail_client, mock_gmail_service):
         """Test reading email in FULL format."""
         import base64
+
         body_text = "Email body content"
         encoded_body = base64.urlsafe_b64encode(body_text.encode()).decode()
 
@@ -268,7 +298,8 @@ class TestSearchEmails:
 
         result = gmail_client.search_emails("test query")
 
-        assert result.query == "test query"
+        # search_emails returns SearchResult with query in the format "label:INBOX test query"
+        assert "test query" in result.query
         assert result.total_count == 1
         assert len(result.emails) == 1
 
@@ -375,9 +406,17 @@ class TestGetThread:
     def test_get_thread(self, gmail_client, mock_gmail_service):
         """Test retrieving email thread."""
         import base64
+
         body1 = base64.urlsafe_b64encode(b"First message").decode()
         body2 = base64.urlsafe_b64encode(b"Second message").decode()
 
+        # Mock get message call (first call to get thread_id)
+        mock_gmail_service.users().messages().get().execute.return_value = {
+            "id": "msg1",
+            "threadId": "thread123",
+        }
+
+        # Mock threads get call
         mock_gmail_service.users().threads().get().execute.return_value = {
             "id": "thread123",
             "messages": [
@@ -394,6 +433,7 @@ class TestGetThread:
                         "mimeType": "text/plain",
                         "body": {"data": body1},
                     },
+                    "snippet": "First message",
                     "labelIds": ["INBOX"],
                 },
                 {
@@ -409,18 +449,18 @@ class TestGetThread:
                         "mimeType": "text/plain",
                         "body": {"data": body2},
                     },
+                    "snippet": "Second message",
                     "labelIds": ["INBOX"],
                 },
             ],
         }
 
-        emails = gmail_client.get_thread("thread123")
+        emails = gmail_client.get_thread("msg1")
 
+        # get_thread returns EmailSummary objects, not EmailFull
         assert len(emails) == 2
         assert emails[0].message_id == "msg1"
         assert emails[1].message_id == "msg2"
-        assert emails[0].body_plain == "First message"
-        assert emails[1].body_plain == "Second message"
 
 
 class TestModifyLabels:
@@ -456,14 +496,18 @@ class TestModifyLabels:
 
     def test_modify_labels_error(self, gmail_client, mock_gmail_service):
         """Test label modification with error."""
-        mock_gmail_service.users().messages().modify().execute.side_effect = Exception("Modify failed")
+        from googleapiclient.errors import HttpError
 
-        result = gmail_client.modify_labels(
-            message_id="msg123",
-            add_labels=["Label_1"],
+        mock_gmail_service.users().messages().modify().execute.side_effect = HttpError(
+            resp=Mock(status=400), content=b"Modify failed"
         )
 
-        assert result is False
+        # modify_labels now raises RuntimeError instead of returning False
+        with pytest.raises(RuntimeError, match="Failed to modify labels"):
+            gmail_client.modify_labels(
+                message_id="msg123",
+                add_labels=["Label_1"],
+            )
 
 
 class TestDeleteEmail:
@@ -494,31 +538,91 @@ class TestGetFolders:
 
     def test_get_folders(self, gmail_client, mock_gmail_service):
         """Test retrieving folders/labels."""
+        # Mock labels.list() to return basic label info
         mock_gmail_service.users().labels().list().execute.return_value = {
             "labels": [
                 {
                     "id": "INBOX",
                     "name": "INBOX",
                     "type": "system",
+                },
+                {
+                    "id": "Label_1",
+                    "name": "Work",
+                    "type": "user",
+                },
+            ],
+        }
+
+        # Mock labels.get() to return full label details with message counts
+        def mock_labels_get(userId, id):
+            label_details = {
+                "INBOX": {
+                    "id": "INBOX",
+                    "name": "INBOX",
+                    "type": "system",
                     "messagesTotal": 100,
                     "messagesUnread": 5,
                 },
-                {
+                "Label_1": {
                     "id": "Label_1",
                     "name": "Work",
                     "type": "user",
                     "messagesTotal": 50,
                     "messagesUnread": 2,
                 },
-            ],
-        }
+            }
+            mock_result = MagicMock()
+            mock_result.execute.return_value = label_details[id]
+            return mock_result
+
+        mock_gmail_service.users().labels().get.side_effect = mock_labels_get
 
         folders = gmail_client.get_folders()
 
         assert len(folders) == 2
         assert folders[0].id == "INBOX"
         assert folders[0].message_count == 100
+        assert folders[0].unread_count == 5
         assert folders[1].name == "Work"
+        assert folders[1].message_count == 50
+        assert folders[1].unread_count == 2
+
+    def test_get_folders_with_unread_messages(self, gmail_client, mock_gmail_service):
+        """Test that unread counts are correctly retrieved from labels.get()."""
+        # Mock labels.list() - note: without message counts (as per Gmail API behavior)
+        mock_gmail_service.users().labels().list().execute.return_value = {
+            "labels": [
+                {
+                    "id": "INBOX",
+                    "name": "INBOX",
+                    "type": "system",
+                }
+            ],
+        }
+
+        # Mock labels.get() - with message counts
+        def mock_labels_get(userId, id):
+            mock_result = MagicMock()
+            mock_result.execute.return_value = {
+                "id": "INBOX",
+                "name": "INBOX",
+                "type": "system",
+                "messagesTotal": 10,
+                "messagesUnread": 3,  # Non-zero unread count
+            }
+            return mock_result
+
+        mock_gmail_service.users().labels().get.side_effect = mock_labels_get
+
+        folders = gmail_client.get_folders()
+
+        # Verify that unread count is correctly populated
+        assert len(folders) == 1
+        inbox = folders[0]
+        assert inbox.id == "INBOX"
+        assert inbox.message_count == 10
+        assert inbox.unread_count == 3  # This should be 3, not 0
 
 
 class TestBatchOperations:

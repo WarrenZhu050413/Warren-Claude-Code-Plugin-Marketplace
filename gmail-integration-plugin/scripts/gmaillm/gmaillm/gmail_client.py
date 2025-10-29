@@ -1,191 +1,285 @@
-"""
-Gmail API client with LLM-friendly interface
-"""
+"""Gmail API client with LLM-friendly interface."""
 
-import os
+import fcntl
 import json
-from typing import Optional, List, Dict, Any, Literal
+import logging
+import os
+import re
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional, Union, overload
 
-from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from .config import get_credentials_file, get_oauth_keys_file
 from .models import (
-    EmailSummary,
-    EmailFull,
-    EmailFormat,
-    EmailAddress,
     Attachment,
-    SearchResult,
+    BatchOperationResult,
+    EmailAddress,
+    EmailFull,
+    EmailSummary,
     Folder,
+    SearchResult,
     SendEmailRequest,
     SendEmailResponse,
-    BatchOperationResult,
 )
 from .utils import (
-    parse_email_address,
     clean_snippet,
     create_mime_message,
     extract_body,
     get_header,
+    parse_email_address,
     parse_label_ids,
     validate_pagination_params,
 )
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# Constants
+MAX_LABEL_NAME_LENGTH = 100
+VALID_LABEL_CHARS_PATTERN = re.compile(r"^[\w\-. /]+$")
+MAX_QUERY_LENGTH = 1000
+
 
 class GmailClient:
-    """
-    LLM-friendly Gmail API client with progressive disclosure and pagination
-    """
+    """LLM-friendly Gmail API client with progressive disclosure and pagination."""
 
     def __init__(
         self,
-        credentials_file: str = "/Users/wz/.gmail-mcp/credentials.json",
-        oauth_keys_file: str = "/Users/wz/Desktop/OAuth2/gcp-oauth.keys.json",
-    ):
-        """
-        Initialize Gmail client with OAuth2 credentials
+        credentials_file: Optional[str] = None,
+        oauth_keys_file: Optional[str] = None,
+    ) -> None:
+        """Initialize Gmail client with OAuth2 credentials.
 
         Args:
-            credentials_file: Path to saved OAuth2 credentials
-            oauth_keys_file: Path to OAuth2 client secrets
+            credentials_file: Path to saved OAuth2 credentials (default: ~/.gmaillm/credentials.json)
+            oauth_keys_file: Path to OAuth2 client secrets (default: ~/.gmaillm/oauth-keys.json)
+
         """
-        self.credentials_file = credentials_file
-        self.oauth_keys_file = oauth_keys_file
+        # Use config module defaults if not provided
+        self.credentials_file = credentials_file or str(get_credentials_file())
+        self.oauth_keys_file = oauth_keys_file or str(get_oauth_keys_file())
         self.service = None
         self._authenticate()
 
-    def _authenticate(self):
-        """Authenticate with Gmail API using existing credentials"""
-        if not os.path.exists(self.credentials_file):
-            raise FileNotFoundError(
-                f"Credentials file not found: {self.credentials_file}\n"
-                f"Please ensure Gmail MCP is set up and authenticated."
-            )
+    def _validate_file_exists_and_nonempty(self, file_path: str, file_type: str) -> None:
+        """Validate file exists and is not empty.
 
-        if not os.path.exists(self.oauth_keys_file):
-            raise FileNotFoundError(
-                f"OAuth keys file not found: {self.oauth_keys_file}\n"
-                f"Please ensure OAuth2 client secrets are available."
-            )
+        Args:
+            file_path: Path to file to validate
+            file_type: Human-readable file type for error messages
 
-        # Check if credentials file is empty
+        Raises:
+            FileNotFoundError: If file does not exist
+            RuntimeError: If file cannot be accessed or is empty
+        """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"{file_type} file not found: {file_path}")
+
         try:
-            cred_size = os.path.getsize(self.credentials_file)
-        except OSError as e:
-            raise RuntimeError(
-                f"Cannot access credentials file: {self.credentials_file}\n"
-                f"Error: {e}"
-            )
+            file_size = os.path.getsize(file_path)
+        except (OSError, IOError, PermissionError) as e:
+            raise RuntimeError(f"Cannot access {file_type} file: {file_path}\nError: {e}")
 
-        if cred_size == 0:
-            raise RuntimeError(
-                f"Credentials file is empty: {self.credentials_file}\n\n"
-                f"You need to authenticate first. Run this command:\n"
-                f"  python3 -m gmaillm.setup_auth\n\n"
-                f"Or follow the Gmail MCP setup instructions."
-            )
+        if file_size == 0:
+            error_msg = f"{file_type} file is empty: {file_path}\n\n"
+            if file_type == "Credentials":
+                error_msg += (
+                    "You need to authenticate first. Run this command:\n"
+                    "  gmail setup-auth\n\n"
+                    "This will guide you through the OAuth2 authentication process."
+                )
+            else:
+                error_msg += (
+                    "Please ensure OAuth2 client secrets are available.\n"
+                    "Follow the Gmail MCP setup instructions."
+                )
+            raise RuntimeError(error_msg)
 
-        # Check if oauth keys file is empty
+    def _load_json_file(self, file_path: str, file_type: str) -> Dict[str, Any]:
+        """Load and parse JSON file with error handling.
+
+        Args:
+            file_path: Path to JSON file
+            file_type: Human-readable file type for error messages
+
+        Returns:
+            Parsed JSON data as dictionary
+
+        Raises:
+            RuntimeError: If file cannot be read or parsed
+        """
         try:
-            oauth_size = os.path.getsize(self.oauth_keys_file)
-        except OSError as e:
-            raise RuntimeError(
-                f"Cannot access OAuth keys file: {self.oauth_keys_file}\n"
-                f"Error: {e}"
-            )
-
-        if oauth_size == 0:
-            raise RuntimeError(
-                f"OAuth keys file is empty: {self.oauth_keys_file}\n\n"
-                f"Please ensure OAuth2 client secrets are available.\n"
-                f"Follow the Gmail MCP setup instructions."
-            )
-
-        # Load OAuth keys
-        try:
-            with open(self.oauth_keys_file, 'r') as f:
-                oauth_keys = json.load(f)
-                if 'installed' in oauth_keys:
-                    oauth_keys = oauth_keys['installed']
+            with open(file_path, encoding="utf-8") as f:
+                return json.load(f)
         except json.JSONDecodeError as e:
-            raise RuntimeError(
-                f"Invalid JSON in OAuth keys file: {self.oauth_keys_file}\n"
+            error_msg = (
+                f"Invalid JSON in {file_type} file: {file_path}\n"
                 f"The file may be corrupted. Error: {e}\n\n"
-                f"Please ensure the file contains valid JSON."
             )
-        except Exception as e:
-            raise RuntimeError(
-                f"Error reading OAuth keys file: {self.oauth_keys_file}\n"
-                f"Error: {e}"
-            )
+            if file_type == "Credentials":
+                error_msg += "Try re-authenticating with: gmail setup-auth"
+            else:
+                error_msg += "Please ensure the file contains valid JSON."
+            raise RuntimeError(error_msg)
+        except (OSError, IOError, PermissionError) as e:
+            raise RuntimeError(f"Error reading {file_type} file: {file_path}\nError: {e}")
 
-        # Load saved credentials
-        try:
-            with open(self.credentials_file, 'r') as f:
-                creds_data = json.load(f)
-        except json.JSONDecodeError as e:
-            raise RuntimeError(
-                f"Invalid JSON in credentials file: {self.credentials_file}\n"
-                f"The file may be corrupted. Error: {e}\n\n"
-                f"Try re-authenticating with: python3 -m gmaillm.setup_auth"
-            )
-        except Exception as e:
-            raise RuntimeError(
-                f"Error reading credentials file: {self.credentials_file}\n"
-                f"Error: {e}"
-            )
+    def _load_oauth_keys(self) -> Dict[str, Any]:
+        """Load OAuth keys from file.
 
-        # Merge OAuth keys with credentials
-        creds_data['client_id'] = oauth_keys['client_id']
-        creds_data['client_secret'] = oauth_keys['client_secret']
+        Returns:
+            OAuth keys dictionary
 
-        creds = Credentials.from_authorized_user_info(creds_data)
+        Raises:
+            RuntimeError: If file validation or loading fails
+        """
+        self._validate_file_exists_and_nonempty(self.oauth_keys_file, "OAuth keys")
+        oauth_keys = self._load_json_file(self.oauth_keys_file, "OAuth keys")
 
-        # Refresh if expired
+        # Unwrap if nested under "installed"
+        if "installed" in oauth_keys:
+            return oauth_keys["installed"]
+        return oauth_keys
+
+    def _load_credentials(self) -> Dict[str, Any]:
+        """Load credentials from file.
+
+        Returns:
+            Credentials dictionary
+
+        Raises:
+            RuntimeError: If file validation or loading fails
+        """
+        self._validate_file_exists_and_nonempty(self.credentials_file, "Credentials")
+        return self._load_json_file(self.credentials_file, "Credentials")
+
+    def _refresh_credentials_if_needed(self, creds: Credentials) -> None:
+        """Refresh credentials if expired.
+
+        Args:
+            creds: Google OAuth2 credentials object
+
+        Raises:
+            RuntimeError: If credential refresh fails
+        """
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-                # Save refreshed credentials
-                with open(self.credentials_file, 'w') as f:
-                    f.write(creds.to_json())
+
+                # Use file locking to prevent race conditions
+                lock_path = f"{self.credentials_file}.lock"
+                Path(lock_path).touch(exist_ok=True)
+
+                try:
+                    with open(lock_path, "w", encoding="utf-8") as lock_file:
+                        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+                        try:
+                            with open(self.credentials_file, "w", encoding="utf-8") as f:
+                                f.write(creds.to_json())
+                        finally:
+                            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                finally:
+                    # Clean up lock file
+                    try:
+                        os.unlink(lock_path)
+                    except OSError:
+                        pass
+
+            except (OSError, IOError, PermissionError) as e:
+                raise RuntimeError(
+                    f"Failed to save refreshed credentials: {e}\n"
+                    f"Check file permissions for {self.credentials_file}"
+                )
             except Exception as e:
                 raise RuntimeError(
                     f"Failed to refresh credentials: {e}\n"
                     f"You may need to re-authenticate with Gmail MCP."
                 )
 
-        self.service = build('gmail', 'v1', credentials=creds)
+    def _authenticate(self) -> None:
+        """Authenticate with Gmail API using existing credentials.
+
+        Raises:
+            RuntimeError: If authentication fails
+            KeyError: If required OAuth fields are missing
+        """
+        # Load OAuth keys and credentials
+        oauth_keys = self._load_oauth_keys()
+        creds_data = self._load_credentials()
+
+        # Validate required OAuth fields exist
+        try:
+            client_id = oauth_keys["client_id"]
+            client_secret = oauth_keys["client_secret"]
+        except KeyError as e:
+            raise KeyError(
+                f"Missing required OAuth field: {e}\n"
+                f"Please ensure your OAuth keys file contains 'client_id' and 'client_secret'"
+            )
+
+        # Merge OAuth keys with credentials
+        creds_data["client_id"] = client_id
+        creds_data["client_secret"] = client_secret
+
+        # Create credentials object
+        creds = Credentials.from_authorized_user_info(creds_data)
+
+        # Refresh if needed
+        self._refresh_credentials_if_needed(creds)
+
+        # Build service
+        self.service = build("gmail", "v1", credentials=creds)
 
     def _parse_message_to_summary(self, msg_data: Dict[str, Any]) -> EmailSummary:
-        """Parse Gmail API message into EmailSummary"""
-        msg_id = msg_data['id']
-        thread_id = msg_data['threadId']
-        snippet = clean_snippet(msg_data.get('snippet', ''))
+        """Parse Gmail API message into EmailSummary.
 
-        payload = msg_data.get('payload', {})
-        headers = payload.get('headers', [])
+        Args:
+            msg_data: Raw message data from Gmail API
+
+        Returns:
+            EmailSummary object
+        """
+        msg_id = msg_data["id"]
+        thread_id = msg_data["threadId"]
+        snippet = clean_snippet(msg_data.get("snippet", ""))
+
+        payload = msg_data.get("payload", {})
+        headers = payload.get("headers", [])
 
         # Extract headers
-        from_header = get_header(headers, 'From') or ''
-        subject = get_header(headers, 'Subject') or '(No subject)'
-        date_str = get_header(headers, 'Date') or ''
+        from_header = get_header(headers, "From") or ""
+        subject = get_header(headers, "Subject") or "(No subject)"
+        date_str = get_header(headers, "Date") or ""
 
-        # Parse date
-        try:
-            from email.utils import parsedate_to_datetime
-            date = parsedate_to_datetime(date_str)
-        except:
+        # Parse date with proper fallback
+        date: Optional[datetime] = None
+        if date_str:
+            try:
+                from email.utils import parsedate_to_datetime
+
+                date = parsedate_to_datetime(date_str)
+            except (ValueError, TypeError, OverflowError) as e:
+                logger.warning(f"Failed to parse date '{date_str}' for message {msg_id}: {e}")
+
+        # If date parsing failed, use None or current time as last resort
+        if date is None:
+            logger.warning(f"No valid date for message {msg_id}, using current time")
             date = datetime.now()
 
         # Parse from address
         from_parsed = parse_email_address(from_header)
 
         # Get labels and flags
-        label_ids = msg_data.get('labelIds', [])
+        label_ids = msg_data.get("labelIds", [])
         flags = parse_label_ids(label_ids)
 
         # Check for attachments
@@ -200,45 +294,69 @@ class GmailClient:
             snippet=snippet,
             labels=label_ids,
             has_attachments=has_attachments,
-            is_unread=flags['is_unread'],
+            is_unread=flags["is_unread"],
         )
 
     def _parse_message_to_full(self, msg_data: Dict[str, Any]) -> EmailFull:
-        """Parse Gmail API message into EmailFull"""
-        msg_id = msg_data['id']
-        thread_id = msg_data['threadId']
+        """Parse Gmail API message into EmailFull.
 
-        payload = msg_data.get('payload', {})
-        headers = payload.get('headers', [])
+        Args:
+            msg_data: Raw message data from Gmail API
+
+        Returns:
+            EmailFull object
+        """
+        msg_id = msg_data["id"]
+        thread_id = msg_data["threadId"]
+
+        payload = msg_data.get("payload", {})
+        headers = payload.get("headers", [])
 
         # Extract all headers into dict
-        headers_dict = {h['name']: h['value'] for h in headers}
+        headers_dict = {h["name"]: h["value"] for h in headers}
 
         # Extract key headers
-        from_header = get_header(headers, 'From') or ''
-        to_header = get_header(headers, 'To') or ''
-        cc_header = get_header(headers, 'Cc') or ''
-        bcc_header = get_header(headers, 'Bcc') or ''
-        subject = get_header(headers, 'Subject') or '(No subject)'
-        date_str = get_header(headers, 'Date') or ''
-        in_reply_to = get_header(headers, 'In-Reply-To')
-        references = get_header(headers, 'References') or ''
+        from_header = get_header(headers, "From") or ""
+        to_header = get_header(headers, "To") or ""
+        cc_header = get_header(headers, "Cc") or ""
+        bcc_header = get_header(headers, "Bcc") or ""
+        subject = get_header(headers, "Subject") or "(No subject)"
+        date_str = get_header(headers, "Date") or ""
+        in_reply_to = get_header(headers, "In-Reply-To")
+        references = get_header(headers, "References") or ""
 
-        # Parse date
-        try:
-            from email.utils import parsedate_to_datetime
-            date = parsedate_to_datetime(date_str)
-        except:
+        # Parse date with proper fallback
+        date: Optional[datetime] = None
+        if date_str:
+            try:
+                from email.utils import parsedate_to_datetime
+
+                date = parsedate_to_datetime(date_str)
+            except (ValueError, TypeError, OverflowError) as e:
+                logger.warning(f"Failed to parse date '{date_str}' for message {msg_id}: {e}")
+
+        # If date parsing failed, use None or current time as last resort
+        if date is None:
+            logger.warning(f"No valid date for message {msg_id}, using current time")
             date = datetime.now()
 
         # Parse email addresses
         from_parsed = parse_email_address(from_header)
-        to_list = [EmailAddress(**parse_email_address(addr.strip()))
-                   for addr in to_header.split(',') if addr.strip()]
-        cc_list = [EmailAddress(**parse_email_address(addr.strip()))
-                   for addr in cc_header.split(',') if addr.strip()]
-        bcc_list = [EmailAddress(**parse_email_address(addr.strip()))
-                    for addr in bcc_header.split(',') if addr.strip()]
+        to_list = [
+            EmailAddress(**parse_email_address(addr.strip()))
+            for addr in to_header.split(",")
+            if addr.strip()
+        ]
+        cc_list = [
+            EmailAddress(**parse_email_address(addr.strip()))
+            for addr in cc_header.split(",")
+            if addr.strip()
+        ]
+        bcc_list = [
+            EmailAddress(**parse_email_address(addr.strip()))
+            for addr in bcc_header.split(",")
+            if addr.strip()
+        ]
 
         # Extract body
         plain_body, html_body = extract_body(payload)
@@ -247,7 +365,7 @@ class GmailClient:
         attachments = self._extract_attachments(payload)
 
         # Get labels
-        label_ids = msg_data.get('labelIds', [])
+        label_ids = msg_data.get("labelIds", [])
 
         # Parse references
         ref_list = [ref.strip() for ref in references.split() if ref.strip()]
@@ -271,53 +389,138 @@ class GmailClient:
         )
 
     def _has_attachments(self, payload: Dict[str, Any]) -> bool:
-        """Check if message has attachments"""
+        """Check if message has attachments.
+
+        Args:
+            payload: Gmail API message payload
+
+        Returns:
+            True if message has attachments, False otherwise
+        """
+
         def check_part(part: Dict[str, Any]) -> bool:
-            if part.get('filename') and part.get('body', {}).get('attachmentId'):
+            if part.get("filename") and part.get("body", {}).get("attachmentId"):
                 return True
-            if 'parts' in part:
-                return any(check_part(p) for p in part['parts'])
+            if "parts" in part:
+                return any(check_part(p) for p in part["parts"])
             return False
 
         return check_part(payload)
 
     def _extract_attachments(self, payload: Dict[str, Any]) -> List[Attachment]:
-        """Extract attachment metadata from payload"""
-        attachments = []
+        """Extract attachment metadata from payload.
 
-        def extract_from_part(part: Dict[str, Any]):
-            filename = part.get('filename', '')
-            body = part.get('body', {})
-            attachment_id = body.get('attachmentId')
+        Args:
+            payload: Gmail API message payload
+
+        Returns:
+            List of Attachment objects
+        """
+        attachments: List[Attachment] = []
+
+        def extract_from_part(part: Dict[str, Any]) -> None:
+            filename = part.get("filename", "")
+            body = part.get("body", {})
+            attachment_id = body.get("attachmentId")
 
             if filename and attachment_id:
-                attachments.append(Attachment(
-                    filename=filename,
-                    mime_type=part.get('mimeType', 'application/octet-stream'),
-                    size=body.get('size', 0),
-                    attachment_id=attachment_id,
-                ))
+                attachments.append(
+                    Attachment(
+                        filename=filename,
+                        mime_type=part.get("mimeType", "application/octet-stream"),
+                        size=body.get("size", 0),
+                        attachment_id=attachment_id,
+                    )
+                )
 
             # Recurse into parts
-            if 'parts' in part:
-                for subpart in part['parts']:
+            if "parts" in part:
+                for subpart in part["parts"]:
                     extract_from_part(subpart)
 
-        if 'parts' in payload:
-            for part in payload['parts']:
+        if "parts" in payload:
+            for part in payload["parts"]:
                 extract_from_part(part)
 
         return attachments
 
+    def _validate_query(self, query: str) -> None:
+        """Validate Gmail search query for safety.
+
+        Args:
+            query: Gmail search query string
+
+        Raises:
+            ValueError: If query is invalid or potentially malicious
+        """
+        if not query:
+            return
+
+        if len(query) > MAX_QUERY_LENGTH:
+            raise ValueError(f"Query too long: {len(query)} chars (max {MAX_QUERY_LENGTH})")
+
+        # Check for suspicious characters that could indicate injection attempts
+        suspicious_patterns = [
+            r"\x00",  # null bytes
+            r"[\x01-\x08\x0b\x0c\x0e-\x1f]",  # control characters
+        ]
+
+        for pattern in suspicious_patterns:
+            if re.search(pattern, query):
+                raise ValueError("Query contains invalid control characters")
+
+    def _validate_label_name(self, name: str) -> None:
+        """Validate label name for Gmail API requirements.
+
+        Args:
+            name: Label name to validate
+
+        Raises:
+            ValueError: If label name is invalid
+        """
+        if not name:
+            raise ValueError("Label name cannot be empty")
+
+        if len(name) > MAX_LABEL_NAME_LENGTH:
+            raise ValueError(
+                f"Label name too long: {len(name)} chars (max {MAX_LABEL_NAME_LENGTH})"
+            )
+
+        # Gmail label names can contain letters, numbers, spaces, dashes, underscores, dots, slashes
+        if not VALID_LABEL_CHARS_PATTERN.match(name):
+            raise ValueError(
+                "Label name contains invalid characters. "
+                "Allowed: letters, numbers, spaces, dashes, underscores, dots, slashes"
+            )
+
+    def _validate_label_ids(self, label_ids: List[str]) -> None:
+        """Validate label IDs.
+
+        Args:
+            label_ids: List of label IDs to validate
+
+        Raises:
+            ValueError: If any label ID is invalid
+        """
+        if not label_ids:
+            return
+
+        for label_id in label_ids:
+            if not label_id or not isinstance(label_id, str):
+                raise ValueError(f"Invalid label ID: {label_id}")
+
+            # Label IDs should be alphanumeric or Gmail system labels (all caps)
+            if not re.match(r"^[A-Za-z0-9_-]+$", label_id):
+                raise ValueError(f"Label ID contains invalid characters: {label_id}")
+
     def list_emails(
         self,
-        folder: str = 'INBOX',
+        folder: str = "INBOX",
         max_results: int = 10,
         page_token: Optional[str] = None,
         query: Optional[str] = None,
     ) -> SearchResult:
-        """
-        List emails from a folder with pagination
+        """List emails from a folder with pagination.
 
         Args:
             folder: Gmail label/folder (default: INBOX)
@@ -327,8 +530,16 @@ class GmailClient:
 
         Returns:
             SearchResult with email summaries and pagination info
+
+        Raises:
+            ValueError: If query is invalid
+            RuntimeError: If API request fails
         """
         max_results = validate_pagination_params(max_results)
+
+        # Validate query if provided
+        if query:
+            self._validate_query(query)
 
         # Build query
         search_query = f"label:{folder}"
@@ -337,28 +548,39 @@ class GmailClient:
 
         try:
             # List messages
-            result = self.service.users().messages().list(
-                userId='me',
-                q=search_query,
-                maxResults=max_results,
-                pageToken=page_token,
-            ).execute()
+            result = (
+                self.service.users()
+                .messages()
+                .list(
+                    userId="me",
+                    q=search_query,
+                    maxResults=max_results,
+                    pageToken=page_token,
+                )
+                .execute()
+            )
 
-            messages = result.get('messages', [])
-            next_page = result.get('nextPageToken')
-            total_estimate = result.get('resultSizeEstimate', len(messages))
+            messages = result.get("messages", [])
+            next_page = result.get("nextPageToken")
+            total_estimate = result.get("resultSizeEstimate", len(messages))
 
             # Fetch full message data for summaries
-            summaries = []
+            summaries: List[EmailSummary] = []
             for msg in messages:
                 try:
-                    msg_data = self.service.users().messages().get(
-                        userId='me',
-                        id=msg['id'],
-                        format='full',
-                    ).execute()
+                    msg_data = (
+                        self.service.users()
+                        .messages()
+                        .get(
+                            userId="me",
+                            id=msg["id"],
+                            format="full",
+                        )
+                        .execute()
+                    )
                     summaries.append(self._parse_message_to_summary(msg_data))
-                except HttpError:
+                except HttpError as e:
+                    logger.warning(f"Failed to fetch message {msg['id']}: {e}")
                     continue  # Skip messages that can't be fetched
 
             return SearchResult(
@@ -371,13 +593,33 @@ class GmailClient:
         except HttpError as e:
             raise RuntimeError(f"Failed to list emails: {e}")
 
+    @overload
+    def read_email(
+        self,
+        message_id: str,
+        format: Literal["summary"] = "summary",
+    ) -> EmailSummary: ...
+
+    @overload
+    def read_email(
+        self,
+        message_id: str,
+        format: Literal["headers"],
+    ) -> EmailFull: ...
+
+    @overload
+    def read_email(
+        self,
+        message_id: str,
+        format: Literal["full"],
+    ) -> EmailFull: ...
+
     def read_email(
         self,
         message_id: str,
         format: Literal["summary", "headers", "full"] = "summary",
-    ) -> EmailSummary | EmailFull:
-        """
-        Read an email with progressive disclosure
+    ) -> Union[EmailSummary, EmailFull]:
+        """Read an email with progressive disclosure.
 
         Args:
             message_id: Gmail message ID
@@ -385,13 +627,22 @@ class GmailClient:
 
         Returns:
             EmailSummary or EmailFull depending on format
+
+        Raises:
+            ValueError: If format is invalid
+            RuntimeError: If API request fails
         """
         try:
-            msg_data = self.service.users().messages().get(
-                userId='me',
-                id=message_id,
-                format='full',
-            ).execute()
+            msg_data = (
+                self.service.users()
+                .messages()
+                .get(
+                    userId="me",
+                    id=message_id,
+                    format="full",
+                )
+                .execute()
+            )
 
             if format == "summary":
                 return self._parse_message_to_summary(msg_data)
@@ -406,12 +657,11 @@ class GmailClient:
     def search_emails(
         self,
         query: str,
-        folder: str = 'INBOX',
+        folder: str = "INBOX",
         max_results: int = 10,
         page_token: Optional[str] = None,
     ) -> SearchResult:
-        """
-        Search emails using Gmail search syntax
+        """Search emails using Gmail search syntax.
 
         Args:
             query: Gmail search query (e.g., "from:[email protected]", "has:attachment")
@@ -421,6 +671,10 @@ class GmailClient:
 
         Returns:
             SearchResult with matching email summaries
+
+        Raises:
+            ValueError: If query is invalid
+            RuntimeError: If API request fails
         """
         return self.list_emails(
             folder=folder,
@@ -430,35 +684,60 @@ class GmailClient:
         )
 
     def get_folders(self) -> List[Folder]:
-        """
-        Get list of all Gmail labels/folders
+        """Get list of all Gmail labels/folders.
 
         Returns:
             List of Folder objects with metadata
+
+        Raises:
+            RuntimeError: If API request fails
         """
         try:
-            result = self.service.users().labels().list(userId='me').execute()
-            labels = result.get('labels', [])
+            # First, get the list of all labels
+            result = self.service.users().labels().list(userId="me").execute()
+            labels = result.get("labels", [])
 
-            folders = []
+            folders: List[Folder] = []
+
+            # For each label, fetch full details to get message counts
+            # Note: labels.list() does NOT return messagesTotal/messagesUnread
+            # We need to call labels.get() for each label to get counts
             for label in labels:
-                folder = Folder(
-                    id=label['id'],
-                    name=label['name'],
-                    type=label['type'].lower(),
-                    message_count=label.get('messagesTotal'),
-                    unread_count=label.get('messagesUnread'),
-                )
-                folders.append(folder)
+                try:
+                    # Get full label details including message counts
+                    full_label = self.service.users().labels().get(
+                        userId="me",
+                        id=label["id"]
+                    ).execute()
+
+                    folder = Folder(
+                        id=full_label["id"],
+                        name=full_label["name"],
+                        type=full_label["type"].lower(),
+                        message_count=full_label.get("messagesTotal"),
+                        unread_count=full_label.get("messagesUnread"),
+                    )
+                    folders.append(folder)
+                except HttpError as e:
+                    # If we can't get details for a specific label, log and skip it
+                    logger.warning(f"Failed to get details for label {label.get('name', 'unknown')}: {e}")
+                    # Fallback: add label without counts
+                    folder = Folder(
+                        id=label["id"],
+                        name=label["name"],
+                        type=label["type"].lower(),
+                        message_count=None,
+                        unread_count=None,
+                    )
+                    folders.append(folder)
 
             return folders
 
         except HttpError as e:
             raise RuntimeError(f"Failed to get folders: {e}")
 
-    def create_label(self, name: str, visibility: str = 'labelShow') -> Folder:
-        """
-        Create a new Gmail label/folder
+    def create_label(self, name: str, visibility: str = "labelShow") -> Folder:
+        """Create a new Gmail label/folder.
 
         Args:
             name: Name of the label to create
@@ -466,33 +745,36 @@ class GmailClient:
 
         Returns:
             Folder object for the newly created label
+
+        Raises:
+            ValueError: If label name is invalid
+            RuntimeError: If API request fails
         """
+        # Validate label name
+        self._validate_label_name(name)
+
         try:
             label_object = {
-                'name': name,
-                'labelListVisibility': visibility,
-                'messageListVisibility': 'show'
+                "name": name,
+                "labelListVisibility": visibility,
+                "messageListVisibility": "show",
             }
 
-            result = self.service.users().labels().create(
-                userId='me',
-                body=label_object
-            ).execute()
+            result = self.service.users().labels().create(userId="me", body=label_object).execute()
 
             return Folder(
-                id=result['id'],
-                name=result['name'],
-                type=result['type'].lower(),
-                message_count=result.get('messagesTotal'),
-                unread_count=result.get('messagesUnread'),
+                id=result["id"],
+                name=result["name"],
+                type=result["type"].lower(),
+                message_count=result.get("messagesTotal"),
+                unread_count=result.get("messagesUnread"),
             )
 
         except HttpError as e:
             raise RuntimeError(f"Failed to create label '{name}': {e}")
 
     def verify_setup(self) -> Dict[str, Any]:
-        """
-        Verify authentication and basic Gmail API functionality
+        """Verify authentication and basic Gmail API functionality.
 
         Returns:
             Dictionary with setup status:
@@ -504,62 +786,66 @@ class GmailClient:
                 'errors': List[str]
             }
         """
-        results = {
-            'auth': False,
-            'email_address': None,
-            'folders': 0,
-            'inbox_accessible': False,
-            'errors': []
+        results: Dict[str, Any] = {
+            "auth": False,
+            "email_address": None,
+            "folders": 0,
+            "inbox_accessible": False,
+            "errors": [],
         }
 
         try:
             # Test authentication by getting user profile
-            profile = self.service.users().getProfile(userId='me').execute()
-            results['auth'] = True
-            results['email_address'] = profile.get('emailAddress')
+            profile = self.service.users().getProfile(userId="me").execute()
+            results["auth"] = True
+            results["email_address"] = profile.get("emailAddress")
 
             # Test folder access
             folders = self.get_folders()
-            results['folders'] = len(folders)
+            results["folders"] = len(folders)
 
             # Test inbox read access
-            inbox = self.list_emails(folder='INBOX', max_results=1)
-            results['inbox_accessible'] = True
+            self.list_emails(folder="INBOX", max_results=1)
+            results["inbox_accessible"] = True
 
+        except HttpError as e:
+            results["errors"].append(f"Gmail API error: {str(e)}")
+        except (OSError, IOError, PermissionError) as e:
+            results["errors"].append(f"File access error: {str(e)}")
         except Exception as e:
-            results['errors'].append(str(e))
+            results["errors"].append(f"Unexpected error: {str(e)}")
 
         return results
 
     def get_thread(self, message_id: str) -> List[EmailSummary]:
-        """
-        Get all emails in a thread
+        """Get all emails in a thread.
 
         Args:
             message_id: ID of any message in the thread
 
         Returns:
             List of EmailSummary objects in chronological order
+
+        Raises:
+            RuntimeError: If API request fails
         """
         try:
             # First get the message to find its thread_id
-            msg = self.service.users().messages().get(
-                userId='me',
-                id=message_id,
-                format='minimal'
-            ).execute()
+            msg = (
+                self.service.users()
+                .messages()
+                .get(userId="me", id=message_id, format="minimal")
+                .execute()
+            )
 
-            thread_id = msg['threadId']
+            thread_id = msg["threadId"]
 
             # Get the full thread
-            thread = self.service.users().threads().get(
-                userId='me',
-                id=thread_id
-            ).execute()
+            thread = self.service.users().threads().get(userId="me", id=thread_id).execute()
 
             # Parse all messages in thread
-            messages = []
-            for msg_data in thread.get('messages', []):
+            messages: List[EmailSummary] = []
+            for msg_data in thread.get("messages", []):
                 email_summary = self._parse_message_to_summary(msg_data)
                 messages.append(email_summary)
 
@@ -572,8 +858,7 @@ class GmailClient:
             raise RuntimeError(f"Failed to get thread: {e}")
 
     def send_email(self, request: SendEmailRequest) -> SendEmailResponse:
-        """
-        Send an email
+        """Send an email.
 
         Args:
             request: SendEmailRequest with email details
@@ -597,28 +882,46 @@ class GmailClient:
             )
 
             # Send via Gmail API
-            result = self.service.users().messages().send(
-                userId='me',
-                body=mime_message,
-            ).execute()
+            result = (
+                self.service.users()
+                .messages()
+                .send(
+                    userId="me",
+                    body=mime_message,
+                )
+                .execute()
+            )
 
             return SendEmailResponse(
-                message_id=result['id'],
-                thread_id=result['threadId'],
+                message_id=result["id"],
+                thread_id=result["threadId"],
                 success=True,
             )
 
+        except HttpError as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"Gmail API error: {str(e)}",
+            )
+        except (OSError, IOError) as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"File access error (attachment?): {str(e)}",
+            )
         except Exception as e:
             return SendEmailResponse(
-                message_id='',
-                thread_id='',
+                message_id="",
+                thread_id="",
                 success=False,
-                error=str(e),
+                error=f"Unexpected error: {str(e)}",
             )
 
     def draft_email(self, request: SendEmailRequest) -> SendEmailResponse:
-        """
-        Create an email draft
+        """Create an email draft.
 
         Args:
             request: SendEmailRequest with email details
@@ -642,24 +945,43 @@ class GmailClient:
             )
 
             # Create draft via Gmail API
-            draft_body = {'message': mime_message}
-            result = self.service.users().drafts().create(
-                userId='me',
-                body=draft_body,
-            ).execute()
+            draft_body = {"message": mime_message}
+            result = (
+                self.service.users()
+                .drafts()
+                .create(
+                    userId="me",
+                    body=draft_body,
+                )
+                .execute()
+            )
 
             return SendEmailResponse(
-                message_id=result['message']['id'],
-                thread_id=result['message']['threadId'],
+                message_id=result["message"]["id"],
+                thread_id=result["message"]["threadId"],
                 success=True,
             )
 
+        except HttpError as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"Gmail API error: {str(e)}",
+            )
+        except (OSError, IOError) as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"File access error (attachment?): {str(e)}",
+            )
         except Exception as e:
             return SendEmailResponse(
-                message_id='',
-                thread_id='',
+                message_id="",
+                thread_id="",
                 success=False,
-                error=str(e),
+                error=f"Unexpected error: {str(e)}",
             )
 
     def reply_email(
@@ -669,8 +991,7 @@ class GmailClient:
         reply_all: bool = False,
         is_html: bool = False,
     ) -> SendEmailResponse:
-        """
-        Reply to an email
+        """Reply to an email.
 
         Args:
             message_id: ID of message to reply to
@@ -689,12 +1010,15 @@ class GmailClient:
 
             # Build recipient list
             to = [original.from_.email]
-            cc = None
+            cc: Optional[List[str]] = None
 
             if reply_all:
                 # Add all original recipients except ourselves
-                cc = [addr.email for addr in original.to + original.cc
-                      if addr.email != original.from_.email]
+                cc = [
+                    addr.email
+                    for addr in original.to + original.cc
+                    if addr.email != original.from_.email
+                ]
                 if not cc:
                     cc = None
 
@@ -710,12 +1034,26 @@ class GmailClient:
 
             return self.send_email(request)
 
+        except HttpError as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"Gmail API error: {str(e)}",
+            )
+        except ValueError as e:
+            return SendEmailResponse(
+                message_id="",
+                thread_id="",
+                success=False,
+                error=f"Invalid request: {str(e)}",
+            )
         except Exception as e:
             return SendEmailResponse(
-                message_id='',
-                thread_id='',
+                message_id="",
+                thread_id="",
                 success=False,
-                error=str(e),
+                error=f"Unexpected error: {str(e)}",
             )
 
     def modify_labels(
@@ -724,8 +1062,7 @@ class GmailClient:
         add_labels: Optional[List[str]] = None,
         remove_labels: Optional[List[str]] = None,
     ) -> bool:
-        """
-        Modify labels on a message
+        """Modify labels on a message.
 
         Args:
             message_id: Gmail message ID
@@ -734,16 +1071,26 @@ class GmailClient:
 
         Returns:
             True if successful
+
+        Raises:
+            ValueError: If label IDs are invalid
+            RuntimeError: If API request fails
         """
+        # Validate label IDs
+        if add_labels:
+            self._validate_label_ids(add_labels)
+        if remove_labels:
+            self._validate_label_ids(remove_labels)
+
         try:
-            body = {}
+            body: Dict[str, List[str]] = {}
             if add_labels:
-                body['addLabelIds'] = add_labels
+                body["addLabelIds"] = add_labels
             if remove_labels:
-                body['removeLabelIds'] = remove_labels
+                body["removeLabelIds"] = remove_labels
 
             self.service.users().messages().modify(
-                userId='me',
+                userId="me",
                 id=message_id,
                 body=body,
             ).execute()
@@ -754,8 +1101,7 @@ class GmailClient:
             raise RuntimeError(f"Failed to modify labels for {message_id}: {e}")
 
     def delete_email(self, message_id: str, permanent: bool = False) -> bool:
-        """
-        Delete an email
+        """Delete an email.
 
         Args:
             message_id: Gmail message ID
@@ -763,16 +1109,19 @@ class GmailClient:
 
         Returns:
             True if successful
+
+        Raises:
+            RuntimeError: If API request fails
         """
         try:
             if permanent:
                 self.service.users().messages().delete(
-                    userId='me',
+                    userId="me",
                     id=message_id,
                 ).execute()
             else:
                 self.service.users().messages().trash(
-                    userId='me',
+                    userId="me",
                     id=message_id,
                 ).execute()
 
@@ -787,8 +1136,7 @@ class GmailClient:
         add_labels: Optional[List[str]] = None,
         remove_labels: Optional[List[str]] = None,
     ) -> BatchOperationResult:
-        """
-        Modify labels on multiple messages in batch
+        """Modify labels on multiple messages in batch.
 
         Args:
             message_ids: List of Gmail message IDs
@@ -804,7 +1152,7 @@ class GmailClient:
             try:
                 self.modify_labels(msg_id, add_labels, remove_labels)
                 result.successful.append(msg_id)
-            except Exception as e:
+            except (ValueError, RuntimeError, HttpError) as e:
                 result.failed[msg_id] = str(e)
 
         return result
@@ -814,8 +1162,7 @@ class GmailClient:
         message_ids: List[str],
         permanent: bool = False,
     ) -> BatchOperationResult:
-        """
-        Delete multiple messages in batch
+        """Delete multiple messages in batch.
 
         Args:
             message_ids: List of Gmail message IDs
@@ -830,7 +1177,7 @@ class GmailClient:
             try:
                 self.delete_email(msg_id, permanent)
                 result.successful.append(msg_id)
-            except Exception as e:
+            except (RuntimeError, HttpError) as e:
                 result.failed[msg_id] = str(e)
 
         return result
