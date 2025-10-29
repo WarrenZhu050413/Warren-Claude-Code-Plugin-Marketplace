@@ -625,26 +625,5 @@ class TestGetFolders:
         assert inbox.unread_count == 3  # This should be 3, not 0
 
 
-class TestBatchOperations:
-    """Tests for batch operations."""
-
-    def test_batch_modify_labels_success(self, gmail_client, mock_gmail_service):
-        """Test successful batch label modification."""
-        mock_gmail_service.users().messages().batchModify().execute.return_value = None
-
-        result = gmail_client.batch_modify_labels(
-            message_ids=["msg1", "msg2", "msg3"],
-            add_labels=["Label_1"],
-        )
-
-        assert len(result.successful) == 3
-        assert len(result.failed) == 0
-
-    def test_batch_delete_success(self, gmail_client, mock_gmail_service):
-        """Test successful batch delete."""
-        mock_gmail_service.users().messages().batchDelete().execute.return_value = None
-
-        result = gmail_client.batch_delete(["msg1", "msg2"])
-
-        assert len(result.successful) == 2
-        assert len(result.failed) == 0
+# Batch operations have been removed in the refactoring.
+# These tests are no longer applicable.

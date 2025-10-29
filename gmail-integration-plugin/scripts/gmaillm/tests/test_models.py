@@ -136,42 +136,7 @@ class TestEmailSummary:
         )
         assert summary.from_.email == "sender@example.com"
 
-    def test_to_markdown_with_unread_attachment(self):
-        """Test markdown formatting with unread and attachment flags."""
-        summary = EmailSummary(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com", name="Sender"),
-            subject="Important Email",
-            date=datetime(2025, 1, 15, 10, 30),
-            snippet="Check this out...",
-            has_attachments=True,
-            is_unread=True,
-        )
-        markdown = summary.to_markdown()
-        assert "[UNREAD, HAS ATTACHMENTS]" in markdown
-        assert "**Important Email**" in markdown
-        assert "From: Sender <sender@example.com>" in markdown
-        assert "2025-01-15 10:30" in markdown
-        assert "msg123" in markdown
-        assert "Check this out..." in markdown
-
-    def test_to_markdown_read_no_attachment(self):
-        """Test markdown formatting for read email without attachments."""
-        summary = EmailSummary(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            subject="Regular Email",
-            date=datetime(2025, 1, 15, 10, 30),
-            snippet="Normal email",
-            is_unread=False,
-            has_attachments=False,
-        )
-        markdown = summary.to_markdown()
-        assert "[UNREAD" not in markdown
-        assert "[HAS ATTACHMENTS" not in markdown
-        assert "**Regular Email**" in markdown
+    # to_markdown methods have been removed - formatting is now handled by RichFormatter
 
 
 class TestEmailFull:
@@ -194,99 +159,7 @@ class TestEmailFull:
         assert len(email.to) == 1
         assert email.body_plain == "Plain text body"
 
-    def test_to_markdown_basic(self):
-        """Test basic markdown formatting."""
-        email = EmailFull(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com", name="Sender"),
-            to=[EmailAddress(email="recipient@example.com")],
-            subject="Test Email",
-            date=datetime(2025, 1, 15, 10, 30, 45),
-            body_plain="Email body text",
-        )
-        markdown = email.to_markdown()
-        assert "# Test Email" in markdown
-        assert "From: Sender <sender@example.com>" in markdown
-        assert "To: recipient@example.com" in markdown
-        assert "2025-01-15 10:30:45" in markdown
-        assert "Email body text" in markdown
-
-    def test_to_markdown_with_cc(self):
-        """Test markdown with CC recipients."""
-        email = EmailFull(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            to=[EmailAddress(email="to@example.com")],
-            cc=[EmailAddress(email="cc@example.com", name="CC Person")],
-            subject="Test",
-            date=datetime(2025, 1, 15, 10, 30),
-            body_plain="Body",
-        )
-        markdown = email.to_markdown()
-        assert "CC: CC Person <cc@example.com>" in markdown
-
-    def test_to_markdown_with_attachments(self):
-        """Test markdown with attachments."""
-        email = EmailFull(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            to=[EmailAddress(email="to@example.com")],
-            subject="Test",
-            date=datetime(2025, 1, 15, 10, 30),
-            body_plain="Body",
-            attachments=[
-                Attachment(
-                    filename="doc.pdf",
-                    mime_type="application/pdf",
-                    size=2048,
-                    attachment_id="att1",
-                ),
-            ],
-        )
-        markdown = email.to_markdown()
-        assert "Attachments (1 files):" in markdown
-        assert "doc.pdf — 2.0KB, application/pdf" in markdown
-
-    def test_to_markdown_truncates_long_body(self):
-        """Test that long email body is truncated."""
-        long_body = "x" * 4000
-        email = EmailFull(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@domain.com"),
-            to=[EmailAddress(email="to@domain.com")],
-            subject="Test",
-            date=datetime(2025, 1, 15, 10, 30),
-            body_plain=long_body,
-        )
-        markdown = email.to_markdown()
-        assert "[Body truncated — 4000 total characters]" in markdown
-
-        # Extract body section (after the separator line)
-        separator = "─" * 80
-        body_section = markdown.split(separator + "\n\n", 1)[1] if separator in markdown else ""
-        # Count x's only in the body section (excluding truncation message)
-        body_content = body_section.split("\n\n[Body truncated")[0]
-        assert body_content.count("x") == 3000  # Only first 3000 chars
-
-    def test_prefers_plain_text_over_html(self):
-        """Test that plain text is preferred over HTML."""
-        email = EmailFull(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            to=[EmailAddress(email="to@example.com")],
-            subject="Test",
-            date=datetime(2025, 1, 15, 10, 30),
-            body_plain="Plain text version",
-            body_html="<p>HTML version</p>",
-        )
-        markdown = email.to_markdown()
-        assert "Plain text version" in markdown
-        assert "<p>HTML version</p>" not in markdown
+    # to_markdown methods have been removed - formatting is now handled by RichFormatter
 
 
 class TestSearchResult:
@@ -303,37 +176,7 @@ class TestSearchResult:
         assert result.query == "test query"
         assert result.next_page_token is None
 
-    def test_to_markdown_basic(self):
-        """Test basic markdown formatting."""
-        summary = EmailSummary(
-            message_id="msg123",
-            thread_id="thread123",
-            from_=EmailAddress(email="sender@example.com"),
-            subject="Result 1",
-            date=datetime(2025, 1, 15, 10, 30),
-            snippet="First result",
-        )
-        result = SearchResult(
-            emails=[summary],
-            total_count=1,
-            query="search term",
-        )
-        markdown = result.to_markdown()
-        assert '# Search Results: "search term"' in markdown
-        assert "Found 1 emails. Showing 1." in markdown
-        assert "## 1. Result 1" in markdown
-
-    def test_to_markdown_with_next_page(self):
-        """Test markdown with pagination token."""
-        result = SearchResult(
-            emails=[],
-            total_count=100,
-            query="test",
-            next_page_token="token123",
-        )
-        markdown = result.to_markdown()
-        assert "More results available" in markdown
-        assert "token123" in markdown
+    # to_markdown methods have been removed - formatting is now handled by RichFormatter
 
 
 class TestFolder:
@@ -353,36 +196,7 @@ class TestFolder:
         assert folder.message_count == 50
         assert folder.unread_count == 10
 
-    def test_to_markdown_with_counts(self):
-        """Test markdown with message and unread counts."""
-        folder = Folder(
-            id="INBOX",
-            name="Inbox",
-            type="system",
-            message_count=100,
-            unread_count=5,
-        )
-        markdown = folder.to_markdown()
-        assert "Inbox" in markdown
-        assert "100 messages" in markdown
-        assert "5 unread" in markdown
-        assert "INBOX" in markdown
-        assert "•" in markdown  # Bullet point
-        assert "—" in markdown  # Em dash separator
-
-    def test_to_markdown_without_counts(self):
-        """Test markdown without counts."""
-        folder = Folder(
-            id="Label_1",
-            name="Custom",
-            type="user",
-        )
-        markdown = folder.to_markdown()
-        assert "Custom" in markdown
-        assert "messages" not in markdown  # No message count
-        assert "Label_1" in markdown
-        assert "•" in markdown  # Bullet point
-        assert "—" in markdown  # Em dash separator
+    # to_markdown methods have been removed - formatting is now handled by RichFormatter
 
 
 class TestSendEmailRequest:
@@ -593,28 +407,6 @@ class TestSendEmailResponse:
         assert resp.success is False
         assert resp.error == "Failed to send"
 
-    def test_to_markdown_success(self):
-        """Test markdown for successful send."""
-        resp = SendEmailResponse(
-            message_id="msg123",
-            thread_id="thread123",
-            success=True,
-        )
-        markdown = resp.to_markdown()
-        assert "Email sent successfully!" in markdown
-        assert "msg123" in markdown
-        assert "thread123" in markdown
-
-    def test_to_markdown_failure(self):
-        """Test markdown for failed send."""
-        resp = SendEmailResponse(
-            message_id="",
-            thread_id="",
-            success=False,
-            error="Network error",
-        )
-        markdown = resp.to_markdown()
-        assert "Failed to send email" in markdown
-        assert "Network error" in markdown
+    # to_markdown methods have been removed - formatting is now handled by RichFormatter
 
 
