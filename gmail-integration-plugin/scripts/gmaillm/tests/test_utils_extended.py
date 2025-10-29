@@ -1,17 +1,18 @@
 """Extended tests for utils.py to cover edge cases and error paths."""
 
 import base64
-import pytest
-from pathlib import Path
 from email.mime.multipart import MIMEMultipart
+from pathlib import Path
+
+import pytest
 
 from gmaillm.utils import (
-    parse_email_address,
-    format_email_address,
+    _attach_file,
+    _set_message_headers,
     create_mime_message,
     decode_base64,
-    _set_message_headers,
-    _attach_file,
+    format_email_address,
+    parse_email_address,
 )
 
 
@@ -27,6 +28,30 @@ class TestParseEmailAddress:
         """Test parsing fails when plain email is invalid."""
         with pytest.raises(ValueError, match="Invalid email address"):
             parse_email_address("not-an-email")
+
+    def test_name_with_newlines(self):
+        """Test parsing email with newlines in name field."""
+        result = parse_email_address("Blocksma\n <valid@example.com>")
+        assert result["name"] == "Blocksma"
+        assert result["email"] == "valid@example.com"
+
+    def test_name_with_multiple_whitespace(self):
+        """Test parsing email with multiple spaces/tabs in name."""
+        result = parse_email_address("John   \t  Doe <john@example.com>")
+        assert result["name"] == "John Doe"
+        assert result["email"] == "john@example.com"
+
+    def test_name_with_quotes(self):
+        """Test parsing email with quoted name."""
+        result = parse_email_address('"John Doe" <john@example.com>')
+        assert result["name"] == "John Doe"
+        assert result["email"] == "john@example.com"
+
+    def test_empty_name_with_brackets(self):
+        """Test parsing email with empty name before brackets."""
+        result = parse_email_address(" <test@example.com>")
+        assert result["name"] == ""
+        assert result["email"] == "test@example.com"
 
 
 class TestFormatEmailAddress:
@@ -90,7 +115,6 @@ class TestAttachFile:
                 return MockStat()
             return result
 
-        import gmaillm.utils
         original_path_stat = Path.stat
 
         def mock_path_stat(self):

@@ -33,6 +33,7 @@ def validate_email(email: str) -> bool:
 
     Returns:
         True if email is valid, False otherwise
+
     """
     return bool(EMAIL_PATTERN.match(email))
 
@@ -48,10 +49,13 @@ def parse_email_address(email_str: str) -> Dict[str, Optional[str]]:
 
     Raises:
         ValueError: If email format is invalid
+
     """
     match = re.match(r"^(.*?)\s*<(.+?)>$", email_str.strip())
     if match:
-        name = match.group(1).strip()
+        # Clean name: remove quotes, newlines, and extra whitespace
+        name = match.group(1).strip().strip('"').strip("'")
+        name = re.sub(r'\s+', ' ', name)  # Replace multiple whitespace (including \n) with single space
         email = match.group(2).strip()
         if not validate_email(email):
             raise ValueError(f"Invalid email address: {email}")
@@ -75,6 +79,7 @@ def format_email_address(email: str, name: Optional[str] = None) -> str:
 
     Raises:
         ValueError: If email format is invalid
+
     """
     if not validate_email(email):
         raise ValueError(f"Invalid email address: {email}")
@@ -94,6 +99,7 @@ def truncate_text(text: str, max_length: int = DEFAULT_TRUNCATE_LENGTH, suffix: 
 
     Returns:
         Truncated text
+
     """
     if len(text) <= max_length:
         return text
@@ -108,6 +114,7 @@ def clean_snippet(snippet: str) -> str:
 
     Returns:
         Cleaned snippet
+
     """
     # Remove common email artifacts first
     snippet = re.sub(r"\[image:.*?\]", "", snippet)
@@ -125,6 +132,7 @@ def _set_message_headers(message: MIMEMultipart, headers: Dict[str, Optional[str
 
     Raises:
         TypeError: If header value is not a string
+
     """
     for header_name, header_value in headers.items():
         if header_value:
@@ -143,6 +151,7 @@ def _attach_file(message: MIMEMultipart, file_path: str) -> None:
     Raises:
         FileNotFoundError: If file does not exist
         ValueError: If file exceeds size limit or has invalid filename
+
     """
     path = Path(file_path)
     if not path.exists():
@@ -211,6 +220,7 @@ def create_mime_message(
 
     Raises:
         ValueError: If recipient list is empty or email validation fails
+
     """
     # Validate empty recipient list
     if not to:
@@ -254,6 +264,7 @@ def decode_base64(data: str) -> str:
 
     Returns:
         Decoded string, or empty string if decoding fails
+
     """
     if not data or not isinstance(data, str):
         return ""
@@ -284,6 +295,7 @@ def extract_body(payload: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]
 
     Returns:
         Tuple of (plain_text_body, html_body), either may be None
+
     """
     plain_body = None
     html_body = None
@@ -325,6 +337,7 @@ def get_header(headers: List[Dict[str, str]], name: str) -> Optional[str]:
 
     Returns:
         Header value if found, None otherwise
+
     """
     name_lower = name.lower()
     for header in headers:
@@ -341,6 +354,7 @@ def parse_label_ids(label_ids: List[str]) -> Dict[str, bool]:
 
     Returns:
         Dictionary of boolean flags for common labels
+
     """
     return {
         "is_unread": "UNREAD" in label_ids,
@@ -363,6 +377,7 @@ def validate_pagination_params(max_results: int, max_allowed: int = 50) -> int:
 
     Returns:
         Validated max_results value
+
     """
     if max_results < 1:
         return DEFAULT_MAX_RESULTS
