@@ -33,36 +33,66 @@ formatter = RichFormatter(console)
 
 
 @app.command("list")
-def list_workflows() -> None:
+def list_workflows(
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
+) -> None:
     """List all configured workflows."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         manager = WorkflowManager()
         workflows = manager.list_workflows()
 
-        if not workflows:
-            console.print("[yellow]No workflows configured[/yellow]")
-            console.print("\nCreate a workflow: [cyan]gmail workflows create <id> --query \"...\"[/cyan]")
-            return
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
 
-        # Create table
-        table = Table(title="Email Workflows")
-        table.add_column("ID", style="cyan")
-        table.add_column("Name", style="green")
-        table.add_column("Query", style="dim")
-        table.add_column("Auto-Read", justify="center")
+        if format_enum == OutputFormat.JSON:
+            # Convert to list format for JSON
+            workflows_list = [
+                {
+                    "id": workflow_id,
+                    "name": config.name,
+                    "query": config.query,
+                    "auto_mark_read": config.auto_mark_read,
+                    "description": config.description
+                }
+                for workflow_id, config in sorted(workflows.items())
+            ]
+            console.print_json(data=workflows_list)
+        else:  # RICH
+            if not workflows:
+                console.print("[yellow]No workflows configured[/yellow]")
+                console.print("\nCreate a workflow: [cyan]gmail workflows create <id> --query \"...\"[/cyan]")
+                return
 
-        for workflow_id, config in sorted(workflows.items()):
-            auto_read = "✓" if config.auto_mark_read else "✗"
-            table.add_row(
-                workflow_id,
-                config.name,
-                config.query[:50] + "..." if len(config.query) > 50 else config.query,
-                auto_read
-            )
+            # Create table
+            table = Table(title="Email Workflows")
+            table.add_column("ID", style="cyan")
+            table.add_column("Name", style="green")
+            table.add_column("Query", style="dim")
+            table.add_column("Auto-Read", justify="center")
 
-        console.print(table)
-        console.print(f"\n[dim]Total: {len(workflows)} workflow(s)[/dim]")
-        console.print(f"\nUsage: [cyan]gmail workflows run <id>[/cyan]")
+            for workflow_id, config in sorted(workflows.items()):
+                auto_read = "✓" if config.auto_mark_read else "✗"
+                table.add_row(
+                    workflow_id,
+                    config.name,
+                    config.query[:50] + "..." if len(config.query) > 50 else config.query,
+                    auto_read
+                )
+
+            console.print(table)
+            console.print(f"\n[dim]Total: {len(workflows)} workflow(s)[/dim]")
+            console.print(f"\nUsage: [cyan]gmail workflows run <id>[/cyan]")
 
     except Exception as e:
         console.print(f"[red]✗ Error listing workflows: {e}[/red]")
@@ -72,21 +102,46 @@ def list_workflows() -> None:
 @app.command("show")
 def show_workflow(
     workflow_id: str = typer.Argument(..., help="Workflow ID to show"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Show detailed information about a workflow."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         manager = WorkflowManager()
         config = manager.get_workflow(workflow_id)
 
-        console.print("=" * 60)
-        console.print(f"Workflow: {workflow_id}")
-        console.print("=" * 60)
-        console.print(f"Name: {config.name}")
-        console.print(f"Query: {config.query}")
-        console.print(f"Description: {config.description or '(none)'}")
-        console.print(f"Auto-mark read on skip: {'Yes' if config.auto_mark_read else 'No'}")
-        console.print()
-        console.print(f"Usage: [cyan]gmail workflows run {workflow_id}[/cyan]")
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
+        if format_enum == OutputFormat.JSON:
+            workflow_data = {
+                "id": workflow_id,
+                "name": config.name,
+                "query": config.query,
+                "description": config.description,
+                "auto_mark_read": config.auto_mark_read
+            }
+            console.print_json(data=workflow_data)
+        else:  # RICH
+            console.print("=" * 60)
+            console.print(f"Workflow: {workflow_id}")
+            console.print("=" * 60)
+            console.print(f"Name: {config.name}")
+            console.print(f"Query: {config.query}")
+            console.print(f"Description: {config.description or '(none)'}")
+            console.print(f"Auto-mark read on skip: {'Yes' if config.auto_mark_read else 'No'}")
+            console.print()
+            console.print(f"Usage: [cyan]gmail workflows run {workflow_id}[/cyan]")
 
     except KeyError as e:
         console.print(f"[red]✗ {e}[/red]")
@@ -102,20 +157,15 @@ def run_workflow(
     workflow_id: Optional[str] = typer.Argument(None, help="Workflow ID to run"),
     query: Optional[str] = typer.Option(None, "--query", "-q", help="Ad-hoc query (instead of named workflow)"),
     max_results: int = typer.Option(100, "--max", "-n", help="Maximum emails to process"),
-    format: OutputFormat = typer.Option(OutputFormat.RICH, "--format", help="Output format"),
+    output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
 ) -> None:
     """Run a workflow (named or ad-hoc query).
 
     \b
     EXAMPLES:
-      Run named workflow:
-        $ gmail workflows run clear
-
-      Ad-hoc query:
-        $ gmail workflows run --query "from:boss@company.com is:unread"
-
-      JSON output (programmatic):
-        $ gmail workflows run clear --format json
+      $ gmail workflows run clear
+      $ gmail workflows run --query "from:boss@company.com is:unread"
+      $ gmail workflows run clear --output-format json
     """
     try:
         client = GmailClient()
@@ -143,7 +193,7 @@ def run_workflow(
         result = client.search_emails(query=search_query, folder="", max_results=max_results)
 
         # JSON output mode (programmatic)
-        if format == OutputFormat.JSON:
+        if output_format == OutputFormat.JSON:
             console.print_json(data=result.model_dump(mode='json'))
             return
 
@@ -252,9 +302,9 @@ def create_workflow(
 
     \b
     EXAMPLE:
-      $ gmail workflows create urgent \\
-          --query "is:important is:unread" \\
-          --name "Process Urgent" \\
+      $ gmail workflows create urgent \
+          --query "is:important is:unread" \
+          --name "Process Urgent" \
           --description "Handle urgent emails first"
     """
     try:

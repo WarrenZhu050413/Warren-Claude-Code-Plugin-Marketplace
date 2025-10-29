@@ -47,13 +47,13 @@ def show_schema() -> None:
     """Display JSON schema for programmatic style creation.
 
     This schema defines the structure required for creating styles
-    via the --json-input flag in the 'create' and 'edit' commands.
+    via the --json-input-path flag in the 'create' and 'edit' commands.
     """
     display_schema_and_exit(
         schema_getter=get_style_json_schema_string,
         title="Email Style JSON Schema",
-        description="Use this schema for programmatic style creation with --json-input",
-        usage_example="gmail styles create my-style --json-input style.json --force"
+        description="Use this schema for programmatic style creation with --json-input-path",
+        usage_example="gmail styles create my-style --json-input-path style.json --force"
     )
 
 
@@ -64,31 +64,59 @@ def list_styles(
         "--paths/--no-paths",
         help="Show file paths for each style (default: True)"
     ),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """List all email styles with name/description."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         styles_dir = get_styles_dir()
         styles = load_all_styles(styles_dir)
 
-        console.print("=" * 60)
-        console.print(f"Email Styles ({len(styles)})")
-        console.print("=" * 60)
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
 
-        if not styles:
-            console.print("\n[yellow]No styles found[/yellow]")
-            console.print(f"\nCreate a new style with: [cyan]gmail styles create <name>[/cyan]")
-            return
+        if format_enum == OutputFormat.JSON:
+            # Add paths to JSON output if requested
+            styles_json = []
+            for style in styles:
+                style_data = {
+                    "name": style['name'],
+                    "description": style['description']
+                }
+                if show_paths:
+                    style_data["path"] = str(get_style_file_path(style['name']))
+                styles_json.append(style_data)
+            console.print_json(data=styles_json)
+        else:  # RICH
+            console.print("=" * 60)
+            console.print(f"Email Styles ({len(styles)})")
+            console.print("=" * 60)
 
-        for style in styles:
-            console.print(f"\n📝 [bold]{style['name']}[/bold]")
-            console.print(f"   {style['description']}")
+            if not styles:
+                console.print("\n[yellow]No styles found[/yellow]")
+                console.print(f"\nCreate a new style with: [cyan]gmail styles create <name>[/cyan]")
+                return
 
-            if show_paths:
-                style_path = get_style_file_path(style['name'])
-                console.print(f"   [dim]Path: {style_path}[/dim]")
+            for style in styles:
+                console.print(f"\n📝 [bold]{style['name']}[/bold]")
+                console.print(f"   {style['description']}")
 
-        console.print(f"\n[dim]Total: {len(styles)} style(s)[/dim]")
-        console.print(f"\nUsage: [cyan]gmail styles show <name>[/cyan]")
+                if show_paths:
+                    style_path = get_style_file_path(style['name'])
+                    console.print(f"   [dim]Path: {style_path}[/dim]")
+
+            console.print(f"\n[dim]Total: {len(styles)} style(s)[/dim]")
+            console.print(f"\nUsage: [cyan]gmail styles show <name>[/cyan]")
 
     except Exception as e:
         console.print(f"[red]✗ Error listing styles: {e}[/red]")
@@ -98,9 +126,17 @@ def list_styles(
 @app.command("show")
 def show_style(
     name: str = typer.Argument(..., help="Name of the style to show"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Show full style content."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         style_file = get_style_file_path(name)
 
         if not style_file.exists():
@@ -109,7 +145,23 @@ def show_style(
             raise typer.Exit(code=1)
 
         content = style_file.read_text()
-        console.print(content)
+
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
+        if format_enum == OutputFormat.JSON:
+            style_data = {
+                "name": name,
+                "path": str(style_file),
+                "content": content
+            }
+            console.print_json(data=style_data)
+        else:  # RICH
+            console.print(content)
 
     except Exception as e:
         console.print(f"[red]✗ Error showing style: {e}[/red]")
@@ -119,9 +171,9 @@ def show_style(
 @app.command("create")
 def create_style(
     name: str = typer.Argument(..., help="Name of the style to create"),
-    json_input: Optional[str] = typer.Option(
+    json_input_path: Optional[str] = typer.Option(
         None,
-        "--json-input",
+        "--json-input-path",
         "-j",
         help="Path to JSON file for programmatic creation"
     ),
@@ -138,7 +190,7 @@ def create_style(
     \b
     MODES:
       1. Interactive (default): Create from template with editor
-      2. Programmatic (--json-input): Create from JSON file
+      2. Programmatic (--json-input-path): Create from JSON file
 
     \b
     EXAMPLES:
@@ -146,7 +198,7 @@ def create_style(
         $ gmail styles create professional-casual
 
       From JSON file:
-        $ gmail styles create my-style --json-input style.json --force
+        $ gmail styles create my-style --json-input-path style.json --force
         $ gmail styles create my-style -j /path/to/style.json -f
 
       View schema:
@@ -165,12 +217,12 @@ def create_style(
             raise typer.Exit(code=1)
 
         # PROGRAMMATIC MODE: JSON input
-        if json_input:
+        if json_input_path:
             console.print("[cyan]Creating style from JSON file...[/cyan]")
 
             # Load and validate JSON
             json_data = load_and_validate_json(
-                json_path_str=json_input,
+                json_path_str=json_input_path,
                 validator_func=validate_json_against_schema,
                 schema_help_command="gmail styles schema"
             )
@@ -233,7 +285,7 @@ def create_style(
                 console.print(f"[green]✅ Style validated successfully[/green]")
 
         # Next steps (interactive mode only)
-        if not json_input:
+        if not json_input_path:
             console.print(f"\nNext steps:")
             console.print(f"  1. Edit: [cyan]gmail styles edit {name}[/cyan]")
             console.print(f"  2. Validate: [cyan]gmail styles validate {name}[/cyan]")
@@ -246,9 +298,9 @@ def create_style(
 @app.command("edit")
 def edit_style(
     name: str = typer.Argument(..., help="Name of the style to edit"),
-    json_input: Optional[str] = typer.Option(
+    json_input_path: Optional[str] = typer.Option(
         None,
-        "--json-input",
+        "--json-input-path",
         "-j",
         help="Path to JSON file for programmatic editing"
     ),
@@ -265,7 +317,7 @@ def edit_style(
     \b
     MODES:
       1. Interactive (default): Open style in $EDITOR
-      2. Programmatic (--json-input): Replace content from JSON file
+      2. Programmatic (--json-input-path): Replace content from JSON file
 
     \b
     EXAMPLES:
@@ -273,7 +325,7 @@ def edit_style(
         $ gmail styles edit professional-casual
 
       Replace from JSON file:
-        $ gmail styles edit my-style --json-input updated.json --force
+        $ gmail styles edit my-style --json-input-path updated.json --force
         $ gmail styles edit my-style -j /path/to/updated.json -f
     """
     try:
@@ -286,7 +338,7 @@ def edit_style(
             raise typer.Exit(code=1)
 
         # PROGRAMMATIC MODE: JSON input
-        if json_input:
+        if json_input_path:
             console.print("[cyan]Updating style from JSON file...[/cyan]")
 
             # Create backup
@@ -295,7 +347,7 @@ def edit_style(
 
             # Load and validate JSON
             json_data = load_and_validate_json(
-                json_path_str=json_input,
+                json_path_str=json_input_path,
                 validator_func=validate_json_against_schema,
                 schema_help_command="gmail styles schema"
             )
@@ -386,9 +438,17 @@ def delete_style(
 def validate_style(
     name: str = typer.Argument(..., help="Name of the style to validate"),
     fix: bool = typer.Option(False, "--fix", help="Auto-fix formatting issues"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Validate a specific style format."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         style_file = get_style_file_path(name)
 
         if not style_file.exists():
@@ -398,34 +458,63 @@ def validate_style(
         content = style_file.read_text()
         linter = StyleLinter()
 
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
         if fix:
             # Auto-fix and re-validate
-            console.print(f"Fixing {name}...")
+            if format_enum == OutputFormat.RICH:
+                console.print(f"Fixing {name}...")
             fixed_content, errors = linter.lint_and_fix(content)
 
             # Save fixed content
             style_file.write_text(fixed_content)
-            console.print("[green]✅ Auto-fixed formatting issues[/green]")
+
+            if format_enum == OutputFormat.JSON:
+                result = {
+                    "name": name,
+                    "fixed": True,
+                    "valid": len(errors) == 0,
+                    "errors": errors
+                }
+                console.print_json(data=result)
+            else:  # RICH
+                console.print("[green]✅ Auto-fixed formatting issues[/green]")
+                if errors:
+                    console.print(f"\n[yellow]⚠️  Remaining validation errors:[/yellow]")
+                    for error in errors:
+                        console.print(f"   {error}")
+                else:
+                    console.print(f"\n[green]✅ Style '{name}' is now valid[/green]")
 
             if errors:
-                console.print(f"\n[yellow]⚠️  Remaining validation errors:[/yellow]")
-                for error in errors:
-                    console.print(f"   {error}")
                 raise typer.Exit(code=1)
-            else:
-                console.print(f"\n[green]✅ Style '{name}' is now valid[/green]")
         else:
             # Just validate
             errors = linter.lint(content)
 
+            if format_enum == OutputFormat.JSON:
+                result = {
+                    "name": name,
+                    "valid": len(errors) == 0,
+                    "errors": errors
+                }
+                console.print_json(data=result)
+            else:  # RICH
+                if errors:
+                    console.print(f"[red]✗ Style '{name}' has validation errors:[/red]")
+                    for error in errors:
+                        console.print(f"   {error}")
+                    console.print(f"\nAuto-fix: [cyan]gmail styles validate {name} --fix[/cyan]")
+                else:
+                    console.print(f"[green]✅ Style '{name}' is valid[/green]")
+
             if errors:
-                console.print(f"[red]✗ Style '{name}' has validation errors:[/red]")
-                for error in errors:
-                    console.print(f"   {error}")
-                console.print(f"\nAuto-fix: [cyan]gmail styles validate {name} --fix[/cyan]")
                 raise typer.Exit(code=1)
-            else:
-                console.print(f"[green]✅ Style '{name}' is valid[/green]")
 
     except Exception as e:
         console.print(f"[red]✗ Error validating style: {e}[/red]")
@@ -435,9 +524,17 @@ def validate_style(
 @app.command("validate-all")
 def validate_all_styles(
     fix: bool = typer.Option(False, "--fix", help="Auto-fix formatting issues in all styles"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
     """Validate all style formats."""
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         styles_dir = get_styles_dir()
         styles = builtins.list(styles_dir.glob("*.md"))
 
@@ -445,11 +542,20 @@ def validate_all_styles(
             console.print("[yellow]No styles found[/yellow]")
             return
 
-        console.print(f"Validating {len(styles)} style(s)...\n")
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
+        if format_enum == OutputFormat.RICH:
+            console.print(f"Validating {len(styles)} style(s)...\n")
 
         valid_count = 0
         invalid_count = 0
         linter = StyleLinter()
+        results = []
 
         for style_file in styles:
             name = style_file.stem
@@ -459,30 +565,58 @@ def validate_all_styles(
                 fixed_content, errors = linter.lint_and_fix(content)
                 style_file.write_text(fixed_content)
 
+                result = {
+                    "name": name,
+                    "fixed": True,
+                    "valid": len(errors) == 0,
+                    "errors": errors[:3] if errors else []  # Limit errors in JSON too
+                }
+                results.append(result)
+
                 if errors:
-                    console.print(f"[red]✗ {name}: {len(errors)} error(s) remaining[/red]")
-                    for error in errors[:3]:  # Show first 3 errors
-                        console.print(f"     {error}")
+                    if format_enum == OutputFormat.RICH:
+                        console.print(f"[red]✗ {name}: {len(errors)} error(s) remaining[/red]")
+                        for error in errors[:3]:  # Show first 3 errors
+                            console.print(f"     {error}")
                     invalid_count += 1
                 else:
-                    console.print(f"[green]✅ {name} (fixed)[/green]")
+                    if format_enum == OutputFormat.RICH:
+                        console.print(f"[green]✅ {name} (fixed)[/green]")
                     valid_count += 1
             else:
                 errors = linter.lint(content)
 
+                result = {
+                    "name": name,
+                    "valid": len(errors) == 0,
+                    "errors": errors[:3] if errors else []
+                }
+                results.append(result)
+
                 if errors:
-                    console.print(f"[red]✗ {name}: {len(errors)} error(s)[/red]")
-                    for error in errors[:3]:  # Show first 3 errors
-                        console.print(f"     {error}")
+                    if format_enum == OutputFormat.RICH:
+                        console.print(f"[red]✗ {name}: {len(errors)} error(s)[/red]")
+                        for error in errors[:3]:  # Show first 3 errors
+                            console.print(f"     {error}")
                     invalid_count += 1
                 else:
-                    console.print(f"[green]✅ {name}[/green]")
+                    if format_enum == OutputFormat.RICH:
+                        console.print(f"[green]✅ {name}[/green]")
                     valid_count += 1
 
-        console.print(f"\nResults: [green]{valid_count} valid[/green], [red]{invalid_count} invalid[/red]")
+        if format_enum == OutputFormat.JSON:
+            summary = {
+                "total": len(styles),
+                "valid": valid_count,
+                "invalid": invalid_count,
+                "results": results
+            }
+            console.print_json(data=summary)
+        else:  # RICH
+            console.print(f"\nResults: [green]{valid_count} valid[/green], [red]{invalid_count} invalid[/red]")
 
         if invalid_count > 0:
-            if not fix:
+            if not fix and format_enum == OutputFormat.RICH:
                 console.print(f"\nAuto-fix all: [cyan]gmail styles validate-all --fix[/cyan]")
             raise typer.Exit(code=1)
 

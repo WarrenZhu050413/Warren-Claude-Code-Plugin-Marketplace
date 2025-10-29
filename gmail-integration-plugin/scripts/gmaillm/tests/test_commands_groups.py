@@ -279,7 +279,7 @@ class TestCreateGroup:
 
         result = runner.invoke(app, [
             "create",
-            "--json-input", "group.json",
+            "--json-input-path", "group.json",
             "--force"
         ])
 
@@ -300,7 +300,7 @@ class TestCreateGroup:
 
         result = runner.invoke(app, [
             "create",
-            "--json-input", "nonexistent.json",
+            "--json-input-path", "nonexistent.json",
             "--force"
         ])
 
@@ -317,7 +317,7 @@ class TestCreateGroup:
 
         result = runner.invoke(app, [
             "create",
-            "--json-input", "invalid.json",
+            "--json-input-path", "invalid.json",
             "--force"
         ])
 
@@ -639,36 +639,6 @@ class TestValidateGroup:
         assert "✗ #invalid" in result.stdout
         assert "✗ #duplicate" in result.stdout
         assert "Validation failed" in result.stdout
-
-
-class TestEditGroupsDeprecated:
-    """Test deprecated edit command."""
-
-    @patch("subprocess.run")
-    @patch("gmaillm.commands.groups.get_groups_file_path")
-    def test_edit_command_shows_deprecation_warning(self, mock_get_path, mock_subprocess):
-        """Test that edit command shows deprecation warning."""
-        mock_file = Mock()
-        mock_file.__str__ = Mock(return_value="/path/to/file")
-        mock_get_path.return_value = mock_file
-
-        with patch("builtins.open", mock_open()):
-            result = runner.invoke(app, ["edit"])
-
-        assert "Deprecation Warning" in result.stdout
-        assert "deprecated" in result.stdout
-        assert "gmail groups create" in result.stdout
-        assert "gmail groups add" in result.stdout
-
-    @patch("gmaillm.commands.groups.get_groups_file_path")
-    def test_edit_command_file_not_found(self, mock_get_path):
-        """Test edit command when file doesn't exist."""
-        mock_get_path.return_value = Path("/nonexistent/file")
-
-        result = runner.invoke(app, ["edit"])
-
-        assert result.exit_code == 1
-        assert "does not exist" in result.stdout
 
 
 class TestShowSchema:

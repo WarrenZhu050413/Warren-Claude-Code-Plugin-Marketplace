@@ -24,12 +24,38 @@ formatter = RichFormatter(console)
 
 
 @app.command("list")
-def list_labels() -> None:
-    """List all labels (system and custom)."""
+def list_labels(
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
+) -> None:
+    """List all labels (system and custom).
+
+    \b
+    EXAMPLES:
+      $ gmail labels list
+      $ gmail labels list --output-format json
+    """
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         client = GmailClient()
         folders = client.get_folders()
-        formatter.print_folder_list(folders, "Gmail Labels")
+
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
+        if format_enum == OutputFormat.JSON:
+            console.print_json(data=[f.model_dump(mode='json') for f in folders])
+        else:  # RICH
+            formatter.print_folder_list(folders, "Gmail Labels")
 
     except Exception as e:
         console.print(f"[red]✗ Error listing labels: {e}[/red]")
@@ -41,7 +67,13 @@ def create_label(
     name: str = typer.Argument(..., help="Name of the label to create"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ) -> None:
-    """Create a new label/folder."""
+    """Create a new label.
+
+    \b
+    EXAMPLES:
+      $ gmail labels create "Work Projects"
+      $ gmail labels create "Archive/2024" --force
+    """
     try:
         # Validate label name
         validate_label_name(name)
@@ -74,7 +106,13 @@ def delete_label(
     name: str = typer.Argument(..., help="Name of the label to delete"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ) -> None:
-    """Delete a label."""
+    """Delete a custom label.
+
+    \b
+    EXAMPLES:
+      $ gmail labels delete "Old Project"
+      $ gmail labels delete "Archive/2023" --force
+    """
     try:
         client = GmailClient()
 

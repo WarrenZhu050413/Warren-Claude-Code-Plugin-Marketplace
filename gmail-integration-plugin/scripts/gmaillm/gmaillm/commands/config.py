@@ -22,14 +22,41 @@ console = Console()
 
 
 @app.command("show")
-def show_config() -> None:
+def show_config(
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
+) -> None:
     """Show configuration file locations and commands."""
+    from enum import Enum
+
+    # Define OutputFormat enum locally to avoid circular import
+    class OutputFormat(str, Enum):
+        RICH = "rich"
+        JSON = "json"
+
     config_dir = get_plugin_config_dir()
     styles_dir = get_styles_dir()
     groups_file = get_groups_file_path()
     learned_dir = config_dir / "learned-patterns"
 
-    editor = os.environ.get("EDITOR", "vim")
+    editor = os.environ.get("EDITOR", "vi")
+
+    # Parse output format
+    try:
+        format_enum = OutputFormat(output_format.lower())
+    except ValueError:
+        console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+        raise typer.Exit(code=1)
+
+    if format_enum == OutputFormat.JSON:
+        config_data = {
+            "config_dir": str(config_dir),
+            "email_styles": str(styles_dir),
+            "email_groups": str(groups_file),
+            "learned_patterns": str(learned_dir),
+            "editor": editor
+        }
+        console.print_json(data=config_data)
+        return
 
     console.print("=" * 60)
     console.print("Gmail Integration Configuration")

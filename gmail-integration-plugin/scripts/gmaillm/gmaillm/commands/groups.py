@@ -1,8 +1,5 @@
 """Gmail distribution groups management commands."""
 
-import os
-import subprocess
-from pathlib import Path
 from typing import List, Optional
 
 import typer
@@ -25,7 +22,7 @@ from gmaillm.helpers.cli_utils import (
     create_backup_with_message,
     print_success
 )
-from gmaillm.validators.email import validate_email, validate_editor
+from gmaillm.validators.email import validate_email
 from gmaillm.validators.email_operations import (
     get_group_json_schema_string,
     validate_group_json
@@ -42,48 +39,74 @@ console = Console()
 
 @app.command("schema")
 def show_schema() -> None:
-    """Display JSON schema for programmatic group creation.
-
-    This schema defines the structure required for creating groups
-    via the --json-input flag in the 'create' command.
-    """
+    """Display JSON schema for programmatic group creation."""
     display_schema_and_exit(
         schema_getter=get_group_json_schema_string,
         title="Email Group JSON Schema",
-        description="Use this schema for programmatic group creation with --json-input",
-        usage_example="gmail groups create --json-input group.json --force"
+        description="Use this schema for programmatic group creation with --json-input-path",
+        usage_example="gmail groups create --json-input-path group.json --force"
     )
 
 
 @app.command("list")
-def list_groups() -> None:
-    """List all email distribution groups with member counts."""
+def list_groups(
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
+) -> None:
+    """List all email distribution groups.
+
+    \b
+    EXAMPLES:
+      $ gmail groups list
+      $ gmail groups list --output-format json
+    """
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         groups = load_email_groups()
 
-        if not groups:
-            console.print("[yellow]No groups found[/yellow]")
-            console.print(f"\nCreate a group: [cyan]gmail groups create <name> --emails email@example.com[/cyan]")
-            return
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
 
-        # Create table
-        table = Table(title="Email Distribution Groups")
-        table.add_column("Group", style="cyan")
-        table.add_column("Members", justify="right", style="green")
-        table.add_column("Emails", style="dim")
+        if format_enum == OutputFormat.JSON:
+            # Convert to list format for JSON
+            groups_list = [
+                {"name": name, "members": emails, "member_count": len(emails)}
+                for name, emails in sorted(groups.items())
+            ]
+            console.print_json(data=groups_list)
+        else:  # RICH
+            if not groups:
+                console.print("[yellow]No groups found[/yellow]")
+                console.print(f"\nCreate a group: [cyan]gmail groups create <name> --emails email@example.com[/cyan]")
+                return
 
-        for name, emails in sorted(groups.items()):
-            # Show first 2 emails, then "..."
-            if len(emails) <= 2:
-                email_preview = ", ".join(emails)
-            else:
-                email_preview = f"{emails[0]}, {emails[1]}, ... ({len(emails) - 2} more)"
+            # Create table
+            table = Table(title="Email Distribution Groups")
+            table.add_column("Group", style="cyan")
+            table.add_column("Members", justify="right", style="green")
+            table.add_column("Emails", style="dim")
 
-            table.add_row(f"#{name}", str(len(emails)), email_preview)
+            for name, emails in sorted(groups.items()):
+                # Show first 2 emails, then "..."
+                if len(emails) <= 2:
+                    email_preview = ", ".join(emails)
+                else:
+                    email_preview = f"{emails[0]}, {emails[1]}, ... ({len(emails) - 2} more)"
 
-        console.print(table)
-        console.print(f"\n[dim]Total: {len(groups)} group(s)[/dim]")
-        console.print(f"\nUsage: [cyan]gmail send --to #groupname --subject \"...\" --body \"...\"[/cyan]")
+                table.add_row(f"#{name}", str(len(emails)), email_preview)
+
+            console.print(table)
+            console.print(f"\n[dim]Total: {len(groups)} group(s)[/dim]")
+            console.print(f"\nUsage: [cyan]gmail send --to #groupname --subject \"...\" --body \"...\"[/cyan]")
 
     except Exception as e:
         console.print(f"[red]✗ Error listing groups: {e}[/red]")
@@ -93,25 +116,54 @@ def list_groups() -> None:
 @app.command("show")
 def show_group(
     name: str = typer.Argument(..., help="Name of the group to show"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
-    """Show detailed information about a specific group."""
+    """Show detailed information about a group.
+
+    \b
+    EXAMPLES:
+      $ gmail groups show team
+      $ gmail groups show team --output-format json
+    """
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         groups = load_email_groups()
         ensure_item_exists(name, groups, "Group", "gmail groups list")
 
         emails = groups[name]
 
-        console.print("=" * 60)
-        console.print(f"Group: #{name}")
-        console.print("=" * 60)
-        console.print(f"Members: {len(emails)}")
-        console.print()
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
 
-        for i, email in enumerate(emails, 1):
-            console.print(f"  {i}. {email}")
+        if format_enum == OutputFormat.JSON:
+            group_data = {
+                "name": name,
+                "members": emails,
+                "member_count": len(emails)
+            }
+            console.print_json(data=group_data)
+        else:  # RICH
+            console.print("=" * 60)
+            console.print(f"Group: #{name}")
+            console.print("=" * 60)
+            console.print(f"Members: {len(emails)}")
+            console.print()
 
-        console.print()
-        console.print(f"Usage: [cyan]gmail send --to #{name} ...[/cyan]")
+            for i, email in enumerate(emails, 1):
+                console.print(f"  {i}. {email}")
+
+            console.print()
+            console.print(f"Usage: [cyan]gmail send --to #{name} ...[/cyan]")
 
     except Exception as e:
         handle_command_error("showing group", e)
@@ -119,11 +171,11 @@ def show_group(
 
 @app.command("create")
 def create_group(
-    name: Optional[str] = typer.Argument(None, help="Name of the group to create (required unless using --json-input)"),
+    name: Optional[str] = typer.Argument(None, help="Name of the group to create (required unless using --json-input-path)"),
     emails: Optional[List[str]] = typer.Option(None, "--emails", "-e", help="Email addresses to add"),
-    json_input: Optional[str] = typer.Option(
+    json_input_path: Optional[str] = typer.Option(
         None,
-        "--json-input",
+        "--json-input-path",
         "-j",
         help="Path to JSON file for programmatic creation"
     ),
@@ -133,30 +185,25 @@ def create_group(
 
     \b
     MODES:
-      1. Interactive (default): Provide name and emails via CLI
-      2. Programmatic (--json-input): Create from JSON file
+      1. Interactive: Provide name and emails via CLI
+      2. Programmatic: Create from JSON file (--json-input-path)
 
     \b
     EXAMPLES:
-      Interactive creation:
-        $ gmail groups create team --emails user1@example.com --emails user2@example.com
-
-      From JSON file:
-        $ gmail groups create --json-input group.json --force
-
-      View schema:
-        $ gmail groups schema
+      $ gmail groups create team --emails user1@example.com --emails user2@example.com
+      $ gmail groups create --json-input-path group.json --force
+      $ gmail groups schema
     """
     try:
         groups = load_email_groups()
 
         # PROGRAMMATIC MODE: JSON input
-        if json_input:
+        if json_input_path:
             console.print("[cyan]Creating group from JSON file...[/cyan]")
 
             # Load and validate JSON
             json_data = load_and_validate_json(
-                json_path_str=json_input,
+                json_path_str=json_input_path,
                 validator_func=validate_group_json,
                 schema_help_command="gmail groups schema"
             )
@@ -168,13 +215,13 @@ def create_group(
         # INTERACTIVE MODE: CLI arguments
         else:
             if name is None:
-                console.print("[red]✗ Group name is required (or use --json-input)[/red]")
+                console.print("[red]✗ Group name is required (or use --json-input-path)[/red]")
                 console.print("\nUsage: [cyan]gmail groups create <name> --emails <email> ...[/cyan]")
-                console.print("   Or: [cyan]gmail groups create --json-input group.json[/cyan]")
+                console.print("   Or: [cyan]gmail groups create --json-input-path group.json[/cyan]")
                 raise typer.Exit(code=1)
 
             if emails is None or len(emails) == 0:
-                console.print("[red]✗ At least one email is required (or use --json-input)[/red]")
+                console.print("[red]✗ At least one email is required (or use --json-input-path)[/red]")
                 console.print("\nUsage: [cyan]gmail groups create {name} --emails <email> ...[/cyan]")
                 raise typer.Exit(code=1)
 
@@ -345,40 +392,26 @@ def delete_group(
         handle_command_error("deleting group", e)
 
 
-@app.command("edit")
-def edit_groups() -> None:
-    """Open email groups file in editor (deprecated - use create/add/remove instead)."""
-    # Deprecation warning
-    console.print("[yellow]⚠️  Deprecation Warning:[/yellow]")
-    console.print("[yellow]   'gmail groups edit' is deprecated.[/yellow]")
-    console.print("[yellow]   Use these commands instead:[/yellow]")
-    console.print("[yellow]     - Create group: [cyan]gmail groups create <name> --emails email@example.com[/cyan][/yellow]")
-    console.print("[yellow]     - Add member:   [cyan]gmail groups add <group> <email>[/cyan][/yellow]")
-    console.print("[yellow]     - Remove member: [cyan]gmail groups remove <group> <email>[/cyan][/yellow]")
-    console.print()
-
-    groups_file = get_groups_file_path()
-
-    try:
-        # Check if file exists
-        with open(groups_file):
-            pass
-    except FileNotFoundError:
-        console.print(f"[red]Error: {groups_file} does not exist[/red]")
-        raise typer.Exit(code=1)
-
-    editor = os.environ.get("EDITOR", "vim")
-    validate_editor(editor)
-    console.print(f"Opening {groups_file} in {editor}...")
-    subprocess.run([editor, str(groups_file)], shell=False)
-
-
 @app.command("validate")
 def validate_group(
     name: Optional[str] = typer.Argument(None, help="Group name to validate (validates all if not specified)"),
+    output_format: str = typer.Option("rich", "--output-format", help="Output format (rich|json)"),
 ) -> None:
-    """Validate group(s) for email format, duplicates."""
+    """Validate group(s) for email format and duplicates.
+
+    \b
+    EXAMPLES:
+      $ gmail groups validate
+      $ gmail groups validate team
+    """
     try:
+        from enum import Enum
+
+        # Define OutputFormat enum locally to avoid circular import
+        class OutputFormat(str, Enum):
+            RICH = "rich"
+            JSON = "json"
+
         groups = load_email_groups()
 
         if name:
@@ -392,7 +425,15 @@ def validate_group(
             # Validate all groups
             groups_to_validate = groups
 
+        # Parse output format
+        try:
+            format_enum = OutputFormat(output_format.lower())
+        except ValueError:
+            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
+            raise typer.Exit(code=1)
+
         errors_found = False
+        validation_results = []
 
         for group_name, emails in groups_to_validate.items():
             group_errors = []
@@ -409,24 +450,39 @@ def validate_group(
                     group_errors.append(f"Duplicate email: {email}")
                 seen.add(email)
 
-            # Report
-            if group_errors:
-                console.print(f"[red]✗ #{group_name}:[/red]")
-                for error in group_errors:
-                    console.print(f"  - {error}")
-                errors_found = True
+            # Store result
+            validation_results.append({
+                "group": group_name,
+                "valid": len(group_errors) == 0,
+                "errors": group_errors
+            })
+
+            # Report (rich format)
+            if format_enum == OutputFormat.RICH:
+                if group_errors:
+                    console.print(f"[red]✗ #{group_name}:[/red]")
+                    for error in group_errors:
+                        console.print(f"  - {error}")
+                    errors_found = True
+                else:
+                    console.print(f"[green]✅ #{group_name}[/green]")
+
+        if format_enum == OutputFormat.JSON:
+            console.print_json(data=validation_results)
+            # Set errors_found based on validation results
+            errors_found = any(not r["valid"] for r in validation_results)
+        else:  # RICH
+            if errors_found:
+                console.print(f"\n[red]Validation failed[/red]")
+                console.print(f"Fix manually: [cyan]gmail groups edit[/cyan]")
             else:
-                console.print(f"[green]✅ #{group_name}[/green]")
+                if name:
+                    console.print(f"\n[green]✅ Group #{name} is valid[/green]")
+                else:
+                    console.print(f"\n[green]✅ All groups are valid[/green]")
 
         if errors_found:
-            console.print(f"\n[red]Validation failed[/red]")
-            console.print(f"Fix manually: [cyan]gmail groups edit[/cyan]")
             raise typer.Exit(code=1)
-        else:
-            if name:
-                console.print(f"\n[green]✅ Group #{name} is valid[/green]")
-            else:
-                console.print(f"\n[green]✅ All groups are valid[/green]")
 
     except Exception as e:
         console.print(f"[red]✗ Error validating groups: {e}[/red]")
