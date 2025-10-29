@@ -6,7 +6,7 @@
 # This is harmless - it's from Google's API client library and can be ignored.
 
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import click
 import typer
@@ -14,30 +14,29 @@ from rich.console import Console
 from rich.panel import Panel
 
 from gmaillm import GmailClient, SendEmailRequest
-from gmaillm.formatters import RichFormatter
-
-# Import helper utilities
-from gmaillm.helpers.domain import expand_email_groups, load_email_groups
-from gmaillm.helpers.cli import (
-    HelpfulGroup,
-    load_and_validate_json,
-    display_schema_and_exit,
-    show_operation_preview,
-    confirm_or_force
-)
-
-# Import validators
-from gmaillm.validators.email import (
-    validate_email_list,
-    validate_attachment_paths
-)
+from gmaillm.commands import config as config_commands
 
 # Import command modules
-from gmaillm.commands import labels, styles, groups, workflows, config as config_commands
+from gmaillm.commands import groups, labels, styles, workflows
+from gmaillm.formatters import RichFormatter
+from gmaillm.helpers.cli import (
+    HelpfulGroup,
+    confirm_or_force,
+    display_schema_and_exit,
+    load_and_validate_json,
+    show_operation_preview,
+)
+
+# Import helper utilities
+from gmaillm.helpers.domain import expand_email_groups
+from gmaillm.models import Folder
+
+# Import validators
+from gmaillm.validators.email import validate_attachment_paths, validate_email_list
 
 
 # Custom callback to print help on errors
-def custom_abort_if_false(ctx, param, value):
+def custom_abort_if_false(ctx: Any, param: Any, value: Any) -> None:
     """Custom callback for validation that shows help on failure."""
     if not value:
         click.echo(ctx.parent.get_help() if ctx.parent else ctx.get_help())
@@ -60,6 +59,7 @@ formatter = RichFormatter(console)
 # Output format enum (kept for backward compatibility)
 class OutputFormat(str, Enum):
     """Output format for CLI commands."""
+
     RICH = "rich"  # Rich terminal output (default)
     JSON = "json"  # Raw JSON output
 
@@ -70,7 +70,7 @@ MESSAGE_ID_DISPLAY_LENGTH = 8
 
 # ============ HELPER FUNCTIONS ============
 
-def _get_folder_by_name(folders, folder_name):
+def _get_folder_by_name(folders: List[Folder], folder_name: str) -> Optional[Folder]:
     """Get folder by name from list."""
     return next((f for f in folders if f.name == folder_name), None)
 
@@ -354,7 +354,10 @@ def read(
         if output_format == OutputFormat.JSON:
             console.print_json(data=email.model_dump(mode='json'))
         else:  # RICH
-            formatter.print_email_full(email)
+            if full:
+                formatter.print_email_full(email)
+            else:
+                formatter.print_email_summary(email)
     except Exception as e:
         console.print(f"[red]Error reading email: {e}[/red]")
         raise typer.Exit(code=1)

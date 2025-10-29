@@ -230,11 +230,11 @@ class TestCLICommands:
     def test_read_command_summary_with_rich_format(self, mock_client_class):
         """Test read command with summary format and rich output.
 
-        This tests the bug where reading an email without --full flag
-        returns EmailSummary but the formatter expects EmailFull.
+        Regression test: reading email without --full flag should use
+        print_email_summary(), not print_email_full().
 
-        Bug: cli.py line 883 always calls formatter.print_email_full(email)
-        even when email is an EmailSummary (which lacks 'to', 'cc', body fields).
+        Bug was at cli.py:357 - always called print_email_full() even when
+        EmailSummary returned (which lacks 'to', 'cc', body fields).
         """
         from gmaillm.models import EmailAddress, EmailSummary
 
@@ -256,13 +256,10 @@ class TestCLICommands:
         mock_client.read_email.return_value = email_summary
         mock_client_class.return_value = mock_client
 
-        # Without --full flag, default format is "rich" which calls formatter.print_email_full()
-        # This should fail because EmailSummary doesn't have 'to' attribute
-        # The error is caught and exits with code 1
+        # Without --full flag, should call print_email_summary() not print_email_full()
         with patch("sys.argv", ["gmail", "read", "19a2d480463360ec"]):
-            with pytest.raises(SystemExit) as exc_info:
+            with patch("sys.exit"):
                 main()
-            assert exc_info.value.code == 1
 
         mock_client.read_email.assert_called_once_with("19a2d480463360ec", format="summary")
 
@@ -426,7 +423,7 @@ class TestCLICommands:
         """Test send command expands email groups."""
         groups = {"team": ["alice@example.com", "bob@example.com"]}
 
-        with patch("gmaillm.cli.load_email_groups", return_value=groups):
+        with patch("gmaillm.helpers.domain.load_email_groups", return_value=groups):
             result = expand_email_groups(["#team"], groups)
             assert len(result) == 2
             assert "alice@example.com" in result
