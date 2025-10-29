@@ -9,16 +9,12 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from gmaillm.helpers.config import (
-    get_styles_dir,
-    get_style_file_path,
-    load_all_styles,
-    create_backup,
-    create_style_from_template
-)
-from gmaillm.helpers.typer_utils import HelpfulGroup
-from gmaillm.helpers.json_input import load_and_validate_json, display_schema_and_exit
-from gmaillm.helpers.cli_utils import (
+from gmaillm.helpers.core import get_styles_dir, get_style_file_path, create_backup
+from gmaillm.helpers.domain import load_all_styles, create_style_from_template
+from gmaillm.helpers.cli import (
+    HelpfulGroup,
+    load_and_validate_json,
+    display_schema_and_exit,
     show_operation_preview,
     confirm_or_force,
     create_backup_with_message,
@@ -434,6 +430,31 @@ def delete_style(
         handle_command_error("deleting style", e)
 
 
+def _validate_single_style(name: str, style_file: Path, fix: bool, linter: StyleLinter) -> dict:
+    """Validate a single style and return result.
+
+    Returns dict with keys: name, valid, errors, fixed (if fix=True)
+    """
+    content = style_file.read_text()
+
+    if fix:
+        fixed_content, errors = linter.lint_and_fix(content)
+        style_file.write_text(fixed_content)
+        return {
+            "name": name,
+            "fixed": True,
+            "valid": len(errors) == 0,
+            "errors": errors
+        }
+    else:
+        errors = linter.lint(content)
+        return {
+            "name": name,
+            "valid": len(errors) == 0,
+            "errors": errors
+        }
+
+
 @app.command("validate")
 def validate_style(
     name: Optional[str] = typer.Argument(None, help="Name of the style to validate (validates all if not specified)"),
@@ -467,160 +488,112 @@ def validate_style(
             console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
             raise typer.Exit(code=1)
 
-        # If no name provided, validate all styles
-        if name is None:
-            _validate_all_styles(fix, format_enum)
-            return
-
-        # Validate specific style
-        style_file = get_style_file_path(name)
-
-        if not style_file.exists():
-            console.print(f"[red]✗ Style '{name}' not found[/red]")
-            raise typer.Exit(code=1)
-
-        content = style_file.read_text()
         linter = StyleLinter()
 
-        if fix:
-            # Auto-fix and re-validate
+        # Determine which styles to validate
+        if name is None:
+            # Validate all styles
+            styles_dir = get_styles_dir()
+            style_files = builtins.list(styles_dir.glob("*.md"))
+
+            if not style_files:
+                console.print("[yellow]No styles found[/yellow]")
+                return
+
             if format_enum == OutputFormat.RICH:
-                console.print(f"Fixing {name}...")
-            fixed_content, errors = linter.lint_and_fix(content)
+                console.print(f"Validating {len(style_files)} style(s)...\n")
 
-            # Save fixed content
-            style_file.write_text(fixed_content)
-
-            if format_enum == OutputFormat.JSON:
-                result = {
-                    "name": name,
-                    "fixed": True,
-                    "valid": len(errors) == 0,
-                    "errors": errors
-                }
-                console.print_json(data=result)
-            else:  # RICH
-                console.print("[green]✅ Auto-fixed formatting issues[/green]")
-                if errors:
-                    console.print(f"\n[yellow]⚠️  Remaining validation errors:[/yellow]")
-                    for error in errors:
-                        console.print(f"   {error}")
-                else:
-                    console.print(f"\n[green]✅ Style '{name}' is now valid[/green]")
-
-            if errors:
-                raise typer.Exit(code=1)
+            styles_to_validate = [(f.stem, f) for f in style_files]
         else:
-            # Just validate
-            errors = linter.lint(content)
+            # Validate specific style
+            style_file = get_style_file_path(name)
 
-            if format_enum == OutputFormat.JSON:
-                result = {
-                    "name": name,
-                    "valid": len(errors) == 0,
-                    "errors": errors
-                }
-                console.print_json(data=result)
-            else:  # RICH
-                if errors:
-                    console.print(f"[red]✗ Style '{name}' has validation errors:[/red]")
-                    for error in errors:
-                        console.print(f"   {error}")
-                    console.print(f"\nAuto-fix: [cyan]gmail styles validate {name} --fix[/cyan]")
-                else:
-                    console.print(f"[green]✅ Style '{name}' is valid[/green]")
-
-            if errors:
+            if not style_file.exists():
+                console.print(f"[red]✗ Style '{name}' not found[/red]")
                 raise typer.Exit(code=1)
+
+            styles_to_validate = [(name, style_file)]
+
+        # Validate all selected styles
+        results = []
+        for style_name, style_path in styles_to_validate:
+            result = _validate_single_style(style_name, style_path, fix, linter)
+            results.append(result)
+
+        # Output results
+        if format_enum == OutputFormat.JSON:
+            if len(results) == 1:
+                # Single style: output just the result
+                console.print_json(data=results[0])
+            else:
+                # Multiple styles: output summary
+                valid_count = sum(1 for r in results if r["valid"])
+                invalid_count = len(results) - valid_count
+                summary = {
+                    "total": len(results),
+                    "valid": valid_count,
+                    "invalid": invalid_count,
+                    "results": results
+                }
+                console.print_json(data=summary)
+        else:  # RICH
+            if len(results) == 1:
+                # Single style: detailed output
+                result = results[0]
+                style_name = result["name"]
+                errors = result["errors"]
+
+                if fix:
+                    console.print(f"Fixing {style_name}...")
+                    console.print("[green]✅ Auto-fixed formatting issues[/green]")
+                    if errors:
+                        console.print(f"\n[yellow]⚠️  Remaining validation errors:[/yellow]")
+                        for error in errors:
+                            console.print(f"   {error}")
+                    else:
+                        console.print(f"\n[green]✅ Style '{style_name}' is now valid[/green]")
+                else:
+                    if errors:
+                        console.print(f"[red]✗ Style '{style_name}' has validation errors:[/red]")
+                        for error in errors:
+                            console.print(f"   {error}")
+                        console.print(f"\nAuto-fix: [cyan]gmail styles validate {style_name} --fix[/cyan]")
+                    else:
+                        console.print(f"[green]✅ Style '{style_name}' is valid[/green]")
+            else:
+                # Multiple styles: summary output
+                for result in results:
+                    style_name = result["name"]
+                    errors = result["errors"]
+
+                    if errors:
+                        error_count = len(errors)
+                        status = f"[red]✗ {style_name}: {error_count} error(s)"
+                        if fix:
+                            status += " remaining"
+                        status += "[/red]"
+                        console.print(status)
+                        for error in errors[:3]:  # Show first 3 errors
+                            console.print(f"     {error}")
+                    else:
+                        status = f"[green]✅ {style_name}"
+                        if fix:
+                            status += " (fixed)"
+                        status += "[/green]"
+                        console.print(status)
+
+                # Summary
+                valid_count = sum(1 for r in results if r["valid"])
+                invalid_count = len(results) - valid_count
+                console.print(f"\nResults: [green]{valid_count} valid[/green], [red]{invalid_count} invalid[/red]")
+
+                if invalid_count > 0 and not fix:
+                    console.print(f"\nAuto-fix all: [cyan]gmail styles validate --fix[/cyan]")
+
+        # Exit with error if any validation failed
+        if any(not r["valid"] for r in results):
+            raise typer.Exit(code=1)
 
     except Exception as e:
         console.print(f"[red]✗ Error validating style: {e}[/red]")
-        raise typer.Exit(code=1)
-
-
-def _validate_all_styles(fix: bool, format_enum) -> None:
-    """Internal helper to validate all styles."""
-    styles_dir = get_styles_dir()
-    styles = builtins.list(styles_dir.glob("*.md"))
-
-    if not styles:
-        console.print("[yellow]No styles found[/yellow]")
-        return
-
-    from enum import Enum
-
-    # Define OutputFormat enum locally to avoid circular import
-    class OutputFormat(str, Enum):
-        RICH = "rich"
-        JSON = "json"
-
-    if format_enum == OutputFormat.RICH:
-        console.print(f"Validating {len(styles)} style(s)...\n")
-
-    valid_count = 0
-    invalid_count = 0
-    linter = StyleLinter()
-    results = []
-
-    for style_file in styles:
-        name = style_file.stem
-        content = style_file.read_text()
-
-        if fix:
-            fixed_content, errors = linter.lint_and_fix(content)
-            style_file.write_text(fixed_content)
-
-            result = {
-                "name": name,
-                "fixed": True,
-                "valid": len(errors) == 0,
-                "errors": errors[:3] if errors else []  # Limit errors in JSON too
-            }
-            results.append(result)
-
-            if errors:
-                if format_enum == OutputFormat.RICH:
-                    console.print(f"[red]✗ {name}: {len(errors)} error(s) remaining[/red]")
-                    for error in errors[:3]:  # Show first 3 errors
-                        console.print(f"     {error}")
-                invalid_count += 1
-            else:
-                if format_enum == OutputFormat.RICH:
-                    console.print(f"[green]✅ {name} (fixed)[/green]")
-                valid_count += 1
-        else:
-            errors = linter.lint(content)
-
-            result = {
-                "name": name,
-                "valid": len(errors) == 0,
-                "errors": errors[:3] if errors else []
-            }
-            results.append(result)
-
-            if errors:
-                if format_enum == OutputFormat.RICH:
-                    console.print(f"[red]✗ {name}: {len(errors)} error(s)[/red]")
-                    for error in errors[:3]:  # Show first 3 errors
-                        console.print(f"     {error}")
-                invalid_count += 1
-            else:
-                if format_enum == OutputFormat.RICH:
-                    console.print(f"[green]✅ {name}[/green]")
-                valid_count += 1
-
-    if format_enum == OutputFormat.JSON:
-        summary = {
-            "total": len(styles),
-            "valid": valid_count,
-            "invalid": invalid_count,
-            "results": results
-        }
-        console.print_json(data=summary)
-    else:  # RICH
-        console.print(f"\nResults: [green]{valid_count} valid[/green], [red]{invalid_count} invalid[/red]")
-
-    if invalid_count > 0:
-        if not fix and format_enum == OutputFormat.RICH:
-            console.print(f"\nAuto-fix all: [cyan]gmail styles validate --fix[/cyan]")
         raise typer.Exit(code=1)
