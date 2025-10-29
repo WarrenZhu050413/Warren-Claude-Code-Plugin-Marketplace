@@ -237,6 +237,69 @@ Example email 2
 
 See [STYLES.md](STYLES.md) for complete style guide documentation.
 
+## Workflows
+
+### Interactive Workflows
+
+Process emails interactively with prompts for each action:
+
+```bash
+# Run named workflow
+gmail workflows run clear
+
+# Run with custom query
+gmail workflows run --query "is:unread from:boss@example.com"
+```
+
+### LLM-Friendly Workflows (Programmatic)
+
+Process emails programmatically with continuation tokens for automation:
+
+```bash
+# Start workflow (returns JSON with token + first email)
+gmail workflows start clear
+
+# Continue with actions (returns next email + same token)
+gmail workflows continue <token> archive
+gmail workflows continue <token> skip
+gmail workflows continue <token> reply --reply-body "Thanks!"
+gmail workflows continue <token> view    # View full body
+gmail workflows continue <token> quit    # End workflow
+```
+
+**JSON Response:**
+```json
+{
+  "success": true,
+  "token": "abc123...",
+  "email": { /* full email data */ },
+  "message": "Archived",
+  "progress": {"total": 10, "processed": 3, "remaining": 7, "current": 4},
+  "completed": false
+}
+```
+
+**Automation Example:**
+```bash
+# Archive all unread emails
+TOKEN=$(gmail workflows start clear | jq -r '.token')
+while [ "$TOKEN" != "null" ]; do
+  RESULT=$(gmail workflows continue "$TOKEN" archive)
+  TOKEN=$(echo "$RESULT" | jq -r '.token')
+done
+```
+
+### Workflow Management
+
+```bash
+gmail workflows list              # List configured workflows
+gmail workflows show clear        # View workflow details
+gmail workflows create daily \
+  --query "is:unread" \
+  --auto-mark-read                # Create new workflow
+gmail workflows cleanup           # Remove expired states
+```
+
 ### Python Library
 
 ```python
@@ -282,8 +345,8 @@ gmail search --help
 ## Documentation
 
 ### User Guides
-- **[Email Styles Guide](docs/email-styles.md)** - Creating and managing email writing styles
-- **[Email Groups Guide](docs/email-groups.md)** - Managing email distribution groups
+- **[Email Styles Guide](../docs/email-styles.md)** - Creating and managing email writing styles
+- **[Email Groups Guide](../docs/email-groups.md)** - Managing email distribution groups
 
 ### Technical Documentation
 - **[Testing Guide](TESTING.md)** - Running and writing tests

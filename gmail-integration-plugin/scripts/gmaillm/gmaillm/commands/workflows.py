@@ -423,14 +423,28 @@ def start_workflow(
     query: Optional[str] = typer.Option(None, "--query", "-q", help="Ad-hoc query (instead of named workflow)"),
     max_results: int = typer.Option(100, "--max", "-n", help="Maximum emails to process"),
 ) -> None:
-    """Start a workflow and get continuation token (LLM-friendly).
+    """Start workflow, returns JSON with first email + continuation token.
 
-    Returns JSON with first email and continuation token for programmatic processing.
+    Use the returned token with 'gmail workflows continue <token> <action>' to process emails.
+    Token expires after 1 hour.
 
     \b
     EXAMPLES:
-      $ gmail workflows start clear
-      $ gmail workflows start --query "is:unread"
+      gmail workflows start clear
+      gmail workflows start --query "is:unread from:boss@example.com"
+
+    \b
+    RETURNS:
+      {
+        "success": true,
+        "token": "abc123...",
+        "email": { /* email data */ },
+        "progress": {"total": 10, "processed": 0, "remaining": 10, "current": 1}
+      }
+
+    \b
+    NEXT STEP:
+      gmail workflows continue <token> archive
     """
     try:
         client = GmailClient()
@@ -510,27 +524,38 @@ def start_workflow(
 
 @app.command("continue")
 def continue_workflow(
-    token: str = typer.Argument(..., help="Continuation token from previous step"),
+    token: str = typer.Argument(..., help="Continuation token from 'start' command"),
     action: str = typer.Argument(..., help="Action: view, reply, archive, skip, quit"),
     reply_body: Optional[str] = typer.Option(None, "--reply-body", "-b", help="Reply body (for 'reply' action)"),
 ) -> None:
-    """Continue workflow with action on current email (LLM-friendly).
-
-    Returns JSON with next email and new continuation token.
+    """Process current email with action, returns JSON with next email + token.
 
     \b
     ACTIONS:
-      view     - Return full email body in response
+      view     - Return full email body (no state change)
+      archive  - Archive email and advance to next
+      skip     - Skip email (mark as read if configured) and advance
       reply    - Send reply (requires --reply-body) and archive
-      archive  - Archive email and move to next
-      skip     - Skip email (optionally mark as read) and move to next
       quit     - End workflow session
 
     \b
     EXAMPLES:
-      $ gmail workflows continue <token> archive
-      $ gmail workflows continue <token> reply --reply-body "Thanks!"
-      $ gmail workflows continue <token> skip
+      gmail workflows continue abc123 archive
+      gmail workflows continue abc123 skip
+      gmail workflows continue abc123 reply --reply-body "Thanks!"
+      gmail workflows continue abc123 view
+      gmail workflows continue abc123 quit
+
+    \b
+    RETURNS:
+      {
+        "success": true,
+        "token": "abc123...",
+        "email": { /* next email */ },
+        "message": "Archived",
+        "progress": {"total": 10, "processed": 1, "remaining": 9, "current": 2},
+        "completed": false
+      }
     """
     try:
         client = GmailClient()
@@ -697,10 +722,7 @@ def continue_workflow(
 
 @app.command("cleanup")
 def cleanup_states() -> None:
-    """Clean up expired workflow states.
-
-    Removes workflow state files that have expired (older than 1 hour).
-    """
+    """Remove expired workflow state files (older than 1 hour)."""
     try:
         state_manager = WorkflowStateManager()
         deleted = state_manager.cleanup_expired()
