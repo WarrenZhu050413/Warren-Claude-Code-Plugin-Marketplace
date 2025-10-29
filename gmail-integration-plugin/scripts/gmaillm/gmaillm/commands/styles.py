@@ -13,6 +13,9 @@ from gmaillm.helpers.core import get_styles_dir, get_style_file_path, create_bac
 from gmaillm.helpers.domain import load_all_styles, create_style_from_template
 from gmaillm.helpers.cli import (
     HelpfulGroup,
+    OutputFormat,
+    parse_output_format,
+    output_json_or_rich,
     load_and_validate_json,
     display_schema_and_exit,
     show_operation_preview,
@@ -64,36 +67,25 @@ def list_styles(
 ) -> None:
     """List all email styles with name/description."""
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         styles_dir = get_styles_dir()
         styles = load_all_styles(styles_dir)
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            # Add paths to JSON output if requested
-            styles_json = []
-            for style in styles:
-                style_data = {
-                    "name": style['name'],
-                    "description": style['description']
-                }
-                if show_paths:
-                    style_data["path"] = str(get_style_file_path(style['name']))
-                styles_json.append(style_data)
-            console.print_json(data=styles_json)
-        else:  # RICH
+        # Prepare JSON data
+        styles_json = []
+        for style in styles:
+            style_data = {
+                "name": style['name'],
+                "description": style['description']
+            }
+            if show_paths:
+                style_data["path"] = str(get_style_file_path(style['name']))
+            styles_json.append(style_data)
+
+        # Define rich output function
+        def print_rich():
             console.print("=" * 60)
             console.print(f"Email Styles ({len(styles)})")
             console.print("=" * 60)
@@ -114,6 +106,9 @@ def list_styles(
             console.print(f"\n[dim]Total: {len(styles)} style(s)[/dim]")
             console.print(f"\nUsage: [cyan]gmail styles show <name>[/cyan]")
 
+        # Output in appropriate format
+        output_json_or_rich(format_enum, styles_json, print_rich)
+
     except Exception as e:
         console.print(f"[red]✗ Error listing styles: {e}[/red]")
         raise typer.Exit(code=1)
@@ -126,13 +121,6 @@ def show_style(
 ) -> None:
     """Show full style content."""
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         style_file = get_style_file_path(name)
 
         if not style_file.exists():
@@ -143,21 +131,17 @@ def show_style(
         content = style_file.read_text()
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            style_data = {
-                "name": name,
-                "path": str(style_file),
-                "content": content
-            }
-            console.print_json(data=style_data)
-        else:  # RICH
-            console.print(content)
+        # Prepare JSON data
+        style_data = {
+            "name": name,
+            "path": str(style_file),
+            "content": content
+        }
+
+        # Output in appropriate format
+        output_json_or_rich(format_enum, style_data, lambda: console.print(content))
 
     except Exception as e:
         console.print(f"[red]✗ Error showing style: {e}[/red]")
@@ -474,19 +458,8 @@ def validate_style(
       $ gmail styles validate --fix  # Auto-fix all styles
     """
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
         linter = StyleLinter()
 

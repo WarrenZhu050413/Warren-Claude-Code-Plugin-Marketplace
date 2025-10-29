@@ -34,37 +34,26 @@ def list_workflows(
 ) -> None:
     """List all configured workflows."""
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         manager = WorkflowManager()
         workflows = manager.list_workflows()
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            # Convert to list format for JSON
-            workflows_list = [
-                {
-                    "id": workflow_id,
-                    "name": config.name,
-                    "query": config.query,
-                    "auto_mark_read": config.auto_mark_read,
-                    "description": config.description
-                }
-                for workflow_id, config in sorted(workflows.items())
-            ]
-            console.print_json(data=workflows_list)
-        else:  # RICH
+        # Prepare JSON data
+        workflows_list = [
+            {
+                "id": workflow_id,
+                "name": config.name,
+                "query": config.query,
+                "auto_mark_read": config.auto_mark_read,
+                "description": config.description
+            }
+            for workflow_id, config in sorted(workflows.items())
+        ]
+
+        # Define rich output function
+        def print_rich():
             if not workflows:
                 console.print("[yellow]No workflows configured[/yellow]")
                 console.print("\nCreate a workflow: [cyan]gmail workflows create <id> --query \"...\"[/cyan]")
@@ -90,6 +79,9 @@ def list_workflows(
             console.print(f"\n[dim]Total: {len(workflows)} workflow(s)[/dim]")
             console.print(f"\nUsage: [cyan]gmail workflows run <id>[/cyan]")
 
+        # Output in appropriate format
+        output_json_or_rich(format_enum, workflows_list, print_rich)
+
     except Exception as e:
         console.print(f"[red]✗ Error listing workflows: {e}[/red]")
         raise typer.Exit(code=1)
@@ -102,33 +94,23 @@ def show_workflow(
 ) -> None:
     """Show detailed information about a workflow."""
     try:
-        from enum import Enum
-
-        # Define OutputFormat enum locally to avoid circular import
-        class OutputFormat(str, Enum):
-            RICH = "rich"
-            JSON = "json"
-
         manager = WorkflowManager()
         config = manager.get_workflow(workflow_id)
 
         # Parse output format
-        try:
-            format_enum = OutputFormat(output_format.lower())
-        except ValueError:
-            console.print(f"[red]✗ Invalid output format: {output_format}. Use 'rich' or 'json'[/red]")
-            raise typer.Exit(code=1)
+        format_enum = parse_output_format(output_format, console)
 
-        if format_enum == OutputFormat.JSON:
-            workflow_data = {
-                "id": workflow_id,
-                "name": config.name,
-                "query": config.query,
-                "description": config.description,
-                "auto_mark_read": config.auto_mark_read
-            }
-            console.print_json(data=workflow_data)
-        else:  # RICH
+        # Prepare JSON data
+        workflow_data = {
+            "id": workflow_id,
+            "name": config.name,
+            "query": config.query,
+            "description": config.description,
+            "auto_mark_read": config.auto_mark_read
+        }
+
+        # Define rich output function
+        def print_rich():
             console.print("=" * 60)
             console.print(f"Workflow: {workflow_id}")
             console.print("=" * 60)
@@ -138,6 +120,9 @@ def show_workflow(
             console.print(f"Auto-mark read on skip: {'Yes' if config.auto_mark_read else 'No'}")
             console.print()
             console.print(f"Usage: [cyan]gmail workflows run {workflow_id}[/cyan]")
+
+        # Output in appropriate format
+        output_json_or_rich(format_enum, workflow_data, print_rich)
 
     except KeyError as e:
         console.print(f"[red]✗ {e}[/red]")

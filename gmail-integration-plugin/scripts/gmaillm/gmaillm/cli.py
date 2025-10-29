@@ -52,6 +52,7 @@ app = typer.Typer(
     no_args_is_help=True,
     cls=HelpfulGroup,  # Show help when required args are missing
     context_settings={"help_option_names": ["-h", "--help"]},  # Support -h and --help
+    rich_markup_mode="rich",  # Enable Rich markup in docstrings
 )
 console = Console()
 formatter = RichFormatter(console)
@@ -82,9 +83,8 @@ def verify(
 ) -> None:
     """Verify Gmail API authentication and configuration.
 
-    \b
-    EXAMPLE:
-      $ gmail verify
+    [bold cyan]EXAMPLE[/bold cyan]:
+      [dim]$[/dim] gmail verify
     """
     try:
         client = GmailClient()
@@ -137,10 +137,9 @@ def setup_auth(
 ) -> None:
     """Set up Gmail API authentication via OAuth2.
 
-    \b
-    EXAMPLE:
-      $ gmail setup-auth
-      $ gmail setup-auth --oauth-keys ~/gcp-oauth.keys.json
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail setup-auth
+      [dim]$[/dim] gmail setup-auth --oauth-keys ~/gcp-oauth.keys.json
     """
     try:
         from gmaillm.setup_auth import setup_authentication
@@ -185,10 +184,9 @@ def status(
 ) -> None:
     """Show Gmail account status and inbox summary.
 
-    \b
-    EXAMPLES:
-      $ gmail status
-      $ gmail status --output-format json
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail status
+      [dim]$[/dim] gmail status --output-format json
     """
     try:
         client = GmailClient()
@@ -317,11 +315,10 @@ def list(
 ) -> None:
     """List emails from a folder.
 
-    \b
-    EXAMPLES:
-      $ gmail list
-      $ gmail list --folder SENT --max 20
-      $ gmail list --query "is:unread"
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail list
+      [dim]$[/dim] gmail list --folder SENT --max 20
+      [dim]$[/dim] gmail list --query "is:unread"
     """
     try:
         client = GmailClient()
@@ -344,11 +341,10 @@ def read(
 ) -> None:
     """Read a specific email by message ID.
 
-    \b
-    EXAMPLES:
-      $ gmail read msg123
-      $ gmail read msg123 --full
-      $ gmail read msg123 --output-format json
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail read msg123
+      [dim]$[/dim] gmail read msg123 --full
+      [dim]$[/dim] gmail read msg123 --output-format json
     """
     try:
         client = GmailClient()
@@ -371,10 +367,9 @@ def thread(
 ) -> None:
     """Show entire email thread containing a message.
 
-    \b
-    EXAMPLES:
-      $ gmail thread msg123
-      $ gmail thread msg123 --output-format json
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail thread msg123
+      [dim]$[/dim] gmail thread msg123 --output-format json
     """
     try:
         client = GmailClient()
@@ -399,11 +394,10 @@ def search(
 ) -> None:
     """Search emails using Gmail query syntax.
 
-    \b
-    EXAMPLES:
-      $ gmail search "from:boss@company.com"
-      $ gmail search "is:unread label:important"
-      $ gmail search "subject:meeting" --max 20
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail search "from:boss@company.com"
+      [dim]$[/dim] gmail search "is:unread label:important"
+      [dim]$[/dim] gmail search "subject:meeting" --max 20
     """
     try:
         client = GmailClient()
@@ -433,17 +427,15 @@ def reply(
 ) -> None:
     """Reply to an email from CLI args or JSON file.
 
-    \b
-    MODES:
-      1. Interactive: Provide body via CLI
-      2. Programmatic: Reply from JSON file (--json-input-path)
-      3. Schema: Display JSON schema (--schema)
+    [bold cyan]MODES[/bold cyan]:
+      [green]1.[/green] Interactive: Provide body via CLI
+      [green]2.[/green] Programmatic: Reply from JSON file ([blue]--json-input-path[/blue])
+      [green]3.[/green] Schema: Display JSON schema ([blue]--schema[/blue])
 
-    \b
-    EXAMPLES:
-      $ gmail reply msg123 --body "Thanks for the update!"
-      $ gmail reply msg123 --json-input-path reply.json
-      $ gmail reply msg123 --schema
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail reply msg123 --body "Thanks for the update!"
+      [dim]$[/dim] gmail reply msg123 --json-input-path reply.json
+      [dim]$[/dim] gmail reply msg123 --schema
     """
     try:
         # Display schema if requested
@@ -539,17 +531,15 @@ def send(
 ) -> None:
     """Send a new email from CLI args or JSON file.
 
-    \b
-    MODES:
-      1. Interactive: Provide email details via CLI
-      2. Programmatic: Send from JSON file (--json-input-path)
-      3. Schema: Display JSON schema (--schema)
+    [bold cyan]MODES[/bold cyan]:
+      [green]1.[/green] Interactive: Provide email details via CLI
+      [green]2.[/green] Programmatic: Send from JSON file ([blue]--json-input-path[/blue])
+      [green]3.[/green] Schema: Display JSON schema ([blue]--schema[/blue])
 
-    \b
-    EXAMPLES:
-      $ gmail send --to user@example.com --subject "Hello" --body "Message"
-      $ gmail send --json-input-path email.json --yolo
-      $ gmail send --schema
+    [bold cyan]EXAMPLES[/bold cyan]:
+      [dim]$[/dim] gmail send --to user@example.com --subject "Hello" --body "Message"
+      [dim]$[/dim] gmail send --json-input-path email.json --yolo
+      [dim]$[/dim] gmail send --schema
     """
     try:
         # Display schema if requested
