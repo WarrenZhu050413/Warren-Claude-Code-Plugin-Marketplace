@@ -44,9 +44,9 @@ def show_schema() -> None:
         console.print_json(schema_str)
         console.print("\n[bold]Usage Examples:[/bold]")
         console.print("  Create from JSON file:")
-        console.print("    [cyan]gmail styles create my-style --json-input style.json[/cyan]")
-        console.print("\n  Create from JSON string:")
-        console.print("    [cyan]gmail styles create my-style -j '{...}' --force[/cyan]")
+        console.print("    [cyan]gmail styles create my-style --json-input style.json --force[/cyan]")
+        console.print("\n  Edit from JSON file:")
+        console.print("    [cyan]gmail styles edit my-style -j updated.json --force[/cyan]")
     except Exception as e:
         console.print(f"[red]✗ Error displaying schema: {e}[/red]")
         raise typer.Exit(code=1)
@@ -118,7 +118,7 @@ def create_style(
         None,
         "--json-input",
         "-j",
-        help="Path to JSON file or JSON string for programmatic creation"
+        help="Path to JSON file for programmatic creation"
     ),
     force: bool = typer.Option(
         False,
@@ -128,12 +128,12 @@ def create_style(
     ),
     skip_validation: bool = typer.Option(False, "--skip-validation", help="Skip validation"),
 ) -> None:
-    """Create a new email style from template or JSON.
+    """Create a new email style from template or JSON file.
 
     \b
     MODES:
       1. Interactive (default): Create from template with editor
-      2. Programmatic (--json-input): Create from JSON file or string
+      2. Programmatic (--json-input): Create from JSON file
 
     \b
     EXAMPLES:
@@ -142,9 +142,7 @@ def create_style(
 
       From JSON file:
         $ gmail styles create my-style --json-input style.json --force
-
-      From JSON string:
-        $ gmail styles create my-style -j '{"name":"my-style",...}' -f
+        $ gmail styles create my-style -j /path/to/style.json -f
 
       View schema:
         $ gmail styles schema
@@ -163,21 +161,28 @@ def create_style(
 
         # PROGRAMMATIC MODE: JSON input
         if json_input:
-            console.print("[cyan]Creating style from JSON input...[/cyan]")
+            console.print("[cyan]Creating style from JSON file...[/cyan]")
 
-            # Load JSON (from file or string)
+            # Load JSON from file
+            json_path = Path(json_input)
+            if not json_path.exists():
+                console.print(f"[red]✗ File not found: {json_path}[/red]")
+                raise typer.Exit(code=1)
+
+            if not json_path.is_file():
+                console.print(f"[red]✗ Not a file: {json_path}[/red]")
+                raise typer.Exit(code=1)
+
             try:
-                json_path = Path(json_input)
-                if json_path.exists() and json_path.is_file():
-                    console.print(f"Reading JSON from file: {json_path}")
-                    with open(json_path) as f:
-                        json_data = json.load(f)
-                else:
-                    console.print("Parsing JSON from string...")
-                    json_data = json.loads(json_input)
+                console.print(f"Reading JSON from: {json_path}")
+                with open(json_path) as f:
+                    json_data = json.load(f)
             except json.JSONDecodeError as e:
-                console.print(f"[red]✗ Invalid JSON: {e}[/red]")
+                console.print(f"[red]✗ Invalid JSON in {json_path}: {e}[/red]")
                 console.print("\nView schema: [cyan]gmail styles schema[/cyan]")
+                raise typer.Exit(code=1)
+            except Exception as e:
+                console.print(f"[red]✗ Error reading file: {e}[/red]")
                 raise typer.Exit(code=1)
 
             # Create backup if overwriting
@@ -260,7 +265,7 @@ def edit_style(
         None,
         "--json-input",
         "-j",
-        help="Path to JSON file or JSON string for programmatic editing"
+        help="Path to JSON file for programmatic editing"
     ),
     force: bool = typer.Option(
         False,
@@ -275,7 +280,7 @@ def edit_style(
     \b
     MODES:
       1. Interactive (default): Open style in $EDITOR
-      2. Programmatic (--json-input): Replace content from JSON
+      2. Programmatic (--json-input): Replace content from JSON file
 
     \b
     EXAMPLES:
@@ -284,9 +289,7 @@ def edit_style(
 
       Replace from JSON file:
         $ gmail styles edit my-style --json-input updated.json --force
-
-      Replace from JSON string:
-        $ gmail styles edit my-style -j '{"name":"my-style",...}' -f
+        $ gmail styles edit my-style -j /path/to/updated.json -f
     """
     try:
         style_file = get_style_file_path(name)
@@ -299,25 +302,32 @@ def edit_style(
 
         # PROGRAMMATIC MODE: JSON input
         if json_input:
-            console.print("[cyan]Updating style from JSON input...[/cyan]")
+            console.print("[cyan]Updating style from JSON file...[/cyan]")
 
             # Create backup
             backup_path = create_backup(style_file)
             console.print(f"Backup created: {backup_path}")
 
-            # Load JSON (from file or string)
+            # Load JSON from file
+            json_path = Path(json_input)
+            if not json_path.exists():
+                console.print(f"[red]✗ File not found: {json_path}[/red]")
+                raise typer.Exit(code=1)
+
+            if not json_path.is_file():
+                console.print(f"[red]✗ Not a file: {json_path}[/red]")
+                raise typer.Exit(code=1)
+
             try:
-                json_path = Path(json_input)
-                if json_path.exists() and json_path.is_file():
-                    console.print(f"Reading JSON from file: {json_path}")
-                    with open(json_path) as f:
-                        json_data = json.load(f)
-                else:
-                    console.print("Parsing JSON from string...")
-                    json_data = json.loads(json_input)
+                console.print(f"Reading JSON from: {json_path}")
+                with open(json_path) as f:
+                    json_data = json.load(f)
             except json.JSONDecodeError as e:
-                console.print(f"[red]✗ Invalid JSON: {e}[/red]")
+                console.print(f"[red]✗ Invalid JSON in {json_path}: {e}[/red]")
                 console.print("\nView schema: [cyan]gmail styles schema[/cyan]")
+                raise typer.Exit(code=1)
+            except Exception as e:
+                console.print(f"[red]✗ Error reading file: {e}[/red]")
                 raise typer.Exit(code=1)
 
             # Replace content
