@@ -16,7 +16,8 @@ from gmaillm.validators.email import validate_label_name
 # Initialize Typer app and console
 app = typer.Typer(
     help="Manage Gmail labels",
-    cls=HelpfulGroup  # Show help on missing required args
+    cls=HelpfulGroup,  # Show help on missing required args
+    context_settings={"help_option_names": ["-h", "--help"]}
 )
 console = Console()
 formatter = RichFormatter(console)

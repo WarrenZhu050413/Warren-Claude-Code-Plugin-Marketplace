@@ -24,7 +24,10 @@ class OutputFormat(str, Enum):
     JSON = "json"  # Raw JSON output
 
 # Initialize Typer app and console
-app = typer.Typer(help="Interactive email workflows")
+app = typer.Typer(
+    help="Interactive email workflows",
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
 console = Console()
 formatter = RichFormatter(console)
 

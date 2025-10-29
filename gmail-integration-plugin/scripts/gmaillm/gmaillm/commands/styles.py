@@ -36,7 +36,8 @@ from gmaillm.validators.styles import (
 # Initialize Typer app and console
 app = typer.Typer(
     help="Manage email style templates",
-    cls=HelpfulGroup  # Show help on missing required args
+    cls=HelpfulGroup,  # Show help on missing required args
+    context_settings={"help_option_names": ["-h", "--help"]}
 )
 console = Console()
 

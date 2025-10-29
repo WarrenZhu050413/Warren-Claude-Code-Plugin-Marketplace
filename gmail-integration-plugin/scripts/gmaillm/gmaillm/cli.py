@@ -53,6 +53,7 @@ app = typer.Typer(
     add_completion=True,
     no_args_is_help=True,
     cls=HelpfulGroup,  # Show help when required args are missing
+    context_settings={"help_option_names": ["-h", "--help"]},  # Support -h and --help
 )
 console = Console()
 formatter = RichFormatter(console)
