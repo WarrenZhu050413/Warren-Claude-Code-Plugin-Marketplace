@@ -226,11 +226,11 @@ class RichFormatter:
 
     # ============ THREAD FORMATTING ============
 
-    def print_thread(self, thread: List[EmailFull], message_id: str) -> None:
+    def print_thread(self, thread: List[EmailSummary], message_id: str) -> None:
         """Print email thread.
 
         Args:
-            thread: List of EmailFull objects in the thread
+            thread: List of EmailSummary objects in the thread
             message_id: Original message ID for title
         """
         self.console.print("=" * 60)
@@ -240,13 +240,8 @@ class RichFormatter:
 
         for i, email in enumerate(thread, 1):
             from_str = f"[cyan]{email.from_.email}[/cyan]"
-            to_str = (
-                f"[cyan]{email.to[0].email}[/cyan]"
-                if email.to and len(email.to) > 0
-                else "[dim]unknown[/dim]"
-            )
 
-            self.console.print(f"\n[bold][{i}][/bold] {from_str} → {to_str}")
+            self.console.print(f"\n[bold][{i}][/bold] From: {from_str}")
             self.console.print(
                 f"[bold]Date:[/bold] {email.date.strftime('%Y-%m-%d %H:%M')}"
             )
