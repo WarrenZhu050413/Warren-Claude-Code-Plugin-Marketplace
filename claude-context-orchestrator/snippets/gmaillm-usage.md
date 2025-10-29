@@ -137,23 +137,71 @@ Claude:
 
 ### 🔄 WORKFLOW Pattern
 
-**Workflow:**
-1. **List available workflows**:
-   ```bash
-   gmail workflows list
-   ```
+**Creating Workflows:**
 
-2. **Show workflow details**:
-   ```bash
-   gmail workflows show <workflow-name>
-   ```
+To create a workflow for specific email patterns:
 
-3. **Run workflow**:
-   ```bash
-   gmail workflows run <workflow-name>
-   ```
+```bash
+# Create workflow for specific recipient
+gmail workflows create gmaillm-inbox \
+  --query "to:wzhu+gmaillm@college.harvard.edu" \
+  --name "GmailLM Messages" \
+  --description "Process emails sent to +gmaillm alias"
 
-4. **Suggest new workflow** if pattern emerges (see below)
+# Create workflow for unread emails
+gmail workflows create daily-clear \
+  --query "is:unread in:inbox" \
+  --auto-mark-read
+
+# Create workflow with specific label
+gmail workflows create proj-alpha \
+  --query "label:Projects/Alpha is:unread"
+```
+
+**Running Workflows:**
+
+```bash
+# Interactive mode (shows each email, prompts for actions)
+gmail workflows run gmaillm-inbox
+
+# Programmatic mode (LLM-friendly with continuation tokens)
+gmail workflows start gmaillm-inbox           # Returns token
+gmail workflows continue <token> archive       # Archive current email
+gmail workflows continue <token> skip          # Skip to next
+gmail workflows continue <token> reply -b "Thanks!"  # Reply and archive
+```
+
+**Common Gmail Search Queries:**
+
+- `to:user+tag@domain.com` - Emails sent to specific alias
+- `from:sender@example.com` - Emails from specific sender
+- `is:unread` - Unread emails only
+- `is:important` - Important emails
+- `has:attachment` - Emails with attachments
+- `in:inbox` - Emails in inbox
+- `label:Projects/Alpha` - Emails with specific label
+- `after:2024/10/01` - Emails after date
+- Combine with AND: `from:user@example.com is:unread`
+
+**Workflow Management:**
+
+```bash
+# List all workflows
+gmail workflows list
+
+# Show workflow details
+gmail workflows show gmaillm-inbox
+
+# Delete workflow
+gmail workflows delete gmaillm-inbox
+```
+
+**When to Suggest New Workflow:**
+
+Suggest creating a workflow if user:
+- Performs same search/action repeatedly
+- Mentions processing specific email patterns
+- Asks about automating email tasks
 
 ---
 
@@ -271,13 +319,21 @@ When suggesting resources:
 
 ## Examples Command
 
-For detailed usage examples:
+**IMPORTANT:** Always use the `examples` command to learn about features. **Never read source code** to understand how to use gmaillm.
+
 ```bash
-gmail groups examples    # Group usage patterns
-gmail styles examples    # Style usage + LLM guide
+gmail groups examples      # Group usage patterns
+gmail styles examples      # Style usage + LLM guide
+gmail workflows examples   # Workflow creation and usage patterns
 ```
 
-The `styles examples` command includes a dedicated "🤖 LLM USE" section showing how to:
+**Why use `examples` instead of reading code:**
+- Examples show **how to use** the CLI, not how it's implemented
+- Examples include real-world patterns and workflows
+- Examples are designed for LLM consumption (structured, clear)
+- Reading source code wastes context and provides wrong information
+
+**The `styles examples` command includes a dedicated "🤖 LLM USE" section showing how to:**
 1. Determine relevant style from user context
 2. Retrieve style guidelines
 3. Apply style rules when composing
