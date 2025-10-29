@@ -329,12 +329,90 @@ def search(
 @app.command()
 def reply(
     message_id: str = typer.Argument(..., help="Message ID to reply to"),
-    body: str = typer.Option(..., "--body", help="Reply body text"),
+    body: Optional[str] = typer.Option(None, "--body", help="Reply body text"),
     reply_all: bool = typer.Option(False, "--reply-all", help="Reply to all recipients"),
+    json_input: Optional[str] = typer.Option(
+        None,
+        "--json-input",
+        "-j",
+        help="Path to JSON file for programmatic reply"
+    ),
+    schema: bool = typer.Option(False, "--schema", help="Display JSON schema and exit"),
 ) -> None:
-    """Reply to an email."""
+    """Reply to an email from CLI args or JSON file.
+
+    \b
+    MODES:
+      1. Interactive (default): Provide body via CLI
+      2. Programmatic (--json-input): Reply from JSON file
+      3. Schema view (--schema): Display JSON schema
+
+    \b
+    EXAMPLES:
+      Interactive reply:
+        $ gmail reply msg123 --body "Thanks for the update!"
+
+      From JSON file:
+        $ gmail reply msg123 --json-input reply.json
+
+      View schema:
+        $ gmail reply msg123 --schema
+    """
     try:
+        # Display schema if requested
+        if schema:
+            from gmaillm.validators.email_operations import get_reply_email_json_schema_string
+            schema_str = get_reply_email_json_schema_string(indent=2)
+            console.print("\n[bold cyan]Reply Email JSON Schema[/bold cyan]")
+            console.print("[dim]Use this schema for programmatic replies with --json-input[/dim]\n")
+            console.print_json(schema_str)
+            console.print("\n[bold]Usage Example:[/bold]")
+            console.print("  [cyan]gmail reply <message_id> --json-input reply.json[/cyan]")
+            return
+
         client = GmailClient()
+
+        # PROGRAMMATIC MODE: JSON input
+        if json_input:
+            from pathlib import Path
+            from gmaillm.validators.email_operations import (
+                validate_reply_email_json,
+                load_json_from_file
+            )
+
+            console.print("[cyan]Sending reply from JSON file...[/cyan]")
+
+            # Load JSON from file
+            try:
+                json_data = load_json_from_file(Path(json_input))
+            except (FileNotFoundError, ValueError) as e:
+                console.print(f"[red]✗ {e}[/red]")
+                raise typer.Exit(code=1)
+
+            # Validate JSON
+            validation_errors = validate_reply_email_json(json_data)
+            if validation_errors:
+                console.print(f"[red]✗ Invalid JSON data:[/red]")
+                for err in validation_errors:
+                    console.print(f"  - {err}")
+                console.print("\nView schema: [cyan]gmail reply <message_id> --schema[/cyan]")
+                raise typer.Exit(code=1)
+
+            # Extract from JSON
+            reply_body = json_data["body"]
+            do_reply_all = json_data.get("reply_all", False)
+
+        # INTERACTIVE MODE: CLI arguments
+        else:
+            if body is None:
+                console.print("[red]✗ Required: --body (or use --json-input)[/red]")
+                console.print("\nUsage: [cyan]gmail reply <message_id> --body <text>[/cyan]")
+                console.print("   Or: [cyan]gmail reply <message_id> --json-input reply.json[/cyan]")
+                console.print("   Or: [cyan]gmail reply <message_id> --schema[/cyan] to view JSON schema")
+                raise typer.Exit(code=1)
+
+            reply_body = body
+            do_reply_all = reply_all
 
         # Get original email for context
         original = client.read_email(message_id, format="summary")
@@ -344,8 +422,10 @@ def reply(
         console.print("Reply Preview")
         console.print("=" * 60)
         console.print(f"To: {original.from_.email}")
+        if do_reply_all:
+            console.print("[yellow](Reply All mode)[/yellow]")
         console.print(f"Subject: Re: {original.subject}")
-        console.print(f"\n{body}")
+        console.print(f"\n{reply_body}")
         console.print("=" * 60)
 
         # Confirm
@@ -355,7 +435,7 @@ def reply(
             return
 
         # Send reply
-        result = client.reply_email(message_id=message_id, body=body, reply_all=reply_all)
+        result = client.reply_email(message_id=message_id, body=reply_body, reply_all=do_reply_all)
 
         console.print(f"\n[green]✅ Reply sent! Message ID: {result.message_id}[/green]")
 
@@ -366,24 +446,110 @@ def reply(
 
 @app.command()
 def send(
-    to: List[str] = typer.Option(..., "--to", "-t", help="Recipient email(s). Can be repeated for multiple recipients or use #groupname"),
-    subject: str = typer.Option(..., "--subject", "-s", help="Email subject"),
-    body: str = typer.Option(..., "--body", "-b", help="Email body"),
+    to: Optional[List[str]] = typer.Option(None, "--to", "-t", help="Recipient email(s). Can be repeated for multiple recipients or use #groupname"),
+    subject: Optional[str] = typer.Option(None, "--subject", "-s", help="Email subject"),
+    body: Optional[str] = typer.Option(None, "--body", "-b", help="Email body"),
     cc: Optional[List[str]] = typer.Option(None, "--cc", help="CC recipient(s). Can be repeated or use #groupname"),
     bcc: Optional[List[str]] = typer.Option(None, "--bcc", help="BCC recipient(s). Can be repeated or use #groupname"),
     attachments: Optional[List[str]] = typer.Option(
         None, "--attachment", "-a", help="Attachment file path(s)"
     ),
+    json_input: Optional[str] = typer.Option(
+        None,
+        "--json-input",
+        "-j",
+        help="Path to JSON file for programmatic email sending"
+    ),
     yolo: bool = typer.Option(False, "--yolo", help="Send without confirmation"),
+    schema: bool = typer.Option(False, "--schema", help="Display JSON schema and exit"),
 ) -> None:
-    """Send a new email."""
+    """Send a new email from CLI args or JSON file.
+
+    \b
+    MODES:
+      1. Interactive (default): Provide email details via CLI
+      2. Programmatic (--json-input): Send from JSON file
+      3. Schema view (--schema): Display JSON schema
+
+    \b
+    EXAMPLES:
+      Interactive sending:
+        $ gmail send --to user@example.com --subject "Hello" --body "Message"
+
+      From JSON file:
+        $ gmail send --json-input email.json --yolo
+
+      View schema:
+        $ gmail send --schema
+    """
     try:
+        # Display schema if requested
+        if schema:
+            from gmaillm.validators.email_operations import get_send_email_json_schema_string
+            schema_str = get_send_email_json_schema_string(indent=2)
+            console.print("\n[bold cyan]Send Email JSON Schema[/bold cyan]")
+            console.print("[dim]Use this schema for programmatic email sending with --json-input[/dim]\n")
+            console.print_json(schema_str)
+            console.print("\n[bold]Usage Example:[/bold]")
+            console.print("  [cyan]gmail send --json-input email.json --yolo[/cyan]")
+            return
+
         client = GmailClient()
 
+        # PROGRAMMATIC MODE: JSON input
+        if json_input:
+            from pathlib import Path
+            from gmaillm.validators.email_operations import (
+                validate_send_email_json,
+                load_json_from_file
+            )
+
+            console.print("[cyan]Sending email from JSON file...[/cyan]")
+
+            # Load JSON from file
+            try:
+                json_data = load_json_from_file(Path(json_input))
+            except (FileNotFoundError, ValueError) as e:
+                console.print(f"[red]✗ {e}[/red]")
+                raise typer.Exit(code=1)
+
+            # Validate JSON
+            validation_errors = validate_send_email_json(json_data)
+            if validation_errors:
+                console.print(f"[red]✗ Invalid JSON data:[/red]")
+                for err in validation_errors:
+                    console.print(f"  - {err}")
+                console.print("\nView schema: [cyan]gmail send --schema[/cyan]")
+                raise typer.Exit(code=1)
+
+            # Extract from JSON
+            to_list_raw = json_data["to"]
+            email_subject = json_data["subject"]
+            email_body = json_data["body"]
+            cc_list_raw = json_data.get("cc")
+            bcc_list_raw = json_data.get("bcc")
+            attachment_list = json_data.get("attachments")
+
+        # INTERACTIVE MODE: CLI arguments
+        else:
+            if to is None or subject is None or body is None:
+                console.print("[red]✗ Required: --to, --subject, --body (or use --json-input)[/red]")
+                console.print("\nUsage: [cyan]gmail send --to <email> --subject <text> --body <text>[/cyan]")
+                console.print("   Or: [cyan]gmail send --json-input email.json[/cyan]")
+                console.print("   Or: [cyan]gmail send --schema[/cyan] to view JSON schema")
+                raise typer.Exit(code=1)
+
+            to_list_raw = to
+            email_subject = subject
+            email_body = body
+            cc_list_raw = cc
+            bcc_list_raw = bcc
+            attachment_list = attachments
+
         # Expand email groups first (#groupname -> actual emails)
-        to_list = expand_email_groups(to)
-        cc_list = expand_email_groups(cc) if cc else None
-        bcc_list = expand_email_groups(bcc) if bcc else None
+        to_list = expand_email_groups(to_list_raw)
+        cc_list = expand_email_groups(cc_list_raw) if cc_list_raw else None
+        bcc_list = expand_email_groups(bcc_list_raw) if bcc_list_raw else None
 
         # Validate expanded email addresses
         validate_email_list(to_list, "recipient")
@@ -393,7 +559,7 @@ def send(
             validate_email_list(bcc_list, "BCC")
 
         # Validate attachments
-        validated_attachments = validate_attachment_paths(attachments)
+        validated_attachments = validate_attachment_paths(attachment_list)
 
         # Show preview
         console.print("=" * 60)
@@ -404,8 +570,8 @@ def send(
             console.print(f"Cc: {', '.join(cc_list)}")
         if bcc_list:
             console.print(f"Bcc: {', '.join(bcc_list)}")
-        console.print(f"Subject: {subject}")
-        console.print(f"\n{body}")
+        console.print(f"Subject: {email_subject}")
+        console.print(f"\n{email_body}")
         if validated_attachments:
             console.print(f"\nAttachments: {len(validated_attachments)} file(s)")
             for att in validated_attachments:
@@ -423,7 +589,7 @@ def send(
 
         # Send email
         request = SendEmailRequest(
-            to=to_list, subject=subject, body=body, cc=cc_list, bcc=bcc_list, attachments=validated_attachments
+            to=to_list, subject=email_subject, body=email_body, cc=cc_list, bcc=bcc_list, attachments=validated_attachments
         )
         result = client.send_email(request)
 
