@@ -1,8 +1,10 @@
 """Style validation utilities for gmaillm."""
 
+import json
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 import typer
 import yaml
@@ -23,6 +25,269 @@ MIN_EXAMPLES = 1
 MAX_EXAMPLES = 3
 MIN_DO_ITEMS = 2
 MIN_DONT_ITEMS = 2
+
+# JSON Schema for programmatic style creation
+STYLE_JSON_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["name", "description", "greeting", "body", "closing", "do", "dont"],
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": STYLE_NAME_MIN_LENGTH,
+            "maxLength": STYLE_NAME_MAX_LENGTH,
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Style identifier (lowercase, hyphens only, no special chars or spaces)"
+        },
+        "description": {
+            "type": "string",
+            "minLength": STYLE_DESC_MIN_LENGTH,
+            "maxLength": STYLE_DESC_MAX_LENGTH,
+            "pattern": "^When to use:",
+            "description": "Must start with 'When to use:' and describe the scenario (30-200 chars)"
+        },
+        "examples": {
+            "type": "array",
+            "minItems": MIN_EXAMPLES,
+            "maxItems": MAX_EXAMPLES,
+            "items": {
+                "type": "string",
+                "minLength": 10
+            },
+            "description": "1-3 complete email examples showing the style in action"
+        },
+        "greeting": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": "List of greeting patterns (e.g., 'Dear {name}', 'Hi {name}')"
+        },
+        "body": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": "List of body writing guidelines and principles"
+        },
+        "closing": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": "List of closing patterns (e.g., 'Best regards', 'Sincerely')"
+        },
+        "do": {
+            "type": "array",
+            "minItems": MIN_DO_ITEMS,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": "Best practices for this style (minimum 2 items)"
+        },
+        "dont": {
+            "type": "array",
+            "minItems": MIN_DONT_ITEMS,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": "Things to avoid with this style (minimum 2 items)"
+        }
+    },
+    "additionalProperties": False
+}
+
+
+def get_style_json_schema() -> Dict[str, Any]:
+    """Return the JSON schema for style creation.
+
+    Returns:
+        Dictionary containing the JSON schema definition
+    """
+    return STYLE_JSON_SCHEMA
+
+
+def get_style_json_schema_string(indent: int = 2) -> str:
+    """Return formatted JSON schema for CLI help and documentation.
+
+    Args:
+        indent: Number of spaces for JSON indentation (default: 2)
+
+    Returns:
+        Pretty-printed JSON schema string
+    """
+    return json.dumps(STYLE_JSON_SCHEMA, indent=indent)
+
+
+def validate_json_against_schema(json_data: Dict[str, Any]) -> List[str]:
+    """Validate JSON data against the style schema.
+
+    Args:
+        json_data: Dictionary containing style data
+
+    Returns:
+        List of validation error messages (empty if valid)
+    """
+    errors = []
+
+    # Check required fields
+    required_fields = STYLE_JSON_SCHEMA["required"]
+    for field in required_fields:
+        if field not in json_data:
+            errors.append(f"Missing required field: '{field}'")
+
+    # Validate name
+    if "name" in json_data:
+        name = json_data["name"]
+        if not isinstance(name, str):
+            errors.append(f"Field 'name' must be a string, got {type(name).__name__}")
+        else:
+            if len(name) < STYLE_NAME_MIN_LENGTH:
+                errors.append(f"Field 'name' too short (min {STYLE_NAME_MIN_LENGTH} chars)")
+            if len(name) > STYLE_NAME_MAX_LENGTH:
+                errors.append(f"Field 'name' too long (max {STYLE_NAME_MAX_LENGTH} chars)")
+            if not re.match(r'^[a-z0-9-]+$', name):
+                errors.append(f"Field 'name' contains invalid characters (only lowercase, numbers, hyphens)")
+
+    # Validate description
+    if "description" in json_data:
+        desc = json_data["description"]
+        if not isinstance(desc, str):
+            errors.append(f"Field 'description' must be a string, got {type(desc).__name__}")
+        else:
+            if not desc.startswith("When to use:"):
+                errors.append("Field 'description' must start with 'When to use:'")
+            if len(desc) < STYLE_DESC_MIN_LENGTH:
+                errors.append(f"Field 'description' too short (min {STYLE_DESC_MIN_LENGTH} chars)")
+            if len(desc) > STYLE_DESC_MAX_LENGTH:
+                errors.append(f"Field 'description' too long (max {STYLE_DESC_MAX_LENGTH} chars)")
+
+    # Validate array fields
+    array_fields = {
+        "examples": (MIN_EXAMPLES, MAX_EXAMPLES),
+        "greeting": (1, None),
+        "body": (1, None),
+        "closing": (1, None),
+        "do": (MIN_DO_ITEMS, None),
+        "dont": (MIN_DONT_ITEMS, None)
+    }
+
+    for field, (min_items, max_items) in array_fields.items():
+        if field in json_data:
+            value = json_data[field]
+            if not isinstance(value, list):
+                errors.append(f"Field '{field}' must be an array, got {type(value).__name__}")
+            else:
+                if len(value) < min_items:
+                    errors.append(f"Field '{field}' must have at least {min_items} item(s)")
+                if max_items and len(value) > max_items:
+                    errors.append(f"Field '{field}' must have at most {max_items} item(s)")
+
+                # Check all items are strings
+                for i, item in enumerate(value):
+                    if not isinstance(item, str):
+                        errors.append(f"Field '{field}[{i}]' must be a string, got {type(item).__name__}")
+                    elif not item.strip():
+                        errors.append(f"Field '{field}[{i}]' cannot be empty")
+
+    # Check for unexpected fields
+    allowed_fields = set(STYLE_JSON_SCHEMA["properties"].keys())
+    extra_fields = set(json_data.keys()) - allowed_fields
+    if extra_fields:
+        errors.append(f"Unexpected fields: {', '.join(sorted(extra_fields))}")
+
+    return errors
+
+
+def create_style_from_json(json_data: Dict[str, Any], output_path: Path) -> None:
+    """Create style markdown file from JSON data.
+
+    Args:
+        json_data: Dictionary containing style data (must be valid against schema)
+        output_path: Path where the style file should be written
+
+    Raises:
+        ValueError: If JSON data is invalid
+    """
+    # Validate JSON data
+    validation_errors = validate_json_against_schema(json_data)
+    if validation_errors:
+        raise ValueError(f"Invalid JSON data:\n" + "\n".join(f"  - {err}" for err in validation_errors))
+
+    # Build markdown content
+    lines = []
+
+    # YAML frontmatter
+    lines.append("---")
+    lines.append(f"name: \"{json_data['name']}\"")
+    lines.append(f"description: \"{json_data['description']}\"")
+    lines.append("---")
+    lines.append("")
+
+    # Examples section
+    lines.append("<examples>")
+    lines.append("")
+    examples = json_data.get("examples", [])
+    lines.append("\n\n---\n\n".join(examples))
+    lines.append("")
+    lines.append("</examples>")
+    lines.append("")
+
+    # Greeting section
+    lines.append("<greeting>")
+    lines.append("")
+    for item in json_data["greeting"]:
+        lines.append(f"- {item}")
+    lines.append("")
+    lines.append("</greeting>")
+    lines.append("")
+
+    # Body section
+    lines.append("<body>")
+    lines.append("")
+    for item in json_data["body"]:
+        lines.append(f"- {item}")
+    lines.append("")
+    lines.append("</body>")
+    lines.append("")
+
+    # Closing section
+    lines.append("<closing>")
+    lines.append("")
+    for item in json_data["closing"]:
+        lines.append(f"- {item}")
+    lines.append("")
+    lines.append("</closing>")
+    lines.append("")
+
+    # Do section
+    lines.append("<do>")
+    lines.append("")
+    for item in json_data["do"]:
+        lines.append(f"- {item}")
+    lines.append("")
+    lines.append("</do>")
+    lines.append("")
+
+    # Dont section
+    lines.append("<dont>")
+    lines.append("")
+    for item in json_data["dont"]:
+        lines.append(f"- {item}")
+    lines.append("")
+    lines.append("</dont>")
+
+    # Write to file
+    content = "\n".join(lines)
+    output_path.write_text(content)
 
 
 def validate_style_name(name: str) -> None:
