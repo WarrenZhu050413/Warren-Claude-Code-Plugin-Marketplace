@@ -337,6 +337,7 @@ def list(
 def read(
     message_id: str = typer.Argument(..., help="Message ID to read"),
     full: bool = typer.Option(False, "--full", help="Show full email body"),
+    full_thread: bool = typer.Option(False, "--full-thread", help="Show full email with entire thread context"),
     output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
 ) -> None:
     """Read a specific email by message ID.
@@ -344,17 +345,39 @@ def read(
     [bold cyan]EXAMPLES[/bold cyan]:
       [dim]$[/dim] gmail read msg123
       [dim]$[/dim] gmail read msg123 --full
+      [dim]$[/dim] gmail read msg123 --full-thread
       [dim]$[/dim] gmail read msg123 --output-format json
     """
     try:
         client = GmailClient()
-        format_type = "full" if full else "summary"
+
+        # Determine format type
+        format_type = "full" if (full or full_thread) else "summary"
         email = client.read_email(message_id, format=format_type)
 
         if output_format == OutputFormat.JSON:
-            console.print_json(data=email.model_dump(mode='json'))
+            # For JSON output with --full-thread, include thread messages
+            if full_thread:
+                thread_messages = client.get_thread(message_id)
+                output_data = {
+                    "email": email.model_dump(mode='json'),
+                    "thread": [msg.model_dump(mode='json') for msg in thread_messages]
+                }
+                console.print_json(data=output_data)
+            else:
+                console.print_json(data=email.model_dump(mode='json'))
         else:  # RICH
-            if full:
+            if full_thread:
+                # Display the main email
+                formatter.print_email_full(email)
+
+                # Display thread context
+                thread_messages = client.get_thread(message_id)
+                if len(thread_messages) > 1:
+                    console.print("\n[bold cyan]📧 Thread Context[/bold cyan]")
+                    console.print(f"[dim]Total messages in thread: {len(thread_messages)}[/dim]\n")
+                    formatter.print_thread(thread_messages, message_id)
+            elif full:
                 formatter.print_email_full(email)
             else:
                 formatter.print_email_summary(email)
@@ -376,12 +399,13 @@ def thread(
     """
     try:
         client = GmailClient()
-        thread = client.get_thread(message_id)
+        thread_messages = client.get_thread(message_id)
 
         if output_format == OutputFormat.JSON:
-            console.print_json(data=thread.model_dump(mode='json'))
+            # thread_messages is a list, so serialize each message
+            console.print_json(data=[msg.model_dump(mode='json') for msg in thread_messages])
         else:  # RICH
-            formatter.print_thread(thread, message_id)
+            formatter.print_thread(thread_messages, message_id)
 
     except Exception as e:
         console.print(f"[red]Error getting thread: {e}[/red]")
