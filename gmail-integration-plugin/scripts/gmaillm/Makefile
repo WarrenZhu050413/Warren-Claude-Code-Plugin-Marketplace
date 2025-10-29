@@ -11,8 +11,8 @@ help:
 	@echo "gmaillm Makefile (uv-based)"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  make install             - Install gmaillm globally with uv tool install"
-	@echo "  make dev                 - Install with dev dependencies (local)"
+	@echo "  make install             - Install gmaillm globally (production, non-editable)"
+	@echo "  make dev                 - Install locally with dev dependencies (editable)"
 	@echo "  make test                - Run pytest test suite"
 	@echo "  make lint                - Run ruff linting"
 	@echo "  make format              - Format code with ruff"
@@ -20,14 +20,14 @@ help:
 	@echo "  make install-completion  - Setup shell completion"
 
 install:
-	@echo "📦 Installing gmaillm globally with uv tool install..."
-	$(UV) tool install --force --editable .
+	@echo "📦 Installing gmaillm globally (non-editable)..."
+	$(UV) tool install --force .
 	@echo "✅ Installed globally! Try: gmail --help"
 
 dev:
-	@echo "📦 Installing with dev dependencies..."
+	@echo "📦 Installing locally with dev dependencies (editable)..."
 	$(UV) sync --all-extras
-	@echo "✅ Dev environment ready"
+	@echo "✅ Dev environment ready (use 'uv run gmail' or 'uv run pytest')"
 
 test:
 	@echo "🧪 Running tests..."

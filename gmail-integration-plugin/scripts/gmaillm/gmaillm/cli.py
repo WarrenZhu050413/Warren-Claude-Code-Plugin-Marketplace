@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Command-line interface for gmaillm using Typer."""
 
-# Note: You may see an INFO message about "file_cache is only supported with oauth2client<4.0.0"
-# This is harmless and can be safely ignored. It's from the Google API client library
-# indicating that disk caching isn't available with the newer google-auth library.
+# Note: You may see this INFO message on first run:
+#   "file_cache is only supported with oauth2client<4.0.0"
+# This is harmless - it's from Google's API client library and can be ignored.
 
 from enum import Enum
 from typing import List, Optional
@@ -354,10 +354,11 @@ def reply(
 
 @app.command()
 def send(
-    to: List[str] = typer.Option(..., "--to", "-t", help="Recipient email(s)"),
+    to: List[str] = typer.Option(..., "--to", "-t", help="Recipient email(s). Can be repeated for multiple recipients or use #groupname"),
     subject: str = typer.Option(..., "--subject", "-s", help="Email subject"),
     body: str = typer.Option(..., "--body", "-b", help="Email body"),
-    cc: Optional[List[str]] = typer.Option(None, "--cc", help="CC recipient(s)"),
+    cc: Optional[List[str]] = typer.Option(None, "--cc", help="CC recipient(s). Can be repeated or use #groupname"),
+    bcc: Optional[List[str]] = typer.Option(None, "--bcc", help="BCC recipient(s). Can be repeated or use #groupname"),
     attachments: Optional[List[str]] = typer.Option(
         None, "--attachment", "-a", help="Attachment file path(s)"
     ),
@@ -370,11 +371,14 @@ def send(
         # Expand email groups first (#groupname -> actual emails)
         to_list = expand_email_groups(to)
         cc_list = expand_email_groups(cc) if cc else None
+        bcc_list = expand_email_groups(bcc) if bcc else None
 
         # Validate expanded email addresses
         validate_email_list(to_list, "recipient")
         if cc_list:
             validate_email_list(cc_list, "CC")
+        if bcc_list:
+            validate_email_list(bcc_list, "BCC")
 
         # Validate attachments
         validated_attachments = validate_attachment_paths(attachments)
@@ -386,6 +390,8 @@ def send(
         console.print(f"To: {', '.join(to_list)}")
         if cc_list:
             console.print(f"Cc: {', '.join(cc_list)}")
+        if bcc_list:
+            console.print(f"Bcc: {', '.join(bcc_list)}")
         console.print(f"Subject: {subject}")
         console.print(f"\n{body}")
         if validated_attachments:
@@ -405,7 +411,7 @@ def send(
 
         # Send email
         request = SendEmailRequest(
-            to=to_list, subject=subject, body=body, cc=cc_list, attachments=validated_attachments
+            to=to_list, subject=subject, body=body, cc=cc_list, bcc=bcc_list, attachments=validated_attachments
         )
         result = client.send_email(request)
 
