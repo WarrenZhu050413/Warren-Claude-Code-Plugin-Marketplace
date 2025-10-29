@@ -255,6 +255,41 @@ gmail workflows continue <token> read              # Get full email content
 - **Single-session**: Each `start` creates a new token
 - **Auto-cleanup**: Expired tokens are cleaned up automatically
 
+**Token Storage and Persistence:**
+
+- **Location**: `~/.gmaillm/workflow-states/`
+- **Format**: Each token stored as a file (e.g., `abc123.json`)
+- **Contains**: Email list, current position, actions taken, timestamp
+- **Persisted to disk**: YES - survives computer restarts
+- **Expiration**: Files older than 1 hour are considered expired
+- **Cleanup**: Run `gmail workflows cleanup` to remove expired state files
+
+**What Happens on Computer Restart:**
+
+✅ **Token survives**: State file is on disk, not in memory
+✅ **Can resume**: If within 1 hour, `gmail workflows continue <token>` works
+❌ **Expires after 1 hour**: Even if computer stays on, token expires
+⚠️ **Cleanup needed**: Old state files accumulate until manually cleaned
+
+**Example:**
+```bash
+# Start workflow
+gmail workflows start gmaillm-inbox
+# Returns: token="abc123"
+
+# Computer restarts (within 1 hour)
+
+# Resume workflow - WORKS because state is on disk
+gmail workflows continue abc123 archive
+
+# After 1 hour - token expires
+gmail workflows continue abc123 archive
+# Error: Token expired (older than 1 hour)
+
+# Clean up old state files
+gmail workflows cleanup
+```
+
 **Programmatic Workflow Pattern (for Claude):**
 
 1. **Start workflow**: `gmail workflows start <name> --output-format json`
