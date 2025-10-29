@@ -5,20 +5,20 @@ from data models. All CLI commands should use RichFormatter for consistent,
 beautiful terminal output.
 """
 
-from typing import List, Optional
+from typing import List
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 from .models import (
-    Attachment,
     EmailFull,
     EmailSummary,
     Folder,
     SearchResult,
     SendEmailResponse,
 )
+from .validators.runtime import validate_pydantic, validate_types
 
 # Constants for formatting
 SNIPPET_PREVIEW_LENGTH = 80
@@ -28,11 +28,12 @@ MESSAGE_ID_DISPLAY_LENGTH = 12
 class RichFormatter:
     """Centralized formatter for Rich terminal output."""
 
-    def __init__(self, console: Console):
+    def __init__(self, console: Console) -> None:
         """Initialize formatter with Rich console.
 
         Args:
             console: Rich Console instance for output
+
         """
         self.console = console
 
@@ -46,6 +47,7 @@ class RichFormatter:
 
         Returns:
             Formatted string with Rich markup
+
         """
         name = f"[bold cyan]{folder.name}[/bold cyan]"
 
@@ -59,6 +61,7 @@ class RichFormatter:
         details = f" ({', '.join(parts)})" if parts else ""
         return f"  {name}{details}"
 
+    @validate_types
     def print_folder_list(
         self, folders: List[Folder], title: str = "Folders"
     ) -> None:
@@ -67,6 +70,10 @@ class RichFormatter:
         Args:
             folders: List of Folder objects
             title: Title for the list
+
+        Raises:
+            TypeError: If folders is not a list of Folder instances
+
         """
         # Separate system and user folders
         system = [f for f in folders if f.type == "system"]
@@ -92,6 +99,7 @@ class RichFormatter:
 
     # ============ EMAIL FORMATTING ============
 
+    @validate_pydantic(EmailSummary)
     def format_email_summary(self, email: EmailSummary) -> str:
         """Format email summary for lists.
 
@@ -100,6 +108,10 @@ class RichFormatter:
 
         Returns:
             Formatted string with Rich markup
+
+        Raises:
+            TypeError: If email is not an EmailSummary instance
+
         """
         # Status indicators
         status = []
@@ -122,6 +134,7 @@ class RichFormatter:
             f"  {email.snippet[:SNIPPET_PREVIEW_LENGTH]}...\n"
         )
 
+    @validate_types
     def print_email_list(
         self, emails: List[EmailSummary], folder: str = "INBOX"
     ) -> None:
@@ -130,6 +143,10 @@ class RichFormatter:
         Args:
             emails: List of EmailSummary objects
             folder: Folder name for title
+
+        Raises:
+            TypeError: If emails is not a list of EmailSummary instances
+
         """
         self.console.print(f"\n[bold]📬 {folder}[/bold] ({len(emails)} emails)\n")
 
@@ -139,11 +156,15 @@ class RichFormatter:
             if i < len(emails):
                 self.console.print("[dim]" + "─" * 60 + "[/dim]")
 
+    @validate_pydantic(EmailFull)
     def print_email_full(self, email: EmailFull) -> None:
         """Print full email in a panel.
 
         Args:
             email: EmailFull object to display
+
+        Raises:
+            TypeError: If email is not an EmailFull instance
         """
         # Build header
         lines = [
@@ -201,11 +222,16 @@ class RichFormatter:
 
     # ============ SEARCH RESULTS ============
 
+    @validate_pydantic(SearchResult)
     def print_search_results(self, result: SearchResult) -> None:
         """Print search results.
 
         Args:
             result: SearchResult object to display
+
+        Raises:
+            TypeError: If result is not a SearchResult instance
+
         """
         self.console.print(f"\n[bold]🔍 Search:[/bold] \"{result.query}\"")
         self.console.print(
@@ -226,12 +252,17 @@ class RichFormatter:
 
     # ============ THREAD FORMATTING ============
 
+    @validate_types
     def print_thread(self, thread: List[EmailSummary], message_id: str) -> None:
         """Print email thread.
 
         Args:
             thread: List of EmailSummary objects in the thread
             message_id: Original message ID for title
+
+        Raises:
+            TypeError: If thread is not a list of EmailSummary instances
+
         """
         self.console.print("=" * 60)
         self.console.print(f"📧 Thread: {len(thread)} message(s)")
@@ -253,26 +284,32 @@ class RichFormatter:
 
     # ============ SEND/REPLY RESULTS ============
 
+    @validate_pydantic(SendEmailResponse)
     def print_send_result(self, result: SendEmailResponse) -> None:
         """Print result of sending an email.
 
         Args:
             result: SendEmailResponse object
+
+        Raises:
+            TypeError: If result is not a SendEmailResponse instance
+
         """
         if result.success:
             self.console.print(
-                f"\n[green]✅ Email sent successfully![/green]"
+                "\n[green]✅ Email sent successfully![/green]"
             )
             self.console.print(
                 f"[dim]Message ID: {result.message_id[:MESSAGE_ID_DISPLAY_LENGTH]}...[/dim]"
             )
         else:
-            self.console.print(f"\n[red]❌ Failed to send email[/red]")
+            self.console.print("\n[red]❌ Failed to send email[/red]")
             if result.error:
                 self.console.print(f"[red]Error: {result.error}[/red]")
 
     # ============ FOLDER STATISTICS ============
 
+    @validate_types
     def build_folder_stats_table(self, folders: List[Folder]) -> Table:
         """Build statistics table from folder data.
 
@@ -281,6 +318,10 @@ class RichFormatter:
 
         Returns:
             Rich Table with folder statistics
+
+        Raises:
+            TypeError: If folders is not a list of Folder instances
+
         """
         stats_table = Table(
             show_header=True, header_style="bold magenta", box=None
