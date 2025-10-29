@@ -96,11 +96,7 @@ def show_group(
     """Show detailed information about a specific group."""
     try:
         groups = load_email_groups()
-
-        if name not in groups:
-            console.print(f"[red]✗ Group '{name}' not found[/red]")
-            console.print(f"\nAvailable groups: [cyan]gmail groups list[/cyan]")
-            raise typer.Exit(code=1)
+        ensure_item_exists(name, groups, "Group", "gmail groups list")
 
         emails = groups[name]
 
@@ -117,8 +113,7 @@ def show_group(
         console.print(f"Usage: [cyan]gmail send --to #{name} ...[/cyan]")
 
     except Exception as e:
-        console.print(f"[red]✗ Error showing group: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("showing group", e)
 
 
 @app.command("create")
@@ -202,35 +197,32 @@ def create_group(
                 raise typer.Exit(code=1)
 
         # Show preview
-        console.print("=" * 60)
-        console.print("Creating Email Group")
-        console.print("=" * 60)
-        console.print(f"Name: #{group_name}")
-        console.print(f"Members: {len(member_emails)}")
-        for email in member_emails:
-            console.print(f"  - {email}")
-        console.print("=" * 60)
+        show_operation_preview(
+            "Creating Email Group",
+            {
+                "Name": f"#{group_name}",
+                "Members": len(member_emails),
+                "Emails": member_emails
+            }
+        )
 
         # Confirm unless --force
-        if not force:
-            response = typer.confirm("\nCreate this group?")
-            if not response:
-                console.print("Cancelled.")
-                return
-        else:
-            console.print("\n[yellow]--force: Creating without confirmation[/yellow]")
+        if not confirm_or_force("\nCreate this group?", force, "Creating without confirmation"):
+            console.print("Cancelled.")
+            return
 
         # Create group
         groups[group_name] = member_emails
         save_email_groups(groups)
 
-        console.print(f"\n[green]✅ Group created: #{group_name}[/green]")
-        console.print(f"   Members: {len(member_emails)}")
-        console.print(f"\nUsage: [cyan]gmail send --to #{group_name} ...[/cyan]")
+        print_success(
+            f"Group created: #{group_name}",
+            {"Members": len(member_emails)},
+            [f"gmail send --to #{group_name} ..."]
+        )
 
     except Exception as e:
-        console.print(f"[red]✗ Error creating group: {e}[/red]")
-        raise typer.Exit(code=1)
+        handle_command_error("creating group", e)
 
 
 @app.command("add")

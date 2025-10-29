@@ -31,7 +31,7 @@ from gmaillm.validators.email import (
 )
 
 # Import command modules
-from gmaillm.commands import labels, styles, groups, config as config_commands
+from gmaillm.commands import labels, styles, groups, workflows, config as config_commands
 
 
 # Custom callback to print help on errors
@@ -581,6 +581,7 @@ def send(
 app.add_typer(labels.app, name="labels")
 app.add_typer(groups.app, name="groups")
 app.add_typer(styles.app, name="styles")
+app.add_typer(workflows.app, name="workflows")
 app.add_typer(config_commands.app, name="config")
 
 
