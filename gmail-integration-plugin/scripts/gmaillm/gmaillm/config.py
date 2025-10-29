@@ -1,10 +1,9 @@
 """Configuration management for gmaillm.
 
-Provides centralized path management with plugin-aware defaults.
-Defaults to plugin credentials directory if available, otherwise ~/.gmaillm/
+Provides centralized path management for credentials and configuration.
+All credentials are stored in ~/.gmaillm/ for security and portability.
 """
 
-import os
 from pathlib import Path
 from typing import Final
 
@@ -12,20 +11,16 @@ from typing import Final
 def _get_config_dir() -> Path:
     """Determine the configuration directory.
 
-    Priority:
-    1. $CLAUDE_PLUGIN_ROOT/credentials/ (if running from plugin)
-    2. ~/.gmaillm/ (standalone fallback)
+    Always uses ~/.gmaillm/ for security and portability.
+    Credentials should never be stored in plugin directories.
 
     Returns:
-        Path to the configuration directory
+        Path to the configuration directory (~/.gmaillm/)
     """
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
-    if plugin_root:
-        return Path(plugin_root) / "credentials"
     return Path.home() / ".gmaillm"
 
 
-# Config directory - plugin-aware
+# Config directory - always ~/.gmaillm/ for security
 CONFIG_DIR: Final[Path] = _get_config_dir()
 
 # Core configuration files
