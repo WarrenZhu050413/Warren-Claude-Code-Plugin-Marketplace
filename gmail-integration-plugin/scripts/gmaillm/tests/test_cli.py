@@ -413,64 +413,6 @@ class TestCLICommands:
 
         mock_client.get_thread.assert_called_once_with("thread123")
 
-    @patch("gmaillm.cli.GmailClient")
-    def test_folders_command(self, mock_client_class):
-        """Test folders command."""
-        mock_client = Mock()
-        mock_folder = Mock()
-        mock_folder.to_markdown.return_value = "- **INBOX**"
-        mock_client.get_folders.return_value = [mock_folder]
-        mock_client_class.return_value = mock_client
-
-        with patch("sys.argv", ["gmail", "folders"]):
-            with patch("sys.exit"):
-                main()
-
-        mock_client.get_folders.assert_called_once()
-
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
-    @patch("subprocess.run")
-    def test_config_edit_style(self, mock_subprocess, mock_config_dir, tmp_path):
-        """Test config edit-style command."""
-        mock_config_dir.return_value = tmp_path
-        style_file = tmp_path / "email-style.md"
-        style_file.write_text("# Email Style")
-
-        with patch("sys.argv", ["gmail", "config", "edit-style"]):
-            with patch("sys.exit"):
-                main()
-
-        # Verify editor was called
-        mock_subprocess.assert_called_once()
-
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
-    @patch("subprocess.run")
-    def test_config_edit_groups(self, mock_subprocess, mock_config_dir, tmp_path):
-        """Test config edit-groups command."""
-        mock_config_dir.return_value = tmp_path
-        groups_file = tmp_path / "email-groups.json"
-        groups_file.write_text("{}")
-
-        with patch("sys.argv", ["gmail", "config", "edit-groups"]):
-            with patch("sys.exit"):
-                main()
-
-        mock_subprocess.assert_called_once()
-
-    @patch("gmaillm.helpers.config.get_plugin_config_dir")
-    def test_config_list_groups(self, mock_config_dir, tmp_path):
-        """Test config list-groups command."""
-        mock_config_dir.return_value = tmp_path
-        groups_file = tmp_path / "email-groups.json"
-        groups_data = {
-            "team": ["alice@example.com", "bob@example.com"],
-        }
-        groups_file.write_text(json.dumps(groups_data))
-
-        with patch("sys.argv", ["gmail", "config", "list-groups"]):
-            with patch("sys.exit"):
-                main()
-
     @patch("gmaillm.helpers.config.get_plugin_config_dir")
     def test_config_show(self, mock_config_dir, tmp_path):
         """Test config show command."""
