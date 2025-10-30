@@ -1,11 +1,11 @@
 ---
 name: managing-snippets
-description: Comprehensive guide for managing Claude Code snippets - creating, reading, updating, and deleting snippet configurations with regex pattern matching. Use this skill when users want to create, inspect, modify, or manage snippet configurations in their Claude Code environment.
+description: Comprehensive guide for managing Claude Code snippets v2.0 - discovering locations, creating snippets from files, searching by name/pattern/description, and validating configurations. Use this skill when users want to create, search, or manage snippet configurations in their Claude Code environment. Updated for LLM-friendly interface with TTY auto-detection.
 ---
 
-# Managing Snippets
+# Managing Snippets (v2.0)
 
-Snippets auto-inject context when regex patterns match user messages. This skill provides a comprehensive workflow for creating, managing, and maintaining snippet configurations.
+Snippets auto-inject context when regex patterns match user messages. This skill provides a streamlined workflow for discovering snippet locations, creating snippets, searching configurations, and direct file editing.
 
 ## About Snippets
 
@@ -79,22 +79,53 @@ Snippets are organized by category:
 - `snippets/local/productivity/` - Workflow automation, task management
 - `snippets/local/output-formats/` - Formatting styles, templates
 
+## CLI v2.0 Overview
+
+The snippets CLI provides four focused commands:
+
+1. **`paths`** - Discover available snippet categories and locations
+2. **`create`** - Create snippets from source files with validation
+3. **`list` / search** - Search snippets by name, pattern, or description
+4. **`validate`** - Verify configuration integrity
+
+**Installation:**
+```bash
+cd /Users/wz/.claude/plugins/.../scripts
+make install  # Global: uv tool install
+# OR
+make dev      # Local dev: uv run snippets
+```
+
+**Auto-detect modes:**
+- **TTY (terminal)**: Interactive selection interface
+- **Non-TTY (piped)**: JSON output for scripting
+
 ## Snippet Management Process
 
 Follow these steps in order to effectively manage snippets.
 
-### Step 1: Understanding Snippet Needs
+### Step 1: Discover Available Locations
 
-Before creating a snippet, clearly understand:
-- **What triggers it?** - Keywords that should activate the snippet
-- **What does it provide?** - Context, guidance, or reference material
-- **How often is it used?** - Frequent use justifies snippet automation
-- **What's the scope?** - Narrow (specific tool) vs. broad (general concept)
+Before creating a snippet, explore where snippets can be placed using the `paths` command.
 
-**Example questions:**
-- "What keywords should trigger this snippet?"
-- "Is this content used frequently enough to justify automatic injection?"
-- "Does this belong in a snippet or should it be a skill?"
+**List all categories:**
+```bash
+snippets paths
+# OR with JSON output
+snippets paths --output json
+```
+
+**Filter by keyword:**
+```bash
+snippets paths dev        # Shows categories matching "dev"
+snippets paths email      # Shows categories matching "email"
+```
+
+**Output:**
+- Base directory path
+- Category names (communication, documentation, development, productivity, output-formats)
+- Category descriptions
+- Full paths to each category
 
 ### Step 2: Planning the Pattern
 
@@ -114,73 +145,106 @@ Determine the regex pattern that will trigger your snippet. Patterns must follow
 
 ### Step 3: Creating a Snippet
 
-Once you've planned the pattern and identified the content, create the snippet.
-
-**Architecture check (CRITICAL):**
-1. **Read config.local.json first** to understand existing structure
-2. **Examine 1-2 existing snippets** to see the pattern
-3. **Understand the separation:**
-   - YAML frontmatter (name, description) goes in SNIPPET.md
-   - Pattern and file path go in config.local.json
-   - Never put pattern in YAML frontmatter
+Create snippets using the `create` command, which validates and registers the snippet automatically.
 
 **Creation workflow:**
 
-1. **Create SNIPPET.md file:**
+1. **Create source SKILL.md file with frontmatter:**
+   ```markdown
+   ---
+   name: "Docker Best Practices"
+   description: "Use when working with Docker containers, images, and containerization"
+   pattern: "\\b(DOCKER|CONTAINER|DOCKERFILE)\\b[.,;:!?]?"
+   ---
+
+   # Docker Best Practices
+   [Content here...]
+   ```
+
+2. **Run create command:**
    ```bash
-   mkdir -p ~/.claude/plugins/.../snippets/local/category/snippet-name
-   # Create SNIPPET.md with proper frontmatter
+   snippets create source.md snippets/local/development/docker/SKILL.md
+
+   # With pattern override
+   snippets create source.md snippets/local/development/docker/SKILL.md \
+     --pattern "\\b(NEW_PATTERN)\\b[.,;:!?]?"
+
+   # Force overwrite existing
+   snippets create source.md snippets/local/development/docker/SKILL.md --force
    ```
 
-2. **Add entry to config.local.json:**
-   ```json
-   {
-     "name": "snippet-name",
-     "pattern": "\\b(PATTERN)\\b[.,;:!?]?",
-     "snippet": ["../snippets/local/category/snippet-name/SNIPPET.md"],
-     "separator": "\n",
-     "enabled": true
-   }
-   ```
+**What create does:**
+1. ✅ Validates source file exists
+2. ✅ Parses YAML frontmatter (name, description, pattern)
+3. ✅ Validates pattern format (ALL CAPS, proper structure)
+4. ✅ Validates destination is within snippets/local/
+5. ✅ Extracts snippet name from destination path
+6. ✅ Checks destination doesn't already exist (unless --force)
+7. ✅ Creates destination directory
+8. ✅ Copies file to destination
+9. ✅ Registers in config.local.json automatically
 
-3. **Verify the snippet works:**
-   - Type the trigger keyword in a new prompt
-   - Confirm content loads automatically
+**Helpful error messages:**
+- Missing frontmatter → Shows required YAML structure
+- Invalid pattern → Explains pattern requirements with examples
+- Invalid destination → Shows expected path format
+- Missing pattern → Reminds to add --pattern flag or pattern field
 
 **Common mistakes to avoid:**
-- ❌ Putting pattern in YAML frontmatter
 - ❌ Using lowercase in pattern
-- ❌ Missing `\\b` word boundaries (requires double backslash in JSON)
-- ❌ Forgetting to add entry to config.local.json
+- ❌ Missing `\\b` word boundaries (requires double backslash)
+- ❌ Destination outside snippets/local/ directory
+- ❌ Forgetting YAML frontmatter
 
-### Step 4: Reading/Inspecting Snippets
+### Step 4: Searching and Inspecting Snippets
 
-To view configured snippets:
+Search snippets using enhanced multi-level matching (name → pattern → description).
 
 **List all snippets:**
 ```bash
-cd /Users/wz/.claude/plugins/.../scripts
-python3 snippets_cli.py list --snippets-dir ../snippets/local
+snippets                    # Default: list all (TTY: interactive, piped: JSON)
+snippets list               # Explicit list command
+snippets --output json      # Force JSON output
 ```
 
-**View specific snippet:**
+**Search by keyword:**
 ```bash
-python3 snippets_cli.py list <snippet-name> --snippets-dir ../snippets/local
+snippets docker             # Searches name, pattern, and description
+snippets kubernetes         # Priority: exact name > name contains > pattern > description
 ```
+
+**Interactive mode (TTY):**
+- Shows formatted list with match indicators
+- Navigate with arrow keys
+- Select to open in $EDITOR
+- ESC to cancel
+
+**Non-interactive mode (piped/JSON):**
+- JSON output with match_type and match_priority
+- Can pipe to jq for filtering
+- Suitable for scripting
+
+**Match priority ranking:**
+1. **Exact name match** (priority 1) - `snippets mail` finds snippet named "mail"
+2. **Name contains** (priority 2) - `snippets dock` finds "docker"
+3. **Pattern content** (priority 3) - `snippets KUBECTL` finds patterns with KUBECTL
+4. **Description match** (priority 4) - `snippets "email templates"` finds description matches
 
 **What to check:**
 - Enabled status (✓ or ✗)
 - Pattern alternatives (does it cover all intended keywords?)
 - File paths (do they point to correct locations?)
-- Content (read SNIPPET.md to verify)
+- Content (read SKILL.md to verify)
 
 **Regular audits:**
 - Review snippets monthly
-- Disable unused snippets
+- Disable unused snippets (edit config.local.json)
 - Update patterns based on usage
 - Remove outdated content
 
-### Step 5: Updating Snippets
+### Step 5: Updating Snippets (Direct File Editing)
+
+**Philosophy:** v2.0 CLI focuses on search and creation. Updates are done by editing files directly.
 
 Modify existing snippets when:
 - Pattern doesn't match expected keywords
@@ -190,37 +254,56 @@ Modify existing snippets when:
 
 **Update workflow:**
 
-1. **Show current state:**
+1. **Find the snippet:**
    ```bash
-   python3 snippets_cli.py list <snippet-name> --snippets-dir ../snippets/local
+   snippets docker          # Search to locate snippet
+   # OR in interactive mode: select snippet → opens in $EDITOR
    ```
 
 2. **Determine what needs updating:**
-   - Pattern expansion (add more keywords)
-   - Content modification (edit SNIPPET.md)
-   - Status change (enable/disable)
-   - Rename (update name field)
+   - **Pattern expansion** → Edit config.local.json
+   - **Content modification** → Edit SKILL.md directly
+   - **Status change** → Edit config.local.json (`enabled` field)
+   - **Rename** → Edit config.local.json (`name` field)
 
 3. **For pattern updates:**
-   - Edit config.local.json
-   - Modify the `pattern` field
-   - Ensure new pattern follows standard format
+   ```bash
+   # Edit config.local.json directly
+   vim ~/.claude/plugins/.../scripts/config.local.json
+
+   # Modify the pattern field
+   {
+     "name": "docker",
+     "pattern": "\\b(DOCKER|CONTAINER|DOCKERFILE|KUBECTL)\\b[.,;:!?]?",  # Added KUBECTL
+     ...
+   }
+   ```
 
 4. **For content updates:**
-   - Edit the SNIPPET.md file directly
-   - Maintain YAML frontmatter structure
+   ```bash
+   # Edit SKILL.md directly
+   vim ~/.claude/plugins/.../snippets/local/development/docker/SKILL.md
 
-5. **Verify changes:**
-   - Test trigger keywords
+   # Update content while maintaining YAML frontmatter
+   ```
+
+5. **Validate changes:**
+   ```bash
+   snippets validate        # Check for errors
+   snippets validate --output json  # JSON output for scripting
+   ```
+
+6. **Test:**
+   - Type trigger keyword in new prompt
    - Confirm content loads correctly
 
 **Context-aware updating:**
 If a snippet failed to load during a session, analyze why:
-- Did the pattern not match? → Expand pattern
-- Was it disabled? → Enable it
-- Missing keywords? → Add alternatives
+- Did the pattern not match? → Edit config.local.json to expand pattern
+- Was it disabled? → Change `"enabled": false` to `true`
+- Missing keywords? → Add alternatives to pattern
 
-### Step 6: Deleting Snippets
+### Step 6: Deleting Snippets (Direct File Editing)
 
 Remove snippets that are:
 - No longer needed
@@ -231,31 +314,40 @@ Remove snippets that are:
 
 1. **Backup first:**
    ```bash
-   # Create backup directory
-   mkdir -p ~/.claude/plugins/.../backups/$(date +%Y%m%d_%H%M%S)_snippet-name
+   # Create backup of config
+   cp ~/.claude/plugins/.../scripts/config.local.json \
+      ~/.claude/plugins/.../scripts/config.local.json.backup.$(date +%Y%m%d_%H%M%S)
 
-   # Copy files
-   cp SNIPPET.md config.local.json backups/...
+   # Backup snippet file
+   cp -r ~/.claude/plugins/.../snippets/local/category/snippet-name \
+         ~/.claude/plugins/.../backups/snippet-name_$(date +%Y%m%d_%H%M%S)
    ```
 
 2. **Remove from config.local.json:**
-   - Delete the entire mapping object
-   - Ensure JSON remains valid (check commas)
+   ```bash
+   vim ~/.claude/plugins/.../scripts/config.local.json
 
-3. **Optionally delete SNIPPET.md:**
+   # Delete the entire mapping object
+   # Ensure JSON remains valid (check commas)
+   ```
+
+3. **Optionally delete SKILL.md:**
    ```bash
    rm -rf ~/.claude/plugins/.../snippets/local/category/snippet-name
    ```
 
-4. **Verify deletion:**
-   - List remaining snippets
-   - Confirm trigger keyword no longer loads content
+4. **Validate and verify:**
+   ```bash
+   snippets validate              # Check JSON is valid
+   snippets                       # Confirm snippet is gone
+   # Type trigger keyword → should not load
+   ```
 
 **Restoration:**
 If you need to restore:
-1. Copy files from backup directory
-2. Add mapping back to config.local.json
-3. Verify pattern works
+1. `cp backup/config.local.json.backup.TIMESTAMP config.local.json`
+2. `cp -r backup/snippet-name_TIMESTAMP snippets/local/category/snippet-name`
+3. `snippets validate` and test trigger keyword
 
 ## Regex Protocol (Standard Format)
 
@@ -420,18 +512,20 @@ Backup → Remove from config.local.json → Delete SNIPPET.md → Verify
 - Test after changes
 - Backup before deletion
 
-## Quick Reference
+## Quick Reference (v2.0)
 
-| Task | Action |
-|------|--------|
-| Create snippet | 1. Create SNIPPET.md with frontmatter<br>2. Add entry to config.local.json |
-| List all snippets | `python3 snippets_cli.py list` |
-| View one snippet | `python3 snippets_cli.py list <name>` |
-| Update pattern | Edit `pattern` field in config.local.json |
-| Update content | Edit SNIPPET.md file directly |
-| Enable/disable | Change `enabled` field in config.local.json |
-| Delete snippet | 1. Backup files<br>2. Remove from config.local.json<br>3. Delete SNIPPET.md |
-| Test pattern | Type trigger keyword in new prompt |
+| Task | Command / Action |
+|------|------------------|
+| **Discover categories** | `snippets paths` or `snippets paths <filter>` |
+| **Create snippet** | `snippets create source.md snippets/local/category/name/SKILL.md` |
+| **List all snippets** | `snippets` or `snippets list` |
+| **Search snippets** | `snippets <keyword>` (searches name/pattern/description) |
+| **Update pattern** | Edit `pattern` field in config.local.json directly |
+| **Update content** | Edit SKILL.md file directly (or use `snippets <name>` in TTY → opens $EDITOR) |
+| **Enable/disable** | Change `enabled` field in config.local.json |
+| **Delete snippet** | 1. Backup files<br>2. Remove from config.local.json<br>3. Delete SKILL.md directory |
+| **Validate config** | `snippets validate` or `snippets validate --output json` |
+| **Test pattern** | Type trigger keyword in new prompt |
 
 ## Troubleshooting
 

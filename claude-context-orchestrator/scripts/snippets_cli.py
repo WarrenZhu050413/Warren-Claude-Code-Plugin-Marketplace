@@ -8,14 +8,14 @@ Designed to be wrapped by LLM-enabled commands for intelligent UX.
 
 import argparse
 import json
-import re
-import sys
 import os
-import subprocess
-from pathlib import Path
-from typing import Dict, List, Optional, Any
-from datetime import datetime
+import re
 import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 # ANSI color codes
@@ -229,7 +229,7 @@ class SnippetManager:
                 return "Incorrect punctuation format; use [.,;:!?]?"
 
         # Check for missing punctuation class
-        if not '[' in pattern:
+        if '[' not in pattern:
             return "Missing optional punctuation [.,;:!?]? at end"
 
         # Check for lowercase in pattern
@@ -403,7 +403,7 @@ class SnippetManager:
         if conflicts and not force:
             raise SnippetError(
                 "DUPLICATE_PATTERN",
-                f"Pattern conflicts with existing snippet(s)",
+                "Pattern conflicts with existing snippet(s)",
                 {"pattern": pattern, "conflicts_with": conflicts}
             )
 
@@ -517,8 +517,8 @@ class SnippetManager:
         }
 
     def list(self, name: str = None, show_content: bool = False,
-             show_stats: bool = False, show_source: bool = True, keyword: str = None) -> Dict:
-        """List snippets with source config and priority information"""
+             show_stats: bool = False, show_source: bool = True, search_term: str = None) -> Dict:
+        """List snippets with optional search across name/pattern/description"""
         snippets = []
 
         for mapping in self.config["mappings"]:
@@ -531,21 +531,59 @@ class SnippetManager:
             else:
                 snippet_name = Path(snippet_files[0]).stem
 
-            # Filter by name if specified
+            # Filter by name if specified (exact match for backwards compat)
             if name and snippet_name != name:
                 continue
 
-            # Filter by keyword in pattern
-            if keyword:
-                pattern = mapping["pattern"]
-                # Extract pattern content between parentheses
-                pattern_match = re.search(r'\(([^)]+)\)', pattern)
-                if pattern_match:
-                    pattern_content = pattern_match.group(1)
-                    # Check if keyword matches any alternative in the pattern
-                    if not any(keyword.upper() in alt.upper() for alt in pattern_content.split('|')):
-                        continue
+            # Enhanced search across name, pattern, description
+            match_type = None
+            match_priority = 999
+
+            if search_term:
+                search_lower = search_term.lower()
+
+                # Check exact name match (highest priority)
+                if snippet_name.lower() == search_lower:
+                    match_type = "exact"
+                    match_priority = 1
+                # Check name contains
+                elif search_lower in snippet_name.lower():
+                    match_type = "name"
+                    match_priority = 2
                 else:
+                    # Check pattern match
+                    pattern = mapping["pattern"]
+                    pattern_match_obj = re.search(r'\(([^)]+)\)', pattern)
+                    if pattern_match_obj:
+                        pattern_content = pattern_match_obj.group(1)
+                        if any(search_lower in alt.lower() for alt in pattern_content.split('|')):
+                            match_type = "pattern"
+                            match_priority = 3
+
+                    # If still no match, check description (read from file)
+                    if not match_type:
+                        for snippet_file in snippet_files:
+                            snippet_path = self.snippets_dir.parent / snippet_file
+                            if snippet_path.exists():
+                                try:
+                                    file_content = snippet_path.read_text()
+                                    if file_content.startswith("---"):
+                                        parts = file_content.split("---", 2)
+                                        if len(parts) >= 3:
+                                            import yaml
+                                            frontmatter = yaml.safe_load(parts[1])
+                                            if frontmatter:
+                                                desc = frontmatter.get("description", "")
+                                                if search_lower in desc.lower():
+                                                    match_type = "description"
+                                                    match_priority = 4
+                                                    break
+                                except Exception:
+                                    # Ignore errors reading/parsing frontmatter
+                                    pass
+
+                # Skip if no matches
+                if not match_type:
                     continue
 
             snippet_info = {
@@ -555,8 +593,12 @@ class SnippetManager:
                 "file_count": len(snippet_files),
                 "separator": mapping.get("separator", "\n"),
                 "enabled": mapping.get("enabled", True),
-                "alternatives": self._count_alternatives(mapping["pattern"])
+                "alternatives": self._count_alternatives(mapping["pattern"]),
+                "match_priority": match_priority,
             }
+
+            if match_type:
+                snippet_info["match_type"] = match_type
 
             # Add source config info if available and requested
             if show_source:
@@ -591,6 +633,9 @@ class SnippetManager:
                 snippet_info["missing_files"] = missing_files
 
             snippets.append(snippet_info)
+
+        # Sort by match priority (lower = better)
+        snippets.sort(key=lambda x: x.get("match_priority", 999))
 
         result = {"snippets": snippets}
 
@@ -635,7 +680,7 @@ class SnippetManager:
             if conflicts:
                 raise SnippetError(
                     "DUPLICATE_PATTERN",
-                    f"Pattern conflicts with existing snippet(s)",
+                    "Pattern conflicts with existing snippet(s)",
                     {"pattern": pattern, "conflicts_with": conflicts}
                 )
             changes["pattern"] = {"old": existing["pattern"], "new": pattern}
@@ -647,7 +692,6 @@ class SnippetManager:
                 target_existing["pattern"] = pattern
 
         # Update content
-        content_updated = False
         if content is not None or file_path is not None:
             if file_path:
                 source_path = Path(file_path).expanduser().resolve()
@@ -665,7 +709,6 @@ class SnippetManager:
                 f.write(content)
             new_size = snippet_path.stat().st_size
             changes["content"] = {"old_size": old_size, "new_size": new_size}
-            content_updated = True
 
         # Update enabled status
         if enabled is not None:
@@ -852,6 +895,161 @@ class SnippetManager:
             "message": f"Priority set to {priority} for {self.target_config_path.name}"
         }
 
+    def show_paths(self, filter_term: str = None) -> Dict:
+        """Show available snippet locations and categories"""
+        categories = {
+            "communication": "Email, reports, writing templates",
+            "documentation": "Guides, references, how-tos",
+            "development": "Code patterns, debugging workflows",
+            "productivity": "Workflow automation, task management",
+            "output-formats": "Formatting styles, templates"
+        }
+
+        if filter_term:
+            categories = {
+                k: v for k, v in categories.items()
+                if filter_term.lower() in k.lower() or filter_term.lower() in v.lower()
+            }
+
+        return {
+            "base_dir": str(self.snippets_dir),
+            "categories": [
+                {
+                    "name": name,
+                    "description": desc,
+                    "path": f"snippets/local/{name}/"
+                }
+                for name, desc in categories.items()
+            ]
+        }
+
+    def create_from_file(self, source_file: str, destination_path: str,
+                         pattern_override: str = None, force: bool = False) -> Dict:
+        """
+        Create snippet from source file to destination path.
+
+        Validates frontmatter, pattern, and destination before creating.
+        """
+        import yaml
+
+        # 1. Validate source file
+        source_path = Path(source_file).expanduser().resolve()
+        if not source_path.exists():
+            raise SnippetError("FILE_ERROR", f"Source file not found: {source_file}")
+
+        # 2. Read and validate YAML frontmatter
+        content = source_path.read_text()
+        if not content.startswith("---"):
+            raise SnippetError(
+                "MISSING_FRONTMATTER",
+                "Source file must start with YAML frontmatter:\n"
+                "---\n"
+                "name: \"Snippet Name\"\n"
+                "description: \"Description\"\n"
+                "pattern: \"\\\\b(PATTERN)\\\\b[.,;:!?]?\"\n"
+                "---"
+            )
+
+        # Extract frontmatter
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            raise SnippetError("INVALID_FRONTMATTER", "Malformed YAML frontmatter")
+
+        try:
+            frontmatter = yaml.safe_load(parts[1])
+        except yaml.YAMLError as e:
+            raise SnippetError("INVALID_YAML", f"Invalid YAML in frontmatter: {e}")
+
+        if not frontmatter:
+            raise SnippetError("EMPTY_FRONTMATTER", "YAML frontmatter is empty")
+
+        # Extract required fields
+        name = frontmatter.get("name", "")
+        description = frontmatter.get("description", "")
+        pattern = pattern_override or frontmatter.get("pattern", "")
+
+        if not name:
+            raise SnippetError("MISSING_NAME", "Frontmatter must include 'name' field")
+        if not description:
+            raise SnippetError("MISSING_DESCRIPTION", "Frontmatter must include 'description' field")
+        if not pattern:
+            raise SnippetError("MISSING_PATTERN", "Frontmatter must include 'pattern' field or use --pattern flag")
+
+        # 3. Validate pattern
+        self._validate_pattern(pattern)
+
+        # 4. Validate destination path
+        dest_path = Path(destination_path)
+
+        # Check it's within snippets directory
+        try:
+            rel_dest = dest_path if not dest_path.is_absolute() else dest_path.relative_to(self.config_path.parent)
+            if not str(rel_dest).startswith("snippets/local/"):
+                raise ValueError("Not in snippets/local/")
+        except (ValueError, OSError):
+            raise SnippetError(
+                "INVALID_DESTINATION",
+                f"Destination must be within snippets/local/ directory\n"
+                f"Expected format: snippets/local/<category>/<name>/SKILL.md\n"
+                f"Got: {destination_path}\n\n"
+                f"Run 'snippets paths' to see available categories."
+            )
+
+        # 5. Extract snippet name from path
+        path_parts = dest_path.parts
+        if len(path_parts) < 4:
+            raise SnippetError(
+                "INVALID_DESTINATION_STRUCTURE",
+                f"Destination must follow: snippets/local/<category>/<name>/SKILL.md\n"
+                f"Got: {destination_path}"
+            )
+
+        snippet_name = path_parts[-2]  # Parent directory name
+
+        # 6. Check destination doesn't exist
+        full_dest_path = self.snippets_dir.parent / dest_path
+        if full_dest_path.exists() and not force:
+            raise SnippetError(
+                "DESTINATION_EXISTS",
+                f"Destination already exists: {destination_path}\n\n"
+                f"Use --force to overwrite"
+            )
+
+        # 7. Create destination directory
+        full_dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # 8. Copy file to destination
+        shutil.copy2(source_path, full_dest_path)
+
+        # 9. Register in config.local.json
+        target_config = self._get_target_config()
+
+        # Remove existing entry if force
+        if force:
+            target_config["mappings"] = [
+                m for m in target_config["mappings"]
+                if m.get("name") != snippet_name
+            ]
+
+        # Add new entry
+        target_config["mappings"].append({
+            "name": snippet_name,
+            "pattern": pattern,
+            "snippet": [str(dest_path)],
+            "separator": "\n",
+            "enabled": True
+        })
+
+        self._save_config()
+
+        return {
+            "name": snippet_name,
+            "pattern": pattern,
+            "destination": str(destination_path),
+            "source": str(source_file),
+            "registered": True
+        }
+
 
 def open_in_editor(file_path: Path) -> bool:
     """Open file in user's preferred editor"""
@@ -1032,171 +1230,156 @@ def format_output(success: bool, operation: str, data: Dict = None,
 
 def preprocess_args(args):
     """
-    Pre-process arguments to treat first positional arg as keyword if it's not a subcommand.
+    Pre-process arguments to treat first positional arg as search term for list.
+    Also ensures global flags come before subcommands.
 
     Examples:
-      snippets DOCKER        → snippets -k DOCKER list
+      snippets docker        → snippets list docker
+      snippets paths --output json → snippets --output json paths
       snippets create foo    → snippets create foo (unchanged)
-      snippets -k DOCKER     → snippets -k DOCKER list (unchanged)
     """
-    subcommands = {'create', 'list', 'update', 'delete', 'validate', 'test', 'set-priority'}
+    subcommands = {'create', 'paths', 'list', 'validate'}
 
-    # Skip global flags to find first positional arg
+    # Separate global flags, subcommand, and subcommand args
+    global_flags = []
+    subcommand = None
+    subcommand_args = []
     i = 0
+
     while i < len(args):
         arg = args[i]
 
-        # Skip flag and its value
-        if arg in ['--config', '--config-name', '--snippets-dir', '--output', '-k', '--keyword']:
-            i += 2  # Skip flag and value
-            continue
-        if arg in ['--use-base-config', '-v', '--verbose']:
-            i += 1  # Skip boolean flag
-            continue
-        if arg.startswith('-'):
-            # Unknown flag, skip
-            i += 1
+        # Global flags (need to come before subcommand)
+        if arg in ['--config', '--snippets-dir', '--output']:
+            if i + 1 < len(args):
+                global_flags.extend([arg, args[i+1]])
+                i += 2
+            else:
+                i += 1
             continue
 
-        # Found first positional argument
-        if arg not in subcommands:
-            # Treat as keyword
-            return args[:i] + ['-k', arg] + args[i+1:]
-        else:
-            # It's a subcommand, leave as is
-            return args
+        # Found subcommand
+        if arg in subcommands:
+            subcommand = arg
+            # Continue parsing remaining args
+            i += 1
+            # Everything after subcommand is subcommand args
+            while i < len(args):
+                arg = args[i]
+                # Check if this is a global flag that should come before subcommand
+                if arg in ['--config', '--snippets-dir', '--output']:
+                    if i + 1 < len(args):
+                        global_flags.extend([arg, args[i+1]])
+                        i += 2
+                    else:
+                        i += 1
+                    continue
+                else:
+                    # Regular subcommand arg
+                    subcommand_args.append(arg)
+                    i += 1
+            break
+
+        # Positional arg before subcommand - treat as search term for list
+        if not arg.startswith('-'):
+            subcommand = 'list'
+            subcommand_args = [arg]
+            i += 1
+            # Get remaining args
+            while i < len(args):
+                arg = args[i]
+                if arg in ['--config', '--snippets-dir', '--output']:
+                    if i + 1 < len(args):
+                        global_flags.extend([arg, args[i+1]])
+                        i += 2
+                    else:
+                        i += 1
+                else:
+                    subcommand_args.append(arg)
+                    i += 1
+            break
 
         i += 1
 
-    return args
+    # No subcommand found - default to list
+    if not subcommand:
+        subcommand = 'list'
+
+    # Reconstruct: global_flags + subcommand + subcommand_args
+    return global_flags + [subcommand] + subcommand_args
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Claude Code Snippets CLI with Multi-Config Support",
+        description="Snippets CLI v2.0 - Search, Create, Validate",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # List all snippets with source config info
-  snippets_cli.py list --show-stats
+  # Show available snippet locations
+  snippets paths
+  snippets paths dev
 
-  # Create snippet in named config (e.g., config.work.json)
-  snippets_cli.py --config-name work create my-snippet --pattern "pattern" --description "desc"
+  # Create snippet from file
+  snippets create ~/my-snippet.md snippets/local/development/my-snippet/SKILL.md
 
-  # Create snippet in local config (default: config.local.json)
-  snippets_cli.py create my-snippet --pattern "pattern" --description "desc"
+  # Search snippets
+  snippets docker
+  snippets "email handling"
 
-  # Create snippet in base config (config.json)
-  snippets_cli.py --use-base-config create my-snippet --pattern "pattern" --description "desc"
+  # List all snippets
+  snippets list
 
-Config Priority System:
-  - config.json: priority 0 (base)
-  - config.local.json: priority 100 (local overrides)
-  - config.{name}.json: priority 50 (or specified in file)
-  - Higher priority configs override lower priority when snippet names conflict
+  # Validate configuration
+  snippets validate
         """
     )
 
-    # Global options
+    # Global options (minimal)
     parser.add_argument("--config", type=Path,
-                       help="Base config file path (default: ./config.json)")
-    parser.add_argument("--config-name", type=str,
-                       help="Named config to target (e.g., 'work' for config.work.json)")
+                       help="Config file path (default: ./config.json)")
     parser.add_argument("--snippets-dir", type=Path,
-                       help="Snippets directory (default: ./commands/local)")
-    parser.add_argument("--use-base-config", action="store_true",
-                       help="Save to config.json instead of config.local.json")
+                       help="Snippets directory (default: ./snippets/local)")
     parser.add_argument("--output", choices=["json", "text"], default="text",
-                       help="Output format (default: text, use 'json' for raw JSON)")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                       help="Verbose output")
-    parser.add_argument("-k", "--keyword", type=str,
-                       help="Filter by keyword (searches in pattern)")
+                       help="Output format (default: text)")
 
-    # Subcommands (default to list if not specified)
+    # Subcommands
     subparsers = parser.add_subparsers(dest="command", required=False)
 
+    # paths
+    paths_parser = subparsers.add_parser("paths", help="Show available snippet locations")
+    paths_parser.add_argument("filter", nargs="?", help="Filter categories by keyword")
+
     # create
-    create_parser = subparsers.add_parser("create", help="Create new snippet")
-    create_parser.add_argument("name", help="Snippet name")
-    create_parser.add_argument("--pattern", required=True, help="Regex pattern")
-    create_parser.add_argument("--description", required=True, help="Skill description (when to use)")
-    create_parser.add_argument("--content", help="Snippet content (inline)")
-    create_parser.add_argument("--file", help="Read content from file")
-    create_parser.add_argument("--files", nargs="+", help="Multiple source files to combine")
-    create_parser.add_argument("--separator", default="\n",
-                              help="Separator between files (default: newline)")
-    create_parser.add_argument("--enabled", type=bool, default=True,
-                              help="Enable snippet (default: true)")
-    create_parser.add_argument("--force", action="store_true",
-                              help="Overwrite if exists")
+    create_parser = subparsers.add_parser("create", help="Create new snippet from file")
+    create_parser.add_argument("source_file", help="Source SKILL.md file")
+    create_parser.add_argument("destination_path", help="Destination path (snippets/local/<category>/<name>/SKILL.md)")
+    create_parser.add_argument("--pattern", help="Override pattern from frontmatter")
+    create_parser.add_argument("--force", action="store_true", help="Overwrite if exists")
 
     # list
-    list_parser = subparsers.add_parser("list", help="List snippets")
-    list_parser.add_argument("name", nargs="?", help="Specific snippet name")
-    list_parser.add_argument("--show-content", action="store_true",
-                            help="Include content in output")
-    list_parser.add_argument("--show-stats", action="store_true",
-                            help="Include statistics")
-
-    # update
-    update_parser = subparsers.add_parser("update", help="Update snippet")
-    update_parser.add_argument("name", help="Snippet name")
-    update_parser.add_argument("--pattern", help="New regex pattern")
-    update_parser.add_argument("--content", help="New content (inline)")
-    update_parser.add_argument("--file", help="Read new content from file")
-    update_parser.add_argument("--enabled", type=bool, help="Enable/disable")
-    update_parser.add_argument("--rename", help="Rename snippet")
-
-    # delete
-    delete_parser = subparsers.add_parser("delete", help="Delete snippet")
-    delete_parser.add_argument("name", help="Snippet name")
-    delete_parser.add_argument("--force", action="store_true",
-                              help="Skip confirmation")
-    delete_parser.add_argument("--backup", action="store_true", default=True,
-                              help="Create backup (default: true)")
-    delete_parser.add_argument("--backup-dir", help="Backup directory")
+    list_parser = subparsers.add_parser("list", help="List and search snippets")
+    list_parser.add_argument("name", nargs="?", help="Search term")
 
     # validate
-    validate_parser = subparsers.add_parser("validate",
+    subparsers.add_parser("validate",
                                            help="Validate config and files")
 
-    # test
-    test_parser = subparsers.add_parser("test", help="Test pattern matching")
-    test_parser.add_argument("name", help="Snippet name")
-    test_parser.add_argument("text", help="Text to test against")
-
-    # set-priority (new command for managing config priorities)
-    priority_parser = subparsers.add_parser("set-priority",
-                                            help="Set priority for current target config")
-    priority_parser.add_argument("priority", type=int,
-                                help="Priority value (higher = takes precedence)")
-
-    # Pre-process arguments to treat first positional as keyword
+    # Pre-process arguments to treat first positional as search term
     processed_args = preprocess_args(sys.argv[1:])
     args = parser.parse_args(processed_args)
 
     # Default to list command if no command specified
     if args.command is None:
         args.command = "list"
-        # Set default list args
         args.name = None
-        args.show_content = False
-        args.show_stats = False
 
     # Set defaults for paths
     script_dir = Path(__file__).parent
     config_path = args.config or script_dir / "config.json"
-    snippets_dir = args.snippets_dir or script_dir.parent / "commands" / "local"
-
-    # Validate config_name and use_base_config are mutually exclusive
-    if args.config_name and args.use_base_config:
-        print("Error: --config-name and --use-base-config cannot be used together",
-              file=sys.stderr)
-        sys.exit(1)
+    snippets_dir = args.snippets_dir or script_dir.parent / "snippets" / "local"
 
     try:
-        manager = SnippetManager(config_path, snippets_dir, args.use_base_config, args.config_name)
+        manager = SnippetManager(config_path, snippets_dir, use_base_config=False, config_name=None)
 
         # Run automatic validation on every invocation (except for validate command itself)
         # Only output if there are issues
@@ -1235,38 +1418,58 @@ Config Priority System:
                         snippet_names = [Path(s[0]).stem if isinstance(s, list) else Path(s).stem for s in issue["snippets"]]
                         print(f"  {Colors.red('✗')} Duplicate {Colors.yellow(issue['pattern'])} in: {', '.join(Colors.cyan(n) for n in snippet_names)}", file=sys.stderr)
 
-                print(Colors.dim(f"\nRun 'snippets_cli.py validate' for full details\n"), file=sys.stderr)
+                print(Colors.dim("\nRun 'snippets_cli.py validate' for full details\n"), file=sys.stderr)
 
-        if args.command == "create":
-            data = manager.create(
-                args.name, args.pattern, args.description,
-                args.content, args.file,
-                getattr(args, 'files', None), args.separator,
-                args.enabled, args.force,
-                announce=True
-            )
-            print(format_output(True, "create", data,
-                              f"Snippet '{args.name}' created successfully",
-                              format_type=args.output))
+        if args.command == "paths":
+            filter_term = getattr(args, 'filter', None)
+            data = manager.show_paths(filter_term)
 
-        elif args.command == "list":
-            # Use keyword from global args if provided
-            keyword = args.keyword if hasattr(args, 'keyword') else None
-            data = manager.list(args.name, args.show_content, args.show_stats, keyword=keyword)
-
-            # If output is JSON, just print it
             if args.output == "json":
                 print(json.dumps(data, indent=2))
             else:
-                # Interactive mode: show list and prompt for selection
+                print("\nAvailable snippet locations:\n")
+                print(f"Base directory: {data['base_dir']}\n")
+                print("Categories:")
+                for cat in data["categories"]:
+                    print(f"  {cat['name']}/")
+                    print(f"    {cat['description']}")
+                    print(f"    Path: {cat['path']}\n")
+
+        elif args.command == "create":
+            data = manager.create_from_file(
+                args.source_file,
+                args.destination_path,
+                getattr(args, 'pattern', None),
+                getattr(args, 'force', False)
+            )
+
+            if args.output == "json":
+                print(json.dumps({"success": True, "data": data}, indent=2))
+            else:
+                print("\n✓ Snippet created successfully!")
+                print(f"  Name: {data['name']}")
+                print(f"  Pattern: {data['pattern']}")
+                print(f"  Destination: {data['destination']}")
+                print("\nTest it: Type trigger keyword in a new prompt")
+
+        elif args.command == "list":
+            search_term = args.name if hasattr(args, 'name') else None
+            data = manager.list(search_term=search_term)
+
+            # Auto-detect TTY mode
+            is_tty = sys.stdout.isatty()
+
+            if args.output == "json" or not is_tty:
+                # Non-interactive mode
+                print(json.dumps(data, indent=2))
+            else:
+                # Interactive mode
                 snippets = data.get("snippets", [])
                 if not snippets:
                     print("No snippets found.")
                 else:
-                    # Show list
                     selected_idx = interactive_select(snippets, operation="edit", base_dir=snippets_dir.parent)
                     if selected_idx is not None:
-                        # Open selected snippet in editor
                         snippet = snippets[selected_idx]
                         file_path = Path(snippet['files'][0])
                         if not file_path.is_absolute():
@@ -1278,37 +1481,10 @@ Config Priority System:
                         else:
                             print("Editor closed without saving or error occurred.")
 
-        elif args.command == "update":
-            data = manager.update(
-                args.name, args.pattern, args.content, args.file,
-                args.enabled, args.rename
-            )
-            print(format_output(True, "update", data,
-                              f"Snippet '{args.name}' updated successfully",
-                              format_type=args.output))
-
-        elif args.command == "delete":
-            data = manager.delete(args.name, args.force, args.backup,
-                                 args.backup_dir)
-            print(format_output(True, "delete", data,
-                              f"Snippet '{args.name}' deleted successfully",
-                              format_type=args.output))
-
         elif args.command == "validate":
             data = manager.validate()
             message = "All snippets valid" if data["config_valid"] else "Validation issues found"
             print(format_output(True, "validate", data, message,
-                              format_type=args.output))
-
-        elif args.command == "test":
-            data = manager.test(args.name, args.text)
-            message = f"Pattern {'matched' if data['matched'] else 'did not match'}"
-            print(format_output(True, "test", data, message,
-                              format_type=args.output))
-
-        elif args.command == "set-priority":
-            data = manager.set_priority(args.priority)
-            print(format_output(True, "set-priority", data, data["message"],
                               format_type=args.output))
 
         sys.exit(0)
