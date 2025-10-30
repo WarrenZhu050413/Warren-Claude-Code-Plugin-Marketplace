@@ -17,7 +17,7 @@ from gmaillm import GmailClient, SendEmailRequest
 from gmaillm.commands import config as config_commands
 
 # Import command modules
-from gmaillm.commands import groups, labels, styles, workflows
+from gmaillm.commands import ask, groups, labels, styles, workflows
 from gmaillm.formatters import RichFormatter
 from gmaillm.helpers.cli import (
     HelpfulGroup,
@@ -713,6 +713,7 @@ def send(
 # ============ SUBCOMMAND REGISTRATION ============
 
 # Register command modules
+app.add_typer(ask.app, name="ask")
 app.add_typer(labels.app, name="labels")
 app.add_typer(groups.app, name="groups")
 app.add_typer(styles.app, name="styles")
