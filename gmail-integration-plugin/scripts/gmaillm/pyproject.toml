@@ -31,6 +31,7 @@ dependencies = [
     "typer>=0.9.0",
     "packaging>=21.0", # Required by google-api-python-client but not declared
     "email-validator>=2.0.0",
+    "beautifulsoup4>=4.9.0",
 ]
 
 [project.optional-dependencies]

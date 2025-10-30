@@ -6,6 +6,8 @@ new content, removing quoted replies and attribution lines.
 
 import re
 
+from bs4 import BeautifulSoup
+
 
 class EmailBodyParser:
     """Parser for extracting new content from email bodies."""
@@ -72,3 +74,34 @@ class EmailBodyParser:
             if re.match(pattern, line, re.IGNORECASE):
                 return True
         return False
+
+    def extract_new_content_html(self, body: str) -> str:
+        """Extract new content from HTML email, removing quotes and blockquotes.
+
+        Args:
+            body: HTML email body
+
+        Returns:
+            New content only, with quotes and attribution removed
+
+        """
+        if not body:
+            return ''
+
+        # Parse HTML
+        soup = BeautifulSoup(body, 'html.parser')
+
+        # Remove all blockquotes (Gmail, Apple Mail, etc.)
+        for blockquote in soup.find_all('blockquote'):
+            blockquote.decompose()
+
+        # Remove Gmail attribution divs
+        for attr_class in ['gmail_attr', 'gmail_quote', 'gmail_quote_container']:
+            for element in soup.find_all(class_=attr_class):
+                element.decompose()
+
+        # Extract remaining text
+        text = soup.get_text()
+
+        # Clean up whitespace
+        return text.strip()
