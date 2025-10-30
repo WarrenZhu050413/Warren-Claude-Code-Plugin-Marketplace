@@ -3,11 +3,10 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-import pytest
 from typer.testing import CliRunner
 
 from gmaillm.cli import app
-from gmaillm.models import EmailSummary, EmailAddress, Folder, SearchResult
+from gmaillm.models import EmailAddress, EmailSummary, Folder, SearchResult
 
 runner = CliRunner()
 
@@ -64,6 +63,51 @@ class TestThreadCommand:
 
         assert result.exit_code == 1
         assert "Error" in result.output
+
+    @patch("gmaillm.cli.GmailClient")
+    def test_thread_with_strip_quotes(self, mock_client_class):
+        """Test thread command with --strip-quotes flag.
+
+        Should display thread with quoted content removed from replies.
+        """
+        from gmaillm.models import EmailFull
+
+        # Mock thread with replies that have quoted content
+        mock_thread_full = [
+            EmailFull(
+                message_id="msg1",
+                thread_id="thread123",
+                **{"from": EmailAddress(email="alice@example.com", name="Alice")},
+                to=[EmailAddress(email="bob@example.com", name="Bob")],
+                subject="Original message",
+                date=datetime.now(),
+                body_plain="This is the original message content.",
+                labels=["INBOX"],
+            ),
+            EmailFull(
+                message_id="msg2",
+                thread_id="thread123",
+                **{"from": EmailAddress(email="bob@example.com", name="Bob")},
+                to=[EmailAddress(email="alice@example.com", name="Alice")],
+                subject="Re: Original message",
+                date=datetime.now(),
+                body_plain="This is my reply.\n\nOn date, Alice wrote:\n> This is the original message content.",
+                labels=["INBOX"],
+            )
+        ]
+
+        mock_client = Mock()
+        mock_client.get_thread_full.return_value = mock_thread_full
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["thread", "msg1", "--strip-quotes"])
+
+        assert result.exit_code == 0
+        # Should show new content
+        assert "This is my reply" in result.output
+        # Should NOT show quoted content
+        assert "This is the original message content" not in result.output or result.output.count("This is the original message content") == 1
+        mock_client.get_thread_full.assert_called_once_with("msg1")
 
 
 class TestStatusCommand:

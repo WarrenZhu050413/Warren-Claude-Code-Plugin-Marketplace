@@ -941,6 +941,47 @@ class GmailClient:
         except HttpError as e:
             raise RuntimeError(f"Failed to get thread: {e}")
 
+    def get_thread_full(self, message_id: str) -> List[EmailFull]:
+        """Get all emails in a thread with full details.
+
+        Args:
+            message_id: ID of any message in the thread
+
+        Returns:
+            List of EmailFull objects in chronological order
+
+        Raises:
+            RuntimeError: If API request fails
+
+        """
+        try:
+            # First get the message to find its thread_id
+            msg = (
+                self.service.users()
+                .messages()
+                .get(userId="me", id=message_id, format="minimal")
+                .execute()
+            )
+
+            thread_id = msg["threadId"]
+
+            # Get the full thread
+            thread = self.service.users().threads().get(userId="me", id=thread_id).execute()
+
+            # Parse all messages in thread with full details
+            messages: List[EmailFull] = []
+            for msg_data in thread.get("messages", []):
+                email_full = self._parse_message_to_full(msg_data)
+                messages.append(email_full)
+
+            # Sort by date (should already be sorted, but ensure it)
+            messages.sort(key=lambda x: x.date)
+
+            return messages
+
+        except HttpError as e:
+            raise RuntimeError(f"Failed to get thread: {e}")
+
     def send_email(self, request: SendEmailRequest) -> SendEmailResponse:
         """Send an email.
 

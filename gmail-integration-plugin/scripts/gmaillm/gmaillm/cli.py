@@ -389,23 +389,48 @@ def read(
 @app.command()
 def thread(
     message_id: str = typer.Argument(..., help="Message ID in the thread"),
+    strip_quotes: bool = typer.Option(False, "--strip-quotes", help="Remove quoted content from replies"),
     output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
 ) -> None:
     """Show entire email thread containing a message.
 
     [bold cyan]EXAMPLES[/bold cyan]:
       [dim]$[/dim] gmail thread msg123
+      [dim]$[/dim] gmail thread msg123 --strip-quotes
       [dim]$[/dim] gmail thread msg123 --output-format json
     """
     try:
+        from gmaillm.helpers.domain.email_parser import EmailBodyParser
+
         client = GmailClient()
-        thread_messages = client.get_thread(message_id)
+
+        if strip_quotes:
+            # Get full thread with bodies so we can strip quotes
+            thread_messages = client.get_thread_full(message_id)
+            parser = EmailBodyParser()
+
+            # Strip quotes from each message
+            for email in thread_messages:
+                if email.body_plain:
+                    email.body_plain = parser.extract_new_content_plain(email.body_plain)
+                if email.body_html:
+                    email.body_html = parser.extract_new_content_html(email.body_html)
+        else:
+            # Get summary thread (no bodies needed)
+            thread_messages = client.get_thread(message_id)
 
         if output_format == OutputFormat.JSON:
             # thread_messages is a list, so serialize each message
             console.print_json(data=[msg.model_dump(mode='json') for msg in thread_messages])
         else:  # RICH
-            formatter.print_thread(thread_messages, message_id)
+            if strip_quotes:
+                # Display full emails with stripped quotes
+                for i, email in enumerate(thread_messages, 1):
+                    console.print(f"\n[bold cyan]Message {i} of {len(thread_messages)}[/bold cyan]")
+                    formatter.print_email_full(email)
+            else:
+                # Display summary thread
+                formatter.print_thread(thread_messages, message_id)
 
     except Exception as e:
         console.print(f"[red]Error getting thread: {e}[/red]")
