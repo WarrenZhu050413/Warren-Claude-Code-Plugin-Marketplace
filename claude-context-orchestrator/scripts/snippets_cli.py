@@ -1237,7 +1237,12 @@ def preprocess_args(args):
       snippets docker        → snippets list docker
       snippets paths --output json → snippets --output json paths
       snippets create foo    → snippets create foo (unchanged)
+      snippets --help        → snippets --help (pass through)
     """
+    # Pass through help flags unchanged so argparse can handle them
+    if '--help' in args or '-h' in args:
+        return args
+
     subcommands = {'create', 'paths', 'list', 'validate'}
 
     # Separate global flags, subcommand, and subcommand args
@@ -1366,6 +1371,12 @@ Examples:
 
     # Pre-process arguments to treat first positional as search term
     processed_args = preprocess_args(sys.argv[1:])
+
+    # If help was requested, let argparse handle it (it will print and exit)
+    if '--help' in processed_args or '-h' in processed_args:
+        args = parser.parse_args(processed_args)
+        return  # argparse will have already printed help and exited
+
     args = parser.parse_args(processed_args)
 
     # Default to list command if no command specified
@@ -1375,8 +1386,27 @@ Examples:
 
     # Set defaults for paths
     script_dir = Path(__file__).parent
-    config_path = args.config or script_dir / "config.json"
-    snippets_dir = args.snippets_dir or script_dir.parent / "snippets" / "local"
+
+    # Use Warren's actual plugin location if config/snippets not specified
+    warren_plugin_base = Path.home() / ".claude" / "plugins" / "marketplaces" / "warren-claude-code-plugin-marketplace" / "claude-context-orchestrator"
+
+    if args.config:
+        config_path = args.config
+    elif (warren_plugin_base / "scripts" / "config.json").exists():
+        # Use Warren's plugin location
+        config_path = warren_plugin_base / "scripts" / "config.json"
+    else:
+        # Fallback to script directory
+        config_path = script_dir / "config.json"
+
+    if args.snippets_dir:
+        snippets_dir = args.snippets_dir
+    elif (warren_plugin_base / "snippets" / "local").exists():
+        # Use Warren's plugin location
+        snippets_dir = warren_plugin_base / "snippets" / "local"
+    else:
+        # Fallback to script directory
+        snippets_dir = script_dir.parent / "snippets" / "local"
 
     try:
         manager = SnippetManager(config_path, snippets_dir, use_base_config=False, config_name=None)
