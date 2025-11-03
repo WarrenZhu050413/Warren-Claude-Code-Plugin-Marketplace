@@ -3,28 +3,36 @@
     {
       "name": "nvim",
       "pattern": "\\b(NVIM|NEOVIM)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-nvim/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-nvim/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "tdd",
       "pattern": "\\b(TDD)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/development/following-tdd/SKILL.md"],
+      "snippet": [
+        "../snippets/local/development/following-tdd/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "gcal",
       "pattern": "\\b(GCAL|CALENDAR)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/calendar/scheduling-events/SKILL.md"],
+      "snippet": [
+        "../snippets/local/calendar/scheduling-events/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "style",
       "pattern": "\\b(STYLE)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/applying-style/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/applying-style/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
@@ -40,21 +48,27 @@
     {
       "name": "plan-html",
       "pattern": "\\b(HTMLPLAN|PLAN)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/planning-html/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/planning-html/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "download-pdf",
       "pattern": "\\b(DOWNLOAD)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/downloading-pdfs/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/downloading-pdfs/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "post",
       "pattern": "\\b(POST)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/communication/posting-content/SKILL.md"],
+      "snippet": [
+        "../snippets/local/communication/posting-content/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
@@ -70,210 +84,270 @@
     {
       "name": "text-output",
       "pattern": "\\b(TEXT|TXT)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/outputting-text/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/outputting-text/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "clear-output",
       "pattern": "\\b(CLEAR|CLEARER)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/clearing-output/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/clearing-output/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "add-todo",
       "pattern": "\\b(TODO|TASK)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/productivity/tracking-todos/SKILL.md"],
+      "snippet": [
+        "../snippets/local/productivity/tracking-todos/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "linear",
       "pattern": "\\b(LINEAR)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-linear/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-linear/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "screenshot-workflow",
       "pattern": "\\b(SCREENSHOT|SCREEN)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-screenshots/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-screenshots/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "journey",
       "pattern": "\\b(JOURNEY)\\b[.,;:!?]?",
-      "snippet": ["../skills/pedagogical-journey/SKILL.md"],
+      "snippet": [
+        "../skills/pedagogical-journey/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "lua",
       "pattern": "\\b(LUA)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/coding-style-guides/writing-lua/SKILL.md"],
+      "snippet": [
+        "../snippets/local/coding-style-guides/writing-lua/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "writing-scripts",
       "pattern": "\\b(SCRIPT|SCRIPTS)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/coding-style-guides/writing-scripts/SKILL.md"],
+      "snippet": [
+        "../skills/writing-scripts/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "iterate-code",
       "pattern": "\\b(ITER|ITERATE)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/development/iterating-code/SKILL.md"],
+      "snippet": [
+        "../snippets/local/development/iterating-code/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "paper",
       "pattern": "\\b(PAPER)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/writing-papers/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/writing-papers/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "create-issue",
       "pattern": "\\b(ISSUE)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/project-mgmt/creating-issues/SKILL.md"],
+      "snippet": [
+        "../snippets/local/project-mgmt/creating-issues/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "spanish-learning",
       "pattern": "\\b(SPANISH|ESPANOL)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/spanish-learning/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/spanish-learning/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "generating-html",
       "pattern": "\\b(HTMLGEN|HTML)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/output-formats/generating-html/SKILL.md"],
+      "snippet": [
+        "../snippets/local/output-formats/generating-html/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "building-artifacts",
       "pattern": "\\b(BUILDART|ARTIFACT)\\b[.,;:!?]?",
-      "snippet": ["../skills/building-artifacts/SKILL.md"],
+      "snippet": [
+        "../skills/building-artifacts/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "building-mcp",
       "pattern": "\\b(BUILDMCP|MCP)\\b[.,;:!?]?",
-      "snippet": ["../skills/building-mcp/SKILL.md"],
+      "snippet": [
+        "../skills/building-mcp/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "managing-skills",
       "pattern": "\\b(MANAGESKILL|SKILL)\\b[.,;:!?]?",
-      "snippet": ["../skills/managing-skills/SKILL.md"],
+      "snippet": [
+        "../skills/managing-skills/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "managing-snippets",
       "pattern": "\\b(MANAGESNIP|SNIPPET)\\b[.,;:!?]?",
-      "snippet": ["../skills/managing-snippets/SKILL.md"],
+      "snippet": [
+        "../skills/managing-snippets/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "searching-deeply",
       "pattern": "\\b(DEEPSEARCH|SEARCH)\\b[.,;:!?]?",
-      "snippet": ["../skills/searching-deeply/SKILL.md"],
+      "snippet": [
+        "../skills/searching-deeply/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "testing-webapps",
       "pattern": "\\b(TESTWEB|WEBTEST)\\b[.,;:!?]?",
-      "snippet": ["../skills/testing-webapps/SKILL.md"],
+      "snippet": [
+        "../skills/testing-webapps/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "rapid-fullstack",
       "pattern": "\\b(PROTOTYPE|WEBAPP)\\b[.,;:!?]?",
-      "snippet": ["../skills/rapid-fullstack/SKILL.md"],
+      "snippet": [
+        "../skills/rapid-fullstack/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "theming-artifacts",
       "pattern": "\\b(THEMEART|THEME)\\b[.,;:!?]?",
-      "snippet": ["../skills/theming-artifacts/SKILL.md"],
+      "snippet": [
+        "../skills/theming-artifacts/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "using-claude",
       "pattern": "\\b(USECLAUDE|CLAUDE)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-claude/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-claude/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "using-codex",
       "pattern": "\\b(USECODEX|CODEX)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-codex/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-codex/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "generating-tts",
       "pattern": "\\b(TTS)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/productivity/generating-tts/SKILL.md"],
+      "snippet": [
+        "../snippets/local/productivity/generating-tts/SKILL.md"
+      ],
       "enabled": true,
       "separator": "\n"
     },
     {
       "name": "reflecting-learnings",
       "pattern": "\\b(REFLECT)\\b[.,;:!?]?",
-      "snippet": ["../skills/reflecting-learnings/SKILL.md"],
+      "snippet": [
+        "../skills/reflecting-learnings/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "using-clis",
       "pattern": "\\b(CLI|USECLI)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-clis/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-clis/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "using-github-cli",
       "pattern": "\\b(GH)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/using-github-cli/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/using-github-cli/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "documentation-tutorial",
       "pattern": "\\b(TUTORIAL)\\b[.,;:!?]?",
-      "snippet": ["../skills/documentation-tutorial/SKILL.md"],
+      "snippet": [
+        "../skills/documentation-tutorial/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "images",
       "pattern": "\\b(IMAGES)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/documentation/fetching-images/SKILL.md"],
+      "snippet": [
+        "../snippets/local/documentation/fetching-images/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "developing-essays",
       "pattern": "\\b(ESSAY)\\b[.,;:!?]?",
-      "snippet": ["../skills/developing-essays/SKILL.md"],
+      "snippet": [
+        "../skills/developing-essays/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
@@ -289,28 +363,72 @@
     {
       "name": "apache-compliance",
       "pattern": "\\b(CHECK_APACHE|APACHE_COMPLIANCE|APACHE)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/development/apache-compliance/SKILL.md"],
+      "snippet": [
+        "../snippets/local/development/apache-compliance/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "mail",
       "pattern": "\\b(MAIL|EMAIL)\\b[.,;:!?]?",
-      "snippet": ["../skills/mail-wrapper/SKILL.md"],
+      "snippet": [
+        "../skills/mail-wrapper/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "gmaillm",
       "pattern": "\\b(GMAILLM)\\b[.,;:!?]?",
-      "snippet": ["../snippets/gmaillm-usage.md"],
+      "snippet": [
+        "../snippets/gmaillm-usage.md"
+      ],
       "separator": "\n",
       "enabled": true
     },
     {
       "name": "tutoring-report",
       "pattern": "\\b(TEACHREPORT)\\b[.,;:!?]?",
-      "snippet": ["../snippets/local/communication/tutoring-report/SNIPPET.md"],
+      "snippet": [
+        "../snippets/local/communication/tutoring-report/SNIPPET.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "latex-style",
+      "pattern": "\\b(LATEXSTYLE|LATEX)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/output-formats/latex-style/SNIPPET.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "ed-post",
+      "pattern": "\\b(EDPOST|ED)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/communication/ed-post/SNIPPET.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "test-snippet",
+      "pattern": "\\b(TEST)\\b[.,;:!?]?",
+      "snippet": [
+        "snippets/local/development/test-snippet/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "override-test",
+      "pattern": "\\b(NEW)\\b[.,;:!?]?",
+      "snippet": [
+        "snippets/local/development/override-test/SKILL.md"
+      ],
       "separator": "\n",
       "enabled": true
     }

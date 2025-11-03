@@ -17,8 +17,8 @@ import shutil
 from pathlib import Path
 import pytest
 
-# Path to CLI script
-CLI_PATH = Path(__file__).parent / "snippets_cli.py"
+# Path to CLI script (now in snippets/ subdirectory)
+CLI_PATH = Path(__file__).parent / "snippets" / "snippets_cli.py"
 
 
 def run_cli(*args, input_text=None):
@@ -49,15 +49,16 @@ def test_paths_list_all():
     data = json.loads(stdout)
     assert "base_dir" in data, "Output should contain base_dir"
     assert "categories" in data, "Output should contain categories"
+    assert "config_files" in data, "Output should contain config_files"
 
     categories = data["categories"]
     assert len(categories) > 0, "Should have at least one category"
 
-    # Check category structure
+    # Check category structure (dynamically discovered)
     for cat in categories:
         assert "name" in cat, "Category should have name"
-        assert "description" in cat, "Category should have description"
-        assert "path" in cat, "Category should have path"
+        assert "snippet_count" in cat, "Category should have snippet_count"
+        assert "sample_paths" in cat, "Category should have sample_paths"
 
     print(f"  ✓ Found {len(categories)} categories")
 
@@ -73,11 +74,10 @@ def test_paths_filter_by_keyword():
     data = json.loads(stdout)
     categories = data["categories"]
 
-    # Should find only matching categories
+    # Should find only matching categories (matches category name only in current implementation)
     for cat in categories:
         name = cat["name"].lower()
-        desc = cat["description"].lower()
-        assert "dev" in name or "dev" in desc, f"Category should match 'dev': {cat}"
+        assert "dev" in name, f"Category name should match 'dev': {cat}"
 
     print(f"  ✓ Found {len(categories)} matching categories")
 

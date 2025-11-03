@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/snippet_injector.py"
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/snippets/snippet_injector.py"
           }
         ]
       }

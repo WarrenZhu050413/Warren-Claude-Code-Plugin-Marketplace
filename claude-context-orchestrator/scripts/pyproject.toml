@@ -33,13 +33,14 @@ dev = [
 ]
 
 [project.scripts]
-snippets = "snippets_cli:main"
+snippets = "snippets.snippets_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/wzhu/claude-context-orchestrator"
 
 [tool.setuptools]
-py-modules = ["snippets_cli"]
+packages = ["snippets"]
+package-dir = {"" = "."}
 
 # Ruff configuration (modern Python linter)
 [tool.ruff]

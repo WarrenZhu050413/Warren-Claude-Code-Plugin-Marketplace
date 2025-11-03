@@ -896,32 +896,95 @@ class SnippetManager:
         }
 
     def show_paths(self, filter_term: str = None) -> Dict:
-        """Show available snippet locations and categories"""
-        categories = {
-            "communication": "Email, reports, writing templates",
-            "documentation": "Guides, references, how-tos",
-            "development": "Code patterns, debugging workflows",
-            "productivity": "Workflow automation, task management",
-            "output-formats": "Formatting styles, templates"
-        }
+        """
+        Show available snippet locations and categories (dynamically discovered).
 
+        Discovers categories from actual snippet file paths in config files.
+        """
+        # Discover unique directories from all snippet files
+        discovered_paths = set()
+
+        for mapping in self.config["mappings"]:
+            snippet_files = mapping.get("snippet", [])
+            if isinstance(snippet_files, str):
+                snippet_files = [snippet_files]
+
+            for snippet_file in snippet_files:
+                snippet_path = Path(snippet_file)
+
+                # Extract category from path (e.g., "../skills/my-skill/SKILL.md" -> "skills")
+                # or "snippets/local/development/foo/SKILL.md" -> "development"
+                parts = snippet_path.parts
+
+                # Find base directory and category
+                if "snippets" in parts and "local" in parts:
+                    # Format: snippets/local/category/name/SKILL.md
+                    try:
+                        local_idx = parts.index("local")
+                        if local_idx + 1 < len(parts):
+                            category = parts[local_idx + 1]
+                            full_path = snippet_path.parent
+                            discovered_paths.add((category, str(full_path)))
+                    except (ValueError, IndexError):
+                        pass
+                elif "skills" in parts:
+                    # Format: ../skills/skill-name/SKILL.md
+                    try:
+                        skills_idx = parts.index("skills")
+                        if skills_idx + 1 < len(parts):
+                            skill_name = parts[skills_idx + 1]
+                            full_path = snippet_path.parent
+                            discovered_paths.add(("skills", str(full_path)))
+                    except (ValueError, IndexError):
+                        pass
+
+        # Group by category and collect unique paths
+        categories = {}
+        for category, path in sorted(discovered_paths):
+            if category not in categories:
+                categories[category] = {
+                    "paths": [],
+                    "count": 0
+                }
+            categories[category]["paths"].append(path)
+            categories[category]["count"] += 1
+
+        # Filter if requested
         if filter_term:
             categories = {
                 k: v for k, v in categories.items()
-                if filter_term.lower() in k.lower() or filter_term.lower() in v.lower()
+                if filter_term.lower() in k.lower()
             }
 
-        return {
+        # Build response
+        result = {
+            "config_files": [
+                {
+                    "path": str(self.config_path),
+                    "priority": 0,
+                    "type": "base"
+                }
+            ],
             "base_dir": str(self.snippets_dir),
             "categories": [
                 {
                     "name": name,
-                    "description": desc,
-                    "path": f"snippets/local/{name}/"
+                    "snippet_count": info["count"],
+                    "sample_paths": info["paths"][:3]  # Show up to 3 sample paths
                 }
-                for name, desc in categories.items()
+                for name, info in sorted(categories.items())
             ]
         }
+
+        # Add local config if it exists
+        if self.local_config_path.exists():
+            result["config_files"].append({
+                "path": str(self.local_config_path),
+                "priority": 100,
+                "type": "local"
+            })
+
+        return result
 
     def create_from_file(self, source_file: str, destination_path: str,
                          pattern_override: str = None, force: bool = False) -> Dict:
@@ -1341,9 +1404,9 @@ Examples:
 
     # Global options (minimal)
     parser.add_argument("--config", type=Path,
-                       help="Config file path (default: ./config.json)")
+                       help="Config file path (default: ./snippets/config.json)")
     parser.add_argument("--snippets-dir", type=Path,
-                       help="Snippets directory (default: ./snippets/local)")
+                       help="Snippets directory (default: ../snippets/local)")
     parser.add_argument("--output", choices=["json", "text"], default="text",
                        help="Output format (default: text)")
 
@@ -1385,18 +1448,18 @@ Examples:
         args.name = None
 
     # Set defaults for paths
-    script_dir = Path(__file__).parent
+    script_dir = Path(__file__).parent  # Now points to scripts/snippets/
 
     # Use Warren's actual plugin location if config/snippets not specified
     warren_plugin_base = Path.home() / ".claude" / "plugins" / "marketplaces" / "warren-claude-code-plugin-marketplace" / "claude-context-orchestrator"
 
     if args.config:
         config_path = args.config
-    elif (warren_plugin_base / "scripts" / "config.json").exists():
+    elif (warren_plugin_base / "scripts" / "snippets" / "config.json").exists():
         # Use Warren's plugin location
-        config_path = warren_plugin_base / "scripts" / "config.json"
+        config_path = warren_plugin_base / "scripts" / "snippets" / "config.json"
     else:
-        # Fallback to script directory
+        # Fallback to current directory (scripts/snippets/)
         config_path = script_dir / "config.json"
 
     if args.snippets_dir:
@@ -1405,8 +1468,8 @@ Examples:
         # Use Warren's plugin location
         snippets_dir = warren_plugin_base / "snippets" / "local"
     else:
-        # Fallback to script directory
-        snippets_dir = script_dir.parent / "snippets" / "local"
+        # Fallback to ../../snippets/local (from scripts/snippets/)
+        snippets_dir = script_dir.parent.parent / "snippets" / "local"
 
     try:
         manager = SnippetManager(config_path, snippets_dir, use_base_config=False, config_name=None)
@@ -1457,13 +1520,32 @@ Examples:
             if args.output == "json":
                 print(json.dumps(data, indent=2))
             else:
-                print("\nAvailable snippet locations:\n")
-                print(f"Base directory: {data['base_dir']}\n")
-                print("Categories:")
+                print("\n" + Colors.bold("Snippet Configuration") + "\n")
+
+                # Show config files
+                print(Colors.bold("Config Files:"))
+                for config in data["config_files"]:
+                    priority_badge = f"[priority: {config['priority']}]"
+                    type_badge = f"({config['type']})"
+                    print(f"  {Colors.cyan(config['path'])} {Colors.dim(type_badge)} {Colors.dim(priority_badge)}")
+
+                print()
+
+                # Show base directory
+                print(Colors.bold("Base Snippets Directory:"))
+                print(f"  {Colors.cyan(data['base_dir'])}\n")
+
+                # Show discovered categories
+                print(Colors.bold("Discovered Categories:"))
                 for cat in data["categories"]:
-                    print(f"  {cat['name']}/")
-                    print(f"    {cat['description']}")
-                    print(f"    Path: {cat['path']}\n")
+                    count_badge = f"({cat['snippet_count']} snippet{'s' if cat['snippet_count'] != 1 else ''})"
+                    print(f"  {Colors.green(cat['name'])} {Colors.dim(count_badge)}")
+
+                    # Show sample paths
+                    for path in cat['sample_paths']:
+                        print(f"    {Colors.dim(path)}")
+
+                    print()
 
         elif args.command == "create":
             data = manager.create_from_file(
