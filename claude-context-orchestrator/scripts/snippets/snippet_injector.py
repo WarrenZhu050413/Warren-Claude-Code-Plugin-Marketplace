@@ -19,7 +19,12 @@ import re
 from pathlib import Path
 
 # Get plugin root directory
-PLUGIN_ROOT = Path(__file__).parent
+# snippet_injector.py is in scripts/snippets/
+# Config files are in scripts/snippets/
+# Snippet files referenced in config are relative to scripts/ (e.g., ../snippets/local/...)
+SCRIPT_DIR = Path(__file__).parent  # scripts/snippets/
+CONFIG_ROOT = SCRIPT_DIR  # Config files are in scripts/snippets/
+PLUGIN_ROOT = SCRIPT_DIR.parent  # scripts/ - base path for resolving snippet file paths
 
 # Default priorities for standard config files
 DEFAULT_PRIORITIES = {
@@ -37,7 +42,7 @@ def load_merged_config():
     config_files = []
 
     # Find all config*.json files
-    for config_path in sorted(PLUGIN_ROOT.glob("config*.json")):
+    for config_path in sorted(CONFIG_ROOT.glob("config*.json")):
         try:
             with open(config_path) as f:
                 config_data = json.load(f)

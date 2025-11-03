@@ -58,3 +58,28 @@ commands/backups/
 scripts/.annotations/
 scripts/.pytest_cache/
 
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Development artifacts
+buffer.txt
+quibbler-*.txt
+.quibbler-messages.txt
+.mcp.json
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Old backups
+old_scripts_backup/
+post-sender-plugin
+

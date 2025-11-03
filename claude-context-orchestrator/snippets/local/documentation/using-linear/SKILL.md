@@ -157,7 +157,90 @@ variables = {
 }
 ```
 
-### 3. Add Comment to Issue
+### 3. Update Issue Due Date
+
+To set a due date on an issue:
+
+```python
+mutation = """
+mutation UpdateIssueDueDate($id: String!, $dueDate: TimelessDate!) {
+  issueUpdate(id: $id, input: {dueDate: $dueDate}) {
+    success
+    issue {
+      id
+      identifier
+      dueDate
+    }
+  }
+}
+"""
+
+variables = {
+    "id": issue_id,
+    "dueDate": "2025-11-03"  # ISO 8601 format: YYYY-MM-DD
+}
+
+result = graphql_request(mutation, variables)
+```
+
+**TimelessDate Type**:
+- Scalar type that accepts ISO 8601 date format: `YYYY-MM-DD`
+- Also accepts shortcuts like `"2021"` for midnight Jan 01 2021
+- Accepts ISO 8601 duration strings added to current date (e.g., `"-P2W1D"` = 2 weeks and 1 day ago)
+- Common format: `"2025-11-03"` for November 3, 2025
+
+### 4. Update Issue Labels
+
+**IMPORTANT:** Linear doesn't have `issueAddLabel` mutation. Use `issueUpdate` with `labelIds` array instead.
+
+To add or update labels on an issue:
+
+```python
+# First, get current labels
+get_issue_query = """{
+  issues(filter: {identifier: {eq: "UNIFIED-15"}}) {
+    nodes {
+      id
+      labels { nodes { id name } }
+    }
+  }
+}"""
+
+issue_result = graphql_request(get_issue_query)
+issue = issue_result['data']['issues']['nodes'][0]
+issue_id = issue['id']
+current_label_ids = [label['id'] for label in issue['labels']['nodes']]
+
+# Add new label to existing ones
+mutation = """
+mutation UpdateIssueLabels($id: String!, $labelIds: [String!]!) {
+  issueUpdate(id: $id, input: {labelIds: $labelIds}) {
+    success
+    issue {
+      id
+      labels { nodes { name } }
+    }
+  }
+}
+"""
+
+# Append new label ID to existing labels
+new_label_ids = current_label_ids + [new_label_id]
+
+variables = {
+    "id": issue_id,
+    "labelIds": new_label_ids  # Array of ALL label IDs (existing + new)
+}
+
+result = graphql_request(mutation, variables)
+```
+
+**Key points:**
+- `labelIds` parameter **REPLACES** all labels (doesn't append)
+- Always include existing label IDs + new ones
+- Use `String!` type for label IDs, not `ID!`
+
+### 4. Add Comment to Issue
 
 To add a text comment (supports Markdown):
 
@@ -305,6 +388,26 @@ variables = {
 ```
 
 ## Common Errors and Solutions
+
+### HTTP 400: Bad Request (GraphQL Mutation)
+
+**Cause**: Query syntax error, wrong mutation name, or incorrect variable types
+
+**Solution**:
+1. **Search for correct syntax** - Linear's GraphQL schema may not match documentation
+   ```bash
+   # Use searching-deeply skill or Exa
+   mcp__exa__get_code_context_exa({
+     query: "Linear API GraphQL mutation [operation] syntax",
+     tokensNum: 3000
+   })
+   ```
+2. Check error message in response for hints
+3. Verify mutation exists in Linear schema (common mistake: `issueAddLabel` doesn't exist)
+4. Confirm variable types match schema (`String!` vs `ID!`)
+5. Look for production code examples showing correct usage
+
+**Example**: Adding labels returns 400 because `issueAddLabel` doesn't exist → Use `issueUpdate` with `labelIds` instead
 
 ### HTTP 400: Bad Request (File Upload)
 

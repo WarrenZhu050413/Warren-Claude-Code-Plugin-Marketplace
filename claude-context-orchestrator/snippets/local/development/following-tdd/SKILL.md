@@ -36,6 +36,7 @@ TDD follows a repetitive four-phase cycle:
 ### 3. REFACTOR Phase - Cleaning It Up
 - Refactor both new and old code to make it well-structured
 - Improve code quality, remove duplication, apply best practices
+- **Run linter** to catch style issues and maintain code standards
 - **CRITICAL:** Ensure all tests still pass after refactoring
 - Do NOT change functionality or introduce breaking changes
 
@@ -43,6 +44,7 @@ TDD follows a repetitive four-phase cycle:
 - Apply SOLID principles and design patterns where appropriate
 - Eliminate code duplication (DRY principle)
 - Improve naming, structure, and readability
+- Run `make lint` or equivalent to fix formatting and style issues
 - **NEVER skip this step** - it's the most commonly neglected but crucial phase
 
 ### 4. COMMIT Phase - Saving Your Progress

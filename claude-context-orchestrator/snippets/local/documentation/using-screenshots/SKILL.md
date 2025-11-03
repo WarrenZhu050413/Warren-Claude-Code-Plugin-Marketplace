@@ -3,6 +3,10 @@ name: "Using Screenshots"
 description: "This snippet should be used when reading, organizing, and naming screenshots with date prefixes."
 ---
 
+When this skill is in your context, you should base your answer from the newest screenshots.
+
+Analyze what screenshots you should read implicitly by getting the current time via `date`. Or explicitly, if the user says HEAD~{n}, which is the top n screenshots, or N, which is the nth screenshot, or [1, 3, 5] which is the 1, 3rd, and 5th screenshot, and other similar notation. Where the screenshots are ordered by time from newest to oldest.
+
 # Screenshot Workflow
 
 ## Reading Screenshots
@@ -30,6 +34,7 @@ YYYY-MM-DD-{descriptive-name}.{extension}
 ```
 
 **Examples:**
+
 - `2025-10-13-login-page-error.png`
 - `2025-10-13-dashboard-layout.png`
 - `2025-10-13-api-response-json.jpg`
@@ -61,11 +66,13 @@ done
 ```
 
 **Why this works:**
+
 - Shell expands glob pattern correctly without manual escaping
 - Variable `$f` is quoted to preserve spaces
 - Works reliably with all special characters
 
 **Alternative methods (less reliable):**
+
 ```bash
 # ⚠️  Escaping spaces - error-prone with multiple spaces
 mv Screenshot\ 2025-10-13\ at\ 11.07.11\ PM.png destination.png
@@ -104,11 +111,12 @@ When taking screenshots with Playwright or other automation tools:
 ```javascript
 // Playwright example
 await page.screenshot({
-  path: `~/Desktop/claude_screenshots/${date}-${descriptiveName}.png`
+  path: `~/Desktop/claude_screenshots/${date}-${descriptiveName}.png`,
 });
 ```
 
 **Python example:**
+
 ```python
 from datetime import datetime
 date = datetime.now().strftime('%Y-%m-%d')
