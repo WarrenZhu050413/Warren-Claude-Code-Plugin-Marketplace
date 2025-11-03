@@ -38,9 +38,8 @@ snippets = "snippets_cli:main"
 [project.urls]
 Homepage = "https://github.com/wzhu/claude-context-orchestrator"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["snippets_cli*"]
+[tool.setuptools]
+py-modules = ["snippets_cli"]
 
 # Ruff configuration (modern Python linter)
 [tool.ruff]
