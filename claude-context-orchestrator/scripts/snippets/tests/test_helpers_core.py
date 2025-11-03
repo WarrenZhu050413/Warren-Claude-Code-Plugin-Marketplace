@@ -422,3 +422,28 @@ def test_resolve_snippet_path_nonexistent(tmp_path):
 
     # Should return some path (won't exist, but that's okay)
     assert isinstance(resolved, Path)
+
+
+def test_resolve_snippet_path_no_double_segments():
+    """Test: Resolve snippet path should not duplicate path segments."""
+    from pathlib import Path
+
+    # Simulate base_dir being scripts/ (matching snippet_injector.py's PLUGIN_ROOT)
+    base_dir = Path("/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/scripts")
+
+    # Simulate a relative path like ../snippets/local/development/following-tdd/SKILL.md
+    # This path is relative to scripts/, so ../snippets goes up to claude-context-orchestrator then into snippets
+    snippet_path = "../snippets/local/development/following-tdd/SKILL.md"
+
+    resolved = resolve_snippet_path(snippet_path, base_dir)
+    resolved_str = str(resolved)
+
+    # Should resolve cleanly without doubled segments
+    assert "snippets/local/development/following-tdd" in resolved_str, f"Path doesn't contain expected segments: {resolved_str}"
+
+    # Should be absolute and clean
+    assert Path(resolved_str).is_absolute(), f"Path is not absolute: {resolved_str}"
+
+    # Should resolve to the correct location (scripts/../snippets = claude-context-orchestrator/snippets)
+    expected = "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/development/following-tdd/SKILL.md"
+    assert resolved_str == expected, f"Path mismatch:\n  Got:      {resolved_str}\n  Expected: {expected}"

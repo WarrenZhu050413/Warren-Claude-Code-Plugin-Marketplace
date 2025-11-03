@@ -134,9 +134,9 @@ def validate_config_mapping(
         snippet_files = [snippet_files]
 
     for snippet_file in snippet_files:
-        snippet_path = Path(snippet_file)
-        if not snippet_path.is_absolute():
-            snippet_path = base_dir / snippet_file
+        # Use resolve_snippet_path to properly handle relative paths
+        from snippets.helpers.core.paths import resolve_snippet_path
+        snippet_path = resolve_snippet_path(snippet_file, base_dir)
 
         is_valid, error_msg = validate_snippet_file(snippet_path)
         if not is_valid:

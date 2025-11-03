@@ -119,7 +119,7 @@ def resolve_snippet_path(snippet_file: str, base_dir: Path) -> Path:
 
     Args:
         snippet_file: Snippet file path (relative or absolute)
-        base_dir: Base directory for resolution
+        base_dir: Base directory for resolution (config file's directory)
 
     Returns:
         Resolved absolute path
@@ -130,18 +130,10 @@ def resolve_snippet_path(snippet_file: str, base_dir: Path) -> Path:
     if snippet_path.is_absolute():
         return snippet_path
 
-    # Try relative to base_dir first
-    resolved = base_dir / snippet_path
-    if resolved.exists():
-        return resolved.resolve()
+    # Resolve relative to base_dir and normalize the path
+    resolved = (base_dir / snippet_path).resolve()
 
-    # Try relative to current working directory
-    resolved = Path.cwd() / snippet_path
-    if resolved.exists():
-        return resolved.resolve()
-
-    # Return as-is if nothing works (will fail later with clear error)
-    return snippet_path
+    return resolved
 
 
 def get_plugin_root() -> Path:
