@@ -1,0 +1,7 @@
+The `#me` group contains 3 email addresses:
+
+1. **warrenzhu513@gmail.com**
+2. **fuchengwarrenzhu@gmail.com**
+3. **wzhu@college.harvard.edu**
+
+You can use this group when sending emails with `gmail send --to #me` to reach all three addresses at once.

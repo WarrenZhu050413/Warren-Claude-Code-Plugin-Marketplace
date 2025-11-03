@@ -72,7 +72,7 @@ ignore = [
 
 # Pytest configuration
 [tool.pytest.ini_options]
-testpaths = ["snippets/tests"]
+testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
