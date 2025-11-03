@@ -542,3 +542,33 @@ def test_named_config_targets_specific_file(temp_config_dir):
     )
 
     assert client.target_config_path == named_path
+
+
+def test_category_info_has_path_property():
+    """Test: CategoryInfo has path property for CLI display."""
+    from snippets.models import CategoryInfo
+
+    # Create category with sample paths
+    category = CategoryInfo(
+        name="test-category",
+        snippet_count=5,
+        sample_paths=["path/to/snippet1", "path/to/snippet2"]
+    )
+
+    # Should have path property that returns first sample path
+    assert hasattr(category, "path"), "CategoryInfo should have 'path' property"
+    assert category.path == "path/to/snippet1", "path should return first sample path"
+
+
+def test_category_info_path_when_no_samples():
+    """Test: CategoryInfo.path returns empty string when no sample paths."""
+    from snippets.models import CategoryInfo
+
+    category = CategoryInfo(
+        name="empty-category",
+        snippet_count=0,
+        sample_paths=[]
+    )
+
+    # Should return empty string when no sample paths
+    assert category.path == "", "path should return empty string when no samples"

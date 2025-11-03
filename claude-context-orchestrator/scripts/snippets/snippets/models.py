@@ -47,6 +47,15 @@ class CategoryInfo(BaseModel):
     snippet_count: int = Field(..., description="Number of snippets in category")
     sample_paths: List[str] = Field(default_factory=list, description="Sample paths (up to 3)")
 
+    @property
+    def path(self) -> str:
+        """Get first sample path for display purposes.
+
+        Returns:
+            First sample path or empty string if no samples
+        """
+        return self.sample_paths[0] if self.sample_paths else ""
+
 
 class ConfigFileInfo(BaseModel):
     """Information about a configuration file.
