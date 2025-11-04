@@ -25,7 +25,8 @@ help:
 
 install: clean
 	@echo "📦 Installing snippets-cli globally..."
-	@echo "   Cleaning stale build artifacts first..."
+	@echo "   Cleaning UV cache and build artifacts..."
+	$(UV) cache clean
 	$(UV) tool install --force .
 	@echo "✅ Installed globally!"
 	@echo ""
