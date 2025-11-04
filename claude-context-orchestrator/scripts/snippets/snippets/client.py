@@ -12,15 +12,12 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .helpers.core import (
-    compute_verification_hash,
     discover_categories,
-    extract_verification_hash,
     get_default_config_path,
     get_default_snippets_dir,
     load_merged_config,
     resolve_snippet_path,
     save_config_file,
-    update_verification_hash,
 )
 from .models import (
     CategoryInfo,
@@ -309,10 +306,6 @@ description: {description}
 [Add snippet content here]
 """
 
-        # Add verification hash
-        hash_value = compute_verification_hash(content)
-        content = update_verification_hash(content, hash_value)
-
         # Write file
         with open(snippet_path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -331,7 +324,6 @@ description: {description}
             path=str(snippet_path),
             pattern=pattern,
             priority=priority,
-            hash=hash_value,
         )
 
     def list_snippets(
@@ -376,19 +368,11 @@ description: {description}
                             snippet_path = candidate
                             break
 
-                # Extract hash from file if it exists
-                hash_value = None
-                if snippet_path.exists():
-                    with open(snippet_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        hash_value = extract_verification_hash(content)
-
                 results.append(SnippetInfo(
                     name=snippet_name,
                     path=str(snippet_path),
                     pattern=mapping.get("pattern"),
                     priority=mapping.get("priority", 0),
-                    hash=hash_value,
                 ))
 
         return results
@@ -482,10 +466,6 @@ description: {description}
                 snippet_path = Path(snippet_file)
                 if not snippet_path.is_absolute():
                     snippet_path = self.snippets_dir / snippet_file
-
-                # Update verification hash
-                hash_value = compute_verification_hash(content)
-                content = update_verification_hash(content, hash_value)
 
                 with open(snippet_path, 'w', encoding='utf-8') as f:
                     f.write(content)

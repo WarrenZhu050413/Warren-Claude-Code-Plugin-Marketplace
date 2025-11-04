@@ -86,18 +86,15 @@ def _display_snippet_table(snippets, show_content: bool = False):
     table.add_column("Name", style="cyan", no_wrap=True)
     table.add_column("Pattern", style="yellow")
     table.add_column("Priority", justify="right", style="magenta")
-    table.add_column("Hash", style="dim")
 
     if show_content:
         table.add_column("Path", style="blue")
 
     for snippet in snippets:
-        hash_display = snippet.hash[:8] if snippet.hash else "—"
         row = [
             snippet.name,
             snippet.pattern or "—",
             str(snippet.priority),
-            hash_display,
         ]
 
         if show_content:
@@ -141,10 +138,8 @@ def list(
 
             if show_stats:
                 total = len(result)
-                with_hash = sum(1 for s in result if s.hash)
                 console.print(f"\n{Colors.info('Statistics:')}")
                 console.print(f"  Total snippets: {Colors.highlight(str(total))}")
-                console.print(f"  With hash: {Colors.highlight(str(with_hash))}")
 
     except SnippetError as e:
         console.print(Colors.error(f"Error: {e.message}"))
@@ -204,7 +199,6 @@ def create(
         else:  # RICH
             console.print(Colors.success(f"✓ Created snippet: {result.name}"))
             console.print(f"  Path: {Colors.highlight(result.path)}")
-            console.print(f"  Hash: {Colors.highlight(result.hash or 'N/A')}")
             console.print(f"\n{Colors.info('Next steps:')}")
             console.print("  1. Restart Claude Code to load the new snippet")
             console.print(f"  2. Test with a prompt matching pattern: {Colors.highlight(pattern)}")
@@ -265,7 +259,6 @@ def update(
         else:  # RICH
             console.print(Colors.success(f"✓ Updated snippet: {result.name}"))
             console.print(f"  Path: {Colors.highlight(result.path)}")
-            console.print(f"  Hash: {Colors.highlight(result.hash or 'N/A')}")
 
     except SnippetError as e:
         console.print(Colors.error(f"Error: {e.message}"))

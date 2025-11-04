@@ -225,16 +225,6 @@ def test_validate_snippet_content_empty():
     assert "empty" in warnings[0]
 
 
-def test_validate_snippet_content_no_hash_warning():
-    """Test: Missing verification hash produces warning."""
-    content = "Test content without hash"
-
-    is_valid, warnings = validate_snippet_content(content)
-
-    assert is_valid
-    assert any("hash" in w.lower() for w in warnings)
-
-
 def test_validate_snippet_content_incomplete_frontmatter():
     """Test: Incomplete frontmatter produces warning."""
     content = """---

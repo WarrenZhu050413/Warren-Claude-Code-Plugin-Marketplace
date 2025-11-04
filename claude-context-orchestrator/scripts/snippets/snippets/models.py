@@ -32,7 +32,6 @@ class SnippetInfo(BaseModel):
     name: str = Field(..., description="Snippet name/identifier")
     path: str = Field(..., description="Full path to snippet file")
     category: Optional[str] = Field(None, description="Category (e.g., 'development', 'output-formats')")
-    hash: Optional[str] = Field(None, description="Verification hash from snippet content")
     pattern: Optional[str] = Field(None, description="Regex pattern that triggers this snippet")
     priority: int = Field(default=0, description="Priority in matching order")
     announce: bool = Field(default=True, description="Whether snippet announces itself")

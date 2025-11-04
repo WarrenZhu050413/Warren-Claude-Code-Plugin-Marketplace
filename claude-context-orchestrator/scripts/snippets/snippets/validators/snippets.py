@@ -80,10 +80,6 @@ def validate_snippet_content(content: str) -> Tuple[bool, List[str]]:
         if len(parts) < 3:
             warnings.append("YAML frontmatter appears incomplete")
 
-    # Check for verification hash
-    if "VERIFICATION_HASH:" not in content:
-        warnings.append("No verification hash found (will be added automatically)")
-
     return True, warnings
 
 

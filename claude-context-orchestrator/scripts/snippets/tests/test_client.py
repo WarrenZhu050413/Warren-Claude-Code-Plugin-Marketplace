@@ -129,7 +129,6 @@ def test_create_snippet(client, temp_config_dir):
     assert isinstance(result, SnippetInfo)
     assert result.name == "new-snippet"
     assert result.pattern == "new.*pattern"
-    assert result.hash is not None
 
     # Verify file was created
     snippet_path = temp_config_dir["snippets_dir"] / "new-snippet.md"
@@ -154,7 +153,6 @@ def test_create_snippet_with_default_content(client, temp_config_dir):
         content = f.read()
         assert "name: templated-snippet" in content
         assert "Template test" in content
-        assert "VERIFICATION_HASH:" in content
 
 
 def test_create_duplicate_snippet_fails(client):
@@ -232,28 +230,6 @@ def test_list_nonexistent_snippet(client):
     result = client.list_snippets(name="nonexistent")
 
     assert len(result) == 0
-
-
-def test_list_extracts_verification_hash(client, temp_config_dir):
-    """Test: List extracts verification hash from snippet files."""
-    # Create snippet with hash (must match path in fixture config)
-    snippet_path = temp_config_dir["snippets_dir"] / "test" / "test-snippet.md"
-    snippet_path.parent.mkdir(parents=True, exist_ok=True)
-
-    content = """---
-name: test-snippet
----
-
-**VERIFICATION_HASH:** `abc12345`
-
-Test content
-"""
-    with open(snippet_path, 'w') as f:
-        f.write(content)
-
-    result = client.list_snippets(name="test-snippet")
-
-    assert result[0].hash == "abc12345"
 
 
 # =============================================================================
@@ -346,7 +322,6 @@ def test_update_content(client, temp_config_dir):
     with open(snippet_path) as f:
         content = f.read()
         assert "New content here" in content
-        assert "VERIFICATION_HASH:" in content
 
 
 def test_update_nonexistent_snippet_fails(client):

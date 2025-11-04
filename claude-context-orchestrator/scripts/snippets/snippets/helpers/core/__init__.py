@@ -10,12 +10,6 @@ from .config import (
     save_config_file,
     update_mapping,
 )
-from .hashing import (
-    compute_verification_hash,
-    extract_verification_hash,
-    update_verification_hash,
-    verify_hash,
-)
 from .paths import (
     discover_categories,
     get_default_config_path,
@@ -34,11 +28,6 @@ __all__ = [
     "remove_mapping",
     "save_config_file",
     "update_mapping",
-    # Hashing
-    "compute_verification_hash",
-    "extract_verification_hash",
-    "update_verification_hash",
-    "verify_hash",
     # Paths
     "discover_categories",
     "get_default_config_path",
