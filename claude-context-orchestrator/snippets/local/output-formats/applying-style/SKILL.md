@@ -24,6 +24,7 @@ description: "Apply precise writing style that expresses ideas clearly with pers
 Eliminate intensifiers that add no meaning.
 
 **Banned words:**
+
 - deeply, profoundly, struck, critical, crucial, key, perfect, disturbing
 - fascinating, alarming (use sparingly)
 - synergy, converge, "realizes X's vision"
@@ -37,6 +38,7 @@ Eliminate intensifiers that add no meaning.
 Delete phrases that occupy space without adding information.
 
 **Banned phrases:**
+
 - "key insight", "But here's what bothers me", "perfect [adjective]"
 - "This changes everything", "game-changer", "paradigm shift"
 - "In other words"
@@ -162,41 +164,49 @@ Let logical flow carry the connection between ideas.
 These rules apply differently across writing genres. Personal experience is content in some genres, filler in others.
 
 ### Analytical Writing (Essays, Reports, Technical Docs)
+
 - Remove personal voice unless giving opinions
 - Lead with claims, not narrative
 - Cut meta-commentary about structure
 
 **Example:**
+
 - ❌ "I really like this approach because it works well"
 - ✅ "This approach works well"
 
 ### Reflective Writing (Academic Reflections, Personal Statements)
+
 - Keep substantive personal narrative
 - Remove meta-commentary about the reflection itself
 - Maintain first person throughout
 
 **Substantive personal narrative (KEEP):**
+
 - "I have always struggled with X" → Shows pattern/growth
 - "For a long time, that made me feel Y" → Demonstrates evolution
 - "When I encounter Z now, I think about..." → Shows current practice
 
 **Meta-commentary (REMOVE):**
+
 - "I really like this quote because..." → Just discuss the quote
 - "This passage is interesting to me because..." → Discuss the passage directly
 - "I find it fascinating that..." → State the observation
 
 **Example from philosophy reflection:**
+
 - ❌ "I really like this quote because I've always disliked a lot of things..."
 - ✅ "I have always disliked a lot of things I observe in life. For a long time, that would just make me feel bad. But reflecting on Xunzi has helped me reframe these moments..."
 
 The first version talks about the quote. The second version uses personal experience to engage with the philosophical idea.
 
 ### Technical Documentation
+
 - Maximum brevity
 - Remove all personal voice
 - Direct instructions only
 
 ### Blog Posts/Opinion Pieces
+
 - Personal voice encouraged
 - Authentic examples valued
 - Balance personality with precision
@@ -206,12 +216,14 @@ The first version talks about the quote. The second version uses personal experi
 **Is this personal content substantive or filler?**
 
 Ask:
+
 1. Does it show growth, pattern, or evolution? → Substantive
 2. Does it demonstrate engagement with ideas? → Substantive
 3. Is it meta-commentary about my feelings toward the text? → Filler
 4. Could I delete it and lose no meaning? → Filler
 
 **Genre check:**
+
 - Reflection/personal statement → Keep substantive personal narrative
 - Analytical essay → Remove unless giving explicit opinion
 - Technical doc → Remove all personal voice
@@ -219,3 +231,7 @@ Ask:
 ## Note
 
 User-specific instructions override this style guide.
+
+Other Rules:
+
+- Don't overuse Yet as a word. For example, instead of: "Yet we so easily brag about our meetings with VCs", have "However, we so easily brag about our meetings with VCs"
