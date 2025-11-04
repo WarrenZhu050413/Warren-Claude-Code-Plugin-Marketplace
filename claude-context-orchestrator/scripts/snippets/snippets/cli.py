@@ -71,18 +71,23 @@ def _get_client(
         raise typer.Exit(code=1)
 
 
-def _display_snippet_table(snippets, show_content: bool = False):
+def _display_snippet_table(snippets, show_content: bool = False, show_numbers: bool = False):
     """Display snippets in a rich table.
 
     Args:
         snippets: List of SnippetInfo objects
         show_content: Whether to show snippet content
+        show_numbers: Whether to show selection numbers (for interactive mode)
     """
     if not snippets:
         console.print(Colors.warning("No snippets found."))
         return
 
     table = Table(title=f"{len(snippets)} Snippet(s)")
+
+    if show_numbers:
+        table.add_column("#", style="dim", justify="right", width=3)
+
     table.add_column("Name", style="cyan", no_wrap=True)
     table.add_column("Pattern", style="yellow")
     table.add_column("Priority", justify="right", style="magenta")
@@ -90,12 +95,17 @@ def _display_snippet_table(snippets, show_content: bool = False):
     if show_content:
         table.add_column("Path", style="blue")
 
-    for snippet in snippets:
-        row = [
+    for i, snippet in enumerate(snippets, 1):
+        row = []
+
+        if show_numbers:
+            row.append(str(i))
+
+        row.extend([
             snippet.name,
             snippet.pattern or "—",
             str(snippet.priority),
-        ]
+        ])
 
         if show_content:
             row.append(snippet.path)
@@ -321,6 +331,7 @@ def delete(
 @app.command()
 def search(
     query: str = typer.Argument(..., help="Search query"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactively select and edit snippet"),
     output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
     config_path: Optional[Path] = typer.Option(None, "--config", help="Path to config file"),
     snippets_dir: Optional[Path] = typer.Option(None, "--snippets-dir", help="Path to snippets directory"),
@@ -332,6 +343,7 @@ def search(
     [bold cyan]EXAMPLES[/bold cyan]:
       [dim]$[/dim] snippets search mail
       [dim]$[/dim] snippets search "error handling"
+      [dim]$[/dim] snippets search mail -i  [dim]# Interactive mode[/dim]
     """
     try:
         client = _get_client(config_path, snippets_dir, use_base_config, config_name)
@@ -348,7 +360,40 @@ def search(
         else:  # RICH
             console.print(f"\n{Colors.info(f'Search results for:')} {Colors.highlight(query)}")
             console.print(f"Searched {result.total_searched} snippet(s)\n")
-            _display_snippet_table(result.matches)
+
+            if not result.matches:
+                console.print(Colors.warning("No snippets found."))
+                return
+
+            _display_snippet_table(result.matches, show_numbers=interactive)
+
+            # Interactive mode: prompt user to select and edit
+            if interactive:
+                console.print()
+                choice = typer.prompt(
+                    f"{Colors.info('Select snippet to edit')} (1-{len(result.matches)}, or 'q' to quit)",
+                    default="q"
+                )
+
+                if choice.lower() == 'q':
+                    return
+
+                try:
+                    index = int(choice) - 1
+                    if 0 <= index < len(result.matches):
+                        snippet = result.matches[index]
+                        import subprocess
+                        import os
+
+                        editor = os.environ.get("EDITOR", "vim")
+                        console.print(f"\n{Colors.info('Opening')} {Colors.highlight(snippet.path)} {Colors.info('in')} {Colors.highlight(editor)}...")
+                        subprocess.run([editor, snippet.path])
+                    else:
+                        console.print(Colors.error(f"Invalid choice: {choice}"))
+                        raise typer.Exit(code=1)
+                except ValueError:
+                    console.print(Colors.error(f"Invalid choice: {choice}"))
+                    raise typer.Exit(code=1)
 
     except SnippetError as e:
         console.print(Colors.error(f"Error: {e.message}"))
