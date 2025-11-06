@@ -134,6 +134,52 @@ class RichFormatter:
             f"  {email.snippet[:SNIPPET_PREVIEW_LENGTH]}...\n"
         )
 
+    @validate_pydantic(EmailSummary)
+    def print_email_summary(self, email: EmailSummary) -> None:
+        """Print single email summary in a panel.
+
+        Args:
+            email: EmailSummary object to display
+
+        Raises:
+            TypeError: If email is not an EmailSummary instance
+
+        """
+        # Build header
+        lines = [
+            f"[bold]From:[/bold] {email.from_}",
+            f"[bold]Date:[/bold] {email.date.strftime('%Y-%m-%d %H:%M')}",
+            f"[bold]Subject:[/bold] {email.subject}",
+        ]
+
+        if email.labels:
+            labels = ", ".join(f"[cyan]{label}[/cyan]" for label in email.labels)
+            lines.append(f"[bold]Labels:[/bold] {labels}")
+
+        # Status indicators
+        status_parts = []
+        if email.is_unread:
+            status_parts.append("[yellow]Unread[/yellow]")
+        if email.has_attachments:
+            status_parts.append("📎 Has attachments")
+        if status_parts:
+            lines.append(f"[bold]Status:[/bold] {', '.join(status_parts)}")
+
+        lines.append("\n" + "─" * 80 + "\n")
+
+        # Snippet
+        lines.append(email.snippet)
+
+        content = "\n".join(lines)
+
+        self.console.print(
+            Panel(
+                content,
+                title=f"📧 Email: {email.message_id[:MESSAGE_ID_DISPLAY_LENGTH]}...",
+                border_style="cyan",
+            )
+        )
+
     @validate_types
     def print_email_list(
         self, emails: List[EmailSummary], folder: str = "INBOX"
@@ -165,6 +211,7 @@ class RichFormatter:
 
         Raises:
             TypeError: If email is not an EmailFull instance
+
         """
         # Build header
         lines = [
