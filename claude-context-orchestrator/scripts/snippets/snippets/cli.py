@@ -9,11 +9,27 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import print as rprint
 
-from snippets.client import SnippetsClient, SnippetError
-from snippets.helpers.cli import HelpfulGroup, confirm_or_force
-from snippets.helpers.cli.colors import Colors
+from snippets.client import SnippetError, SnippetsClient
+from snippets.helpers.cli import Colors, HelpfulGroup, confirm_or_force
+
+
+# Rich markup helper functions
+def info(text: str) -> str:
+    """Format info message."""
+    return f"[cyan]ℹ {text}[/cyan]"
+
+def error(text: str) -> str:
+    """Format error message."""
+    return f"[red]✗ {text}[/red]"
+
+def warning(text: str) -> str:
+    """Format warning message."""
+    return f"[yellow]⚠️ {text}[/yellow]"
+
+def highlight(text: str) -> str:
+    """Highlight text."""
+    return f"[cyan bold]{text}[/cyan bold]"
 
 
 # Output format enum
@@ -34,7 +50,7 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
     rich_markup_mode="rich",
 )
-console = Console()
+console = Console(force_terminal=True)
 
 
 # ============ HELPER FUNCTIONS ============
@@ -67,7 +83,7 @@ def _get_client(
             config_name=config_name,
         )
     except SnippetError as e:
-        console.print(Colors.error(f"Error initializing client: {e.message}"))
+        console.print(error(f"Error initializing client: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -80,7 +96,7 @@ def _display_snippet_table(snippets, show_content: bool = False, show_numbers: b
         show_numbers: Whether to show selection numbers (for interactive mode)
     """
     if not snippets:
-        console.print(Colors.warning("No snippets found."))
+        console.print(warning("No snippets found."))
         return
 
     table = Table(title=f"{len(snippets)} Snippet(s)")
@@ -115,6 +131,64 @@ def _display_snippet_table(snippets, show_content: bool = False, show_numbers: b
     console.print(table)
 
 
+def _find_or_search_snippet(client: 'SnippetsClient', keyword: str):
+    """Find snippet by exact match or fuzzy search.
+
+    Args:
+        client: SnippetsClient instance
+        keyword: Snippet name or search keyword
+
+    Returns:
+        Selected SnippetInfo or None if cancelled/not found
+
+    Raises:
+        typer.Exit: If snippet not found or user cancels
+    """
+    # Try exact match first
+    exact_matches = client.list_snippets(name=keyword, show_content=True)
+    if exact_matches:
+        return exact_matches[0]
+
+    # No exact match, perform fuzzy search
+    search_result = client.search(keyword)
+
+    if not search_result.matches:
+        console.print(error(f"No snippets found matching '{keyword}'"))
+        console.print(f"\n{info('Suggestion:')} Use [cyan]snippets list[/cyan] to see all snippets")
+        raise typer.Exit(code=1)
+
+    # Single match - use it automatically
+    if len(search_result.matches) == 1:
+        snippet = search_result.matches[0]
+        console.print(f"\n{info('Found:')} [cyan bold]{snippet.name}[/cyan bold]")
+        return snippet
+
+    # Multiple matches - show interactive selection
+    console.print(f"\n{info('Multiple matches found for:')} [cyan bold]{keyword}[/cyan bold]\n")
+    _display_snippet_table(search_result.matches, show_numbers=True)
+
+    console.print()
+    choice = typer.prompt(
+        f"{info('Select snippet to update')} (1-{len(search_result.matches)}, or 'q' to quit)",
+        default="1"
+    )
+
+    if choice.lower() == 'q':
+        console.print(warning("Cancelled."))
+        raise typer.Exit(code=0)
+
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(search_result.matches):
+            return search_result.matches[index]
+        else:
+            console.print(error(f"Invalid choice: {choice}"))
+            raise typer.Exit(code=1)
+    except ValueError:
+        console.print(error(f"Invalid choice: {choice}"))
+        raise typer.Exit(code=1)
+
+
 # ============ MAIN COMMANDS ============
 
 @app.command()
@@ -141,18 +215,17 @@ def list(
         result = client.list_snippets(name=name, show_content=show_content)
 
         if output_format == OutputFormat.JSON:
-            import json
             console.print_json(data=[s.model_dump() for s in result])
         else:  # RICH
             _display_snippet_table(result, show_content=show_content)
 
             if show_stats:
                 total = len(result)
-                console.print(f"\n{Colors.info('Statistics:')}")
-                console.print(f"  Total snippets: {Colors.highlight(str(total))}")
+                console.print(f"\n{info('Statistics:')}")
+                console.print(f"  Total snippets: {highlight(str(total))}")
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -193,7 +266,7 @@ def create(
             ))
 
             if not confirm_or_force(force, "Create this snippet?"):
-                console.print(Colors.warning("Cancelled."))
+                console.print(warning("Cancelled."))
                 raise typer.Exit(code=0)
 
         result = client.create(
@@ -208,21 +281,23 @@ def create(
             console.print_json(data=result.model_dump())
         else:  # RICH
             console.print(Colors.success(f"✓ Created snippet: {result.name}"))
-            console.print(f"  Path: {Colors.highlight(result.path)}")
-            console.print(f"\n{Colors.info('Next steps:')}")
+            console.print(f"  Path: {highlight(result.path)}")
+            console.print(f"\n{info('Next steps:')}")
             console.print("  1. Restart Claude Code to load the new snippet")
-            console.print(f"  2. Test with a prompt matching pattern: {Colors.highlight(pattern)}")
+            console.print(f"  2. Test with a prompt matching pattern: {highlight(pattern)}")
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
 @app.command()
 def update(
     name: str = typer.Argument(..., help="Snippet name to update"),
-    pattern: Optional[str] = typer.Option(None, "--pattern", "-p", help="New regex pattern"),
-    content: Optional[str] = typer.Option(None, "--content", "-c", help="New snippet content"),
+    pattern: Optional[str] = typer.Option(None, "--pattern", help="New regex pattern (non-interactive)"),
+    content: Optional[str] = typer.Option(None, "--content", help="New snippet content (non-interactive)"),
+    edit_pattern: bool = typer.Option(False, "-p", help="Interactively edit pattern in editor"),
+    edit_content: bool = typer.Option(False, "-c", help="Interactively edit content in editor"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation prompt"),
     output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
     config_path: Optional[Path] = typer.Option(None, "--config", help="Path to config file"),
@@ -232,46 +307,140 @@ def update(
 ) -> None:
     """Update an existing snippet.
 
-    [bold cyan]EXAMPLES[/bold cyan]:
+    [bold cyan]INTERACTIVE MODE[/bold cyan] (Default):
+      [dim]$[/dim] snippets update my-snippet        [dim]# Edit pattern in editor (default)[/dim]
+      [dim]$[/dim] snippets update my-snippet -p     [dim]# Edit pattern in editor (explicit)[/dim]
+      [dim]$[/dim] snippets update my-snippet -c     [dim]# Edit content in editor[/dim]
+
+    [bold cyan]NON-INTERACTIVE MODE[/bold cyan]:
       [dim]$[/dim] snippets update my-snippet --pattern "new.*pattern"
       [dim]$[/dim] snippets update my-snippet --content "# New content"
-      [dim]$[/dim] snippets update my-snippet -p "pattern" -c "content"
     """
-    if pattern is None and content is None:
-        console.print(Colors.error("Error: Must specify either --pattern or --content"))
-        raise typer.Exit(code=1)
+    import os
+    import subprocess
+    import tempfile
 
     try:
         client = _get_client(config_path, snippets_dir, use_base_config, config_name)
 
-        # Show preview
-        if not force:
-            updates = []
-            if pattern:
-                updates.append(f"[cyan]Pattern:[/cyan] {pattern}")
-            if content:
-                updates.append(f"[cyan]Content:[/cyan] {'<updated>' if content else 'N/A'}")
+        # Determine mode: interactive vs non-interactive
+        has_values = pattern is not None or content is not None
+        has_flags = edit_pattern or edit_content
 
-            console.print(Panel(
-                f"[cyan]Snippet:[/cyan] {name}\n" + "\n".join(updates),
-                title="Updating Snippet",
-                border_style="yellow"
-            ))
+        # Default to interactive pattern editing if no arguments provided
+        if not has_values and not has_flags:
+            edit_pattern = True
 
-            if not confirm_or_force(force, "Update this snippet?"):
-                console.print(Colors.warning("Cancelled."))
-                raise typer.Exit(code=0)
+        # Find snippet by exact match or search
+        snippet = _find_or_search_snippet(client, name)
 
+        # Update the name to the actual snippet name found
+        name = snippet.name
+
+        # Interactive mode
+        if edit_pattern or edit_content:
+            # Validate that values weren't also provided
+            if has_values:
+                console.print(error("Error: Cannot mix interactive flags (-p/-c) with value flags (--pattern/--content)"))
+                raise typer.Exit(code=1)
+
+            editor = os.environ.get("EDITOR", "vim")
+
+            # Interactive pattern editing
+            if edit_pattern:
+                current_pattern = snippet.pattern or ""
+                console.print(f"\n{info('Current pattern:')} [yellow]{current_pattern}[/yellow]")
+                console.print(f"{info('Opening editor to modify pattern...')}\n")
+
+                # Create temp file with current pattern
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tf:
+                    tf.write(current_pattern)
+                    temp_path = tf.name
+
+                try:
+                    # Open editor
+                    subprocess.run([editor, temp_path])
+
+                    # Read back the edited pattern
+                    with open(temp_path) as f:
+                        new_pattern = f.read().strip()
+
+                    # Check if pattern changed
+                    if new_pattern == current_pattern:
+                        console.print(warning("Pattern unchanged. Aborting."))
+                        raise typer.Exit(code=0)
+
+                    # Preview change
+                    if not force:
+                        console.print(Panel(
+                            f"[cyan]Snippet:[/cyan] {name}\n"
+                            f"[cyan]Old pattern:[/cyan] {current_pattern}\n"
+                            f"[cyan]New pattern:[/cyan] {new_pattern}",
+                            title="Update Pattern",
+                            border_style="yellow"
+                        ))
+
+                        if not confirm_or_force(force, "Apply this change?"):
+                            console.print(warning("Cancelled."))
+                            raise typer.Exit(code=0)
+
+                    pattern = new_pattern
+                finally:
+                    # Clean up temp file
+                    os.unlink(temp_path)
+
+            # Interactive content editing
+            elif edit_content:
+                snippet_path = Path(snippet.path)
+                if not snippet_path.exists():
+                    console.print(error(f"Snippet file not found: {snippet_path}"))
+                    raise typer.Exit(code=1)
+
+                console.print(f"\n{info('Opening editor to modify content...')}")
+                console.print(f"[cyan]File:[/cyan] [cyan bold]{snippet_path}[/cyan bold]\n")
+
+                # Open the actual snippet file directly
+                subprocess.run([editor, str(snippet_path)])
+
+                console.print(Colors.success(f"✓ Updated snippet content: {name}"))
+                console.print(f"  Path: {highlight(str(snippet_path))}")
+                return
+
+        # Non-interactive mode (original behavior)
+        else:
+            if pattern is None and content is None:
+                console.print(error("Error: Must specify either --pattern, --content, -p, or -c"))
+                raise typer.Exit(code=1)
+
+            # Show preview
+            if not force:
+                updates = []
+                if pattern:
+                    updates.append(f"[cyan]Pattern:[/cyan] {pattern}")
+                if content:
+                    updates.append(f"[cyan]Content:[/cyan] {'<updated>' if content else 'N/A'}")
+
+                console.print(Panel(
+                    f"[cyan]Snippet:[/cyan] {name}\n" + "\n".join(updates),
+                    title="Updating Snippet",
+                    border_style="yellow"
+                ))
+
+                if not confirm_or_force(force, "Update this snippet?"):
+                    console.print(warning("Cancelled."))
+                    raise typer.Exit(code=0)
+
+        # Apply update (for both interactive pattern and non-interactive modes)
         result = client.update(name=name, pattern=pattern, content=content)
 
         if output_format == OutputFormat.JSON:
             console.print_json(data=result.model_dump())
         else:  # RICH
             console.print(Colors.success(f"✓ Updated snippet: {result.name}"))
-            console.print(f"  Path: {Colors.highlight(result.path)}")
+            console.print(f"  Path: {highlight(result.path)}")
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -306,25 +475,24 @@ def delete(
             ))
 
             if not confirm_or_force(force, "Delete this snippet?"):
-                console.print(Colors.warning("Cancelled."))
+                console.print(warning("Cancelled."))
                 raise typer.Exit(code=0)
 
         result = client.delete(name=name, force=True, backup=backup)
 
         if output_format == OutputFormat.JSON:
-            import json
             console.print_json(data=result)
         else:  # RICH
             console.print(Colors.success(f"✓ Deleted snippet: {result['name']}"))
             console.print(f"  Deleted {len(result['deleted_files'])} file(s)")
 
             if result.get('backup_paths'):
-                console.print(f"\n{Colors.info('Backups created:')}")
+                console.print(f"\n{info('Backups created:')}")
                 for backup_path in result['backup_paths']:
-                    console.print(f"  {Colors.highlight(backup_path)}")
+                    console.print(f"  {highlight(backup_path)}")
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -350,7 +518,6 @@ def search(
         result = client.search(query)
 
         if output_format == OutputFormat.JSON:
-            import json
             data = {
                 "query": result.query,
                 "total_searched": result.total_searched,
@@ -358,11 +525,11 @@ def search(
             }
             console.print_json(data=data)
         else:  # RICH
-            console.print(f"\n{Colors.info(f'Search results for:')} {Colors.highlight(query)}")
+            console.print(f"\n[cyan]ℹ Search results for:[/cyan] [cyan bold]{query}[/cyan bold]")
             console.print(f"Searched {result.total_searched} snippet(s)\n")
 
             if not result.matches:
-                console.print(Colors.warning("No snippets found."))
+                console.print(warning("No snippets found."))
                 return
 
             _display_snippet_table(result.matches, show_numbers=interactive)
@@ -371,8 +538,8 @@ def search(
             if interactive:
                 console.print()
                 choice = typer.prompt(
-                    f"{Colors.info('Select snippet to edit')} (1-{len(result.matches)}, or 'q' to quit)",
-                    default="q"
+                    f"{info('Select snippet to edit')} (1-{len(result.matches)}, or 'q' to quit)",
+                    default="1"
                 )
 
                 if choice.lower() == 'q':
@@ -382,21 +549,21 @@ def search(
                     index = int(choice) - 1
                     if 0 <= index < len(result.matches):
                         snippet = result.matches[index]
-                        import subprocess
                         import os
+                        import subprocess
 
                         editor = os.environ.get("EDITOR", "vim")
-                        console.print(f"\n{Colors.info('Opening')} {Colors.highlight(snippet.path)} {Colors.info('in')} {Colors.highlight(editor)}...")
+                        console.print(f"\n[cyan]ℹ Opening[/cyan] [cyan bold]{snippet.path}[/cyan bold] [cyan]in[/cyan] [cyan bold]{editor}[/cyan bold]...")
                         subprocess.run([editor, snippet.path])
                     else:
-                        console.print(Colors.error(f"Invalid choice: {choice}"))
+                        console.print(error(f"Invalid choice: {choice}"))
                         raise typer.Exit(code=1)
                 except ValueError:
-                    console.print(Colors.error(f"Invalid choice: {choice}"))
+                    console.print(error(f"Invalid choice: {choice}"))
                     raise typer.Exit(code=1)
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -418,7 +585,6 @@ def validate(
         result = client.validate()
 
         if output_format == OutputFormat.JSON:
-            import json
             data = {
                 "valid": result.valid,
                 "total_mappings": result.total_mappings,
@@ -428,19 +594,19 @@ def validate(
             console.print_json(data=data)
         else:  # RICH
             if result.valid:
-                console.print(Colors.success(f"✓ Configuration is valid"))
+                console.print(Colors.success("✓ Configuration is valid"))
             else:
-                console.print(Colors.error(f"✗ Configuration has errors"))
+                console.print(error("✗ Configuration has errors"))
 
             console.print(f"  Total mappings: {result.total_mappings}")
 
             if result.errors:
-                console.print(f"\n{Colors.error('Errors:')}")
+                console.print(f"\n{error('Errors:')}")
                 for err in result.errors:
                     console.print(f"  [{err.error_type}] {err.message}")
 
             if result.warnings:
-                console.print(f"\n{Colors.warning('Warnings:')}")
+                console.print(f"\n{warning('Warnings:')}")
                 for warn in result.warnings:
                     console.print(f"  [{warn.error_type}] {warn.message}")
 
@@ -448,7 +614,7 @@ def validate(
                 raise typer.Exit(code=1)
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
@@ -472,7 +638,6 @@ def show_paths(
         result = client.show_paths(filter_term=filter_term)
 
         if output_format == OutputFormat.JSON:
-            import json
             data = {
                 "base_dir": result.base_dir,
                 "config_files": [
@@ -486,7 +651,7 @@ def show_paths(
             }
             console.print_json(data=data)
         else:  # RICH
-            console.print(f"\n{Colors.info('Base directory:')} {Colors.highlight(result.base_dir)}\n")
+            console.print(f"\n{info('Base directory:')} {highlight(result.base_dir)}\n")
 
             # Config files table
             config_table = Table(title="Configuration Files")
@@ -512,10 +677,10 @@ def show_paths(
 
                 console.print(cat_table)
             else:
-                console.print(Colors.warning("No snippet categories found."))
+                console.print(warning("No snippet categories found."))
 
     except SnippetError as e:
-        console.print(Colors.error(f"Error: {e.message}"))
+        console.print(error(f"Error: {e.message}"))
         raise typer.Exit(code=1)
 
 
