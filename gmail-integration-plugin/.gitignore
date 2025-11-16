@@ -39,3 +39,13 @@ scripts/gmaillm/REFACTORING_SUMMARY.md
 scripts/gmaillm/STYLES.md
 scripts/gmaillm/refactoring-examples.py
 scripts/gmaillm/pyproject-strict.toml.example
+
+# Personal development files and test output
+evaluate.txt
+IMPLEMENTATION_SUMMARY.md
+GMAILLM_ENHANCEMENT_PLAN.md
+scripts/gmaillm/claude_files/
+scripts/gmaillm/test_results/
+
+# Personal workflow documentation (keep technical docs in scripts/*/docs/)
+/docs/

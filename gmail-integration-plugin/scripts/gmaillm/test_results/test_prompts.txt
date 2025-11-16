@@ -1,8 +1,0 @@
-Test 1: Show me the #me group details
-Test 2: List all my email groups
-Test 3: Send a test email to #me with subject "Headless Test" and body "Testing automated workflow" using dry-run
-Test 4: What email styles do I have available?
-Test 5: Show me examples of how to use email groups
-Test 6: Validate the #me group
-Test 7: Create a new group called #test-group with emails test1@example.com and test2@example.com (dry-run, don't actually create)
-Test 8: How do I send an email to multiple groups?
