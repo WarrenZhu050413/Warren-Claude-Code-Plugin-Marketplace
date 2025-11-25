@@ -65,6 +65,38 @@ skill-name/
 
 **Metadata Quality:** The `name` and `description` in YAML frontmatter determine when Claude will use the skill. Be specific about what the skill does and when to use it. Use the third-person (e.g. "This skill should be used when..." instead of "Use this skill when...").
 
+**Critical Format Rule:** Do NOT include overview sections or "When to Use This Skill" sections in the SKILL.md body. This information belongs ONLY in the YAML frontmatter description. The body should contain ONLY procedural instructions on how to use the skill.
+
+**Incorrect format:**
+```markdown
+---
+name: example
+description: Brief description
+---
+
+# Example Skill Title
+
+Overview paragraph explaining what the skill does.
+
+## When to Use This Skill
+- Use case 1
+- Use case 2
+
+## How to Use
+Instructions here...
+```
+
+**Correct format:**
+```markdown
+---
+name: example
+description: Detailed description including what the skill does, when to use it (use case 1, use case 2, etc.), and what it provides. Use when working with X, Y, and Z operations.
+---
+
+## How to Use
+Instructions here (no overview, no "when to use" section)...
+```
+
 #### Bundled Resources (optional)
 
 ##### Scripts (`scripts/`)
@@ -193,11 +225,48 @@ Also, delete any example files and directories not needed for the skill. The ini
 
 **Writing Style:** Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language (e.g., "To accomplish X, do Y" rather than "You should do X" or "If you need to do X"). This maintains consistency and clarity for AI consumption.
 
-To complete SKILL.md, answer the following questions:
+**Content Organization:**
 
-1. What is the purpose of the skill, in a few sentences?
-2. When should the skill be used?
-3. In practice, how should Claude use the skill? All reusable skill contents developed above should be referenced so that Claude knows how to use them.
+1. **YAML Frontmatter (required):**
+   - `name`: Skill identifier
+   - `description`: Comprehensive description that includes:
+     - What the skill does
+     - When to use it (all use cases)
+     - What it provides (features, capabilities)
+     - Any pre-configured elements
+
+2. **Markdown Body (required):**
+   - **Start directly with procedural sections** (e.g., "## Environment Setup", "## Helper Script Usage")
+   - **Do NOT include:**
+     - Title headers repeating the skill name
+     - Overview/introduction paragraphs
+     - "When to Use This Skill" sections
+     - "What This Skill Provides" sections
+   - **DO include:**
+     - Setup instructions
+     - Usage examples
+     - Common operations
+     - Workflow guidelines
+     - References to bundled resources
+
+**Example structure:**
+```markdown
+---
+name: my-skill
+description: [Complete description with all use cases and features]
+---
+
+## Environment Setup
+[Setup instructions]
+
+## Using the Helper Script
+[How to use scripts/]
+
+## Common Operations
+[Examples and patterns]
+```
+
+All reusable skill contents (scripts, references, assets) should be referenced in the body so Claude knows how to use them.
 
 ### Step 5: Packaging a Skill
 

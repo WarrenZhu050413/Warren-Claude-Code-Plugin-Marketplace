@@ -61,6 +61,21 @@ Examples:
 - API: "AI generates interactive UIs from prompts, streaming real-time"
 - Tool: "PDFs are structured data; extract tables/text like CSV/JSON"
 - Codebase: "Request flows through middleware → router → handler → response"
+- Academic Paper: "YouTube Data API v3 lets you search videos, get metadata, and filter by captions/views/category using REST endpoints"
+
+### Primary Source Types
+
+**Documentation:** Official API docs, SDK references, CLI manuals
+
+**Codebases:** Open source projects, example repos
+
+**Tools:** Software applications, command-line utilities
+
+**Academic Papers:** Research methodologies in appendices/supplementary materials
+- Look for: Data collection procedures, API workflows, filtering criteria, implementation details
+- Example: MINEDOJO paper Appendix D.1 documents exact YouTube API usage with 5-step workflow
+- Extract: Step-by-step procedures, quota limits, legal considerations, real filtering parameters
+- Value: More rigorous methodology than typical blog posts, validated by peer review
 
 **Step 2: Find Real Examples**
 
@@ -292,68 +307,57 @@ By dismissing British technology, he missed intelligence-gathering opportunities
 
 **CRITICAL:** All tutorials follow this organization pattern:
 
-### 1. Create in Central Tutorial Directory
+### 1. Markdown Tutorials → claude_files/tutorial/
 
 ```bash
-# Organize by topic in ~/Desktop/Tutorial
-mkdir -p ~/Desktop/Tutorial/{topic-name}
+# Create in project's claude_files/tutorial directory
+mkdir -p claude_files/tutorial
 
 # Create tutorial file there
-# Example: ~/Desktop/Tutorial/python-cli/typer-tutorial.md
+# Example: claude_files/tutorial/youtube-data-api.md
 ```
 
-**Topic categories:**
-- `python-cli/` - CLI tools, Typer, Click, argparse
-- `web-apis/` - API tutorials, REST, GraphQL
-- `frontend/` - React, JavaScript, HTML/CSS
-- `backend/` - Django, Flask, Node.js
-- `devops/` - Docker, Kubernetes, CI/CD
-- `databases/` - SQL, NoSQL, ORMs
-- `tools/` - Git, GitHub, VS Code extensions
-- `languages/` - Language-specific guides
+**Naming convention:**
+- Lowercase, kebab-case
+- Descriptive: `{technology}-{purpose}.md`
+- Examples: `youtube-data-api.md`, `python-cli-tutorial.md`, `docker-compose-guide.md`
 
-### 2. Create Symlink in Current Directory
+### 2. HTML Tutorials → claude_files/html/
 
 ```bash
-# From the project directory, create Tutorial/ directory
-mkdir -p Tutorial
+# Create in project's claude_files/html directory
+mkdir -p claude_files/html
 
-# Create symlink to specific tutorial
-ln -s ~/Desktop/Tutorial/{topic-name}/{tutorial-name}.md Tutorial/{tutorial-name}.md
-
-# Example:
-cd /path/to/gmail-integration-plugin
-mkdir -p Tutorial
-ln -s ~/Desktop/Tutorial/python-cli/typer-tutorial.md Tutorial/typer-tutorial.md
+# Create HTML file there
+# Example: claude_files/html/youtube-data-tutorial.html
 ```
 
-### 3. Verify Structure
+**Naming convention:**
+- Lowercase, kebab-case
+- Descriptive: `{technology}-{purpose}.html`
+- Examples: `youtube-data-tutorial.html`, `api-comparison.html`
 
-```bash
-# Check symlink works
-ls -la Tutorial/
-# Should show: typer-tutorial.md -> ~/Desktop/Tutorial/python-cli/typer-tutorial.md
+### 3. Why This Pattern?
 
-# Read through symlink
-cat Tutorial/typer-tutorial.md
-```
-
-### Why This Pattern?
-
-1. **Centralized tutorials** - All tutorials in one place (~/Desktop/Tutorial)
-2. **Topic organization** - Easy to find related tutorials
-3. **Project-specific access** - Symlink makes it available in current project
-4. **Reusability** - Same tutorial can be symlinked from multiple projects
-5. **Version control** - Symlinks don't clutter git repos (add `Tutorial/` to .gitignore)
+1. **Project-specific** - Tutorials live with the code they document
+2. **Version controlled** - Part of the project, tracked in git
+3. **Self-contained** - Everything in `claude_files/` for easy cleanup
+4. **Consistent location** - Always `claude_files/tutorial/` or `claude_files/html/`
+5. **No symlinks** - Direct files, no complicated linking
 
 ### Workflow
 
 When creating a tutorial:
-1. Determine topic category
-2. Create file in `~/Desktop/Tutorial/{topic}/`
-3. Create `Tutorial/` directory in current project
-4. Symlink from project to central location
-5. Add `Tutorial/` to `.gitignore`
+
+**Markdown:**
+1. Run: `mkdir -p claude_files/tutorial`
+2. Create: `claude_files/tutorial/{name}.md`
+3. Preview: `nvim -c "MarkdownPreview" claude_files/tutorial/{name}.md`
+
+**HTML:**
+1. Run: `mkdir -p claude_files/html`
+2. Create: `claude_files/html/{name}.html`
+3. Open: `open claude_files/html/{name}.html`
 
 ## Tools & Preview
 
@@ -362,8 +366,13 @@ When creating a tutorial:
 **Layout:** Sidebar + main content
 
 **Preview markdown tutorials:**
+
+**CRITICAL:** Always open markdown tutorials with preview immediately after creation.
+
 ```bash
 nvim -c "MarkdownPreview" /path/to/tutorial.md
 ```
+
+This provides instant visual feedback and allows the user to review formatting, code blocks, and overall structure in the rendered view.
 
 Use direct commands (no aliases) for reproducibility.

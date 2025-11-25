@@ -5,13 +5,14 @@ SHELL_TYPE := $(shell basename $$SHELL)
 
 .DEFAULT_GOAL := install
 
-.PHONY: help install dev test lint format clean install-completion
+.PHONY: help install install-editable dev test lint format clean install-completion
 
 help:
 	@echo "snippets-cli Makefile (uv-based)"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  make install             - Install globally (always rebuilds from scratch)"
+	@echo "  make install             - Install globally (production, rebuilds each time)"
+	@echo "  make install-editable    - Install globally in editable mode (changes instant)"
 	@echo "  make dev                 - Setup dev environment (use 'uv run snippets')"
 	@echo "  make test                - Run pytest test suite"
 	@echo "  make lint                - Run ruff linting"
@@ -19,19 +20,28 @@ help:
 	@echo "  make clean               - Remove build artifacts"
 	@echo "  make install-completion  - Setup shell completion"
 	@echo ""
-	@echo "Development workflow:"
-	@echo "  Recommended: make dev + uv run snippets  (changes reflect immediately)"
-	@echo "  Alternative: make install  (reinstall after each change)"
+	@echo "Development workflow (choose one):"
+	@echo "  Recommended: make install-editable  (global install, changes instant)"
+	@echo "  Alternative: make dev + uv run snippets  (local, need 'uv run' prefix)"
 
 install: clean
-	@echo "📦 Installing snippets-cli globally..."
+	@echo "📦 Installing snippets-cli globally (production mode)..."
 	@echo "   Cleaning UV cache and build artifacts..."
-	$(UV) cache clean
+	$(UV) cache clean --force
 	$(UV) tool install --force .
 	@echo "✅ Installed globally!"
 	@echo ""
 	@echo "⚠️  Note: After code changes, run 'make install' again to rebuild."
-	@echo "   Or use 'make dev' + 'uv run snippets' for instant changes."
+	@echo "   Or use 'make install-editable' for instant changes."
+
+install-editable: clean
+	@echo "📦 Installing snippets-cli globally (editable mode)..."
+	@echo "   Cleaning UV cache and build artifacts..."
+	$(UV) cache clean --force
+	$(UV) tool install --force --editable .
+	@echo "✅ Installed globally in editable mode!"
+	@echo ""
+	@echo "✨ Changes to Python files will take effect immediately (no reinstall needed)"
 
 dev:
 	@echo "📦 Installing locally with dev dependencies (editable)..."

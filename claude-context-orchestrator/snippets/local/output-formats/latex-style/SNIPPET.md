@@ -164,3 +164,132 @@ By induction, $\cup M = \cup M_0 \subseteq \cup M_1 \subseteq \cdots
 Reads like someone who deeply understands the material explaining it clearly
 and efficiently. Direct statements, brief justifications, proper notation,
 and strategic use of redundancy phrases for clarity.
+
+---
+
+# Academic Paper PDF Generation
+
+## Standard Pandoc Command
+
+For academic papers meeting university formatting requirements (double-spaced, 1-inch margins, 12pt font):
+
+```bash
+pandoc input.md -o output.pdf --pdf-engine=pdflatex \
+  -V geometry:margin=1in \
+  -V fontsize=12pt \
+  -V linestretch=2 \
+  -V documentclass=article
+```
+
+**Key parameters:**
+- `geometry:margin=1in` - Standard 1-inch margins on all sides
+- `fontsize=12pt` - Standard academic font size
+- `linestretch=2` - Creates double-spacing (required for most academic papers)
+- `documentclass=article` - Basic article format
+
+## Word Count to Page Ratio
+
+With double-spacing, 12pt font, 1-inch margins:
+- **~250-260 words per page**
+- 1,800 words ≈ 7 pages
+- 1,600 words ≈ 6-6.5 pages
+- 1,400 words ≈ 5.5-6 pages
+
+Use this to estimate cuts needed without regenerating PDF repeatedly.
+
+## Page Count Verification (macOS)
+
+Fast page count check without opening PDF:
+```bash
+mdls -name kMDItemNumberOfPages file.pdf
+```
+
+Combined with word count:
+```bash
+mdls -name kMDItemNumberOfPages file.pdf && wc -w file.md
+```
+
+## Academic Paper Editing Workflow
+
+**Systematic approach for meeting length requirements:**
+
+1. **Grammar/spelling fixes** - Get content stable first
+2. **Citation format cleanup** - MLA/Chicago/APA consistency
+3. **Generate initial PDF** - Check baseline
+4. **Check page count + word count** - Assess distance from target
+5. **Identify sections to condense** - Opening/closing examples, anecdotes, redundant transitions
+6. **Iterative cuts** - Cut ~100-200 words at a time
+7. **Verify with page count** - Regenerate PDF, check progress
+8. **Final generation** - Once within range
+
+**Tips for meeting length requirements:**
+- Cut opening/closing examples first (preserve core argument)
+- Condense anecdotal evidence
+- Remove redundant transitions
+- Tighten verbose explanations
+- Check word count before regenerating PDF (faster iteration)
+
+## MLA Citation Format (9th Edition)
+
+**Period placement:**
+- Period goes **AFTER** citation bracket: `"quote"[1].` ✓
+- NOT before: `"quote."[1]` ❌
+
+**Web essay format:**
+```
+Author. "Title." Website Name, Month Year, url.
+```
+Example:
+```
+Graham, Paul. "Before the Startup." Paul Graham, Mar. 2014, paulgraham.com/before.html.
+```
+
+**Book format:**
+```
+Author. Title. Publisher, Year.
+```
+
+**Anthology/Collection:**
+```
+Text. Translated by Translator. Collection Title, edited by Editors, edition, Publisher, Year, pp. X-Y.
+```
+
+**Common mistakes:**
+- ❌ Using http:// or https:// in URLs (modern MLA omits)
+- ❌ Period before citation bracket
+- ❌ Inconsistent month abbreviations (use Mar., Sept., Dec., not March, September)
+- ❌ Forgetting site name for web essays
+
+## Common Formatting Requirements
+
+| Requirement | LaTeX Variable | Value |
+|------------|---------------|-------|
+| Double-spaced | `linestretch` | `2` |
+| 1-inch margins | `geometry:margin` | `1in` |
+| 12pt font | `fontsize` | `12pt` |
+| Standard article | `documentclass` | `article` |
+
+## Example Workflow Session
+
+```bash
+# 1. Check current state
+wc -w paper.md
+# 1883 words
+
+# 2. Generate PDF
+pandoc paper.md -o paper.pdf --pdf-engine=pdflatex \
+  -V geometry:margin=1in -V fontsize=12pt -V linestretch=2 \
+  -V documentclass=article
+
+# 3. Check pages
+mdls -name kMDItemNumberOfPages paper.pdf
+# 8 pages (need to get to 6-6.5)
+
+# 4. Calculate needed cuts
+# 8 pages × 250 words/page = ~2000 words
+# Target: 1600 words
+# Need to cut: ~300 words
+
+# 5. Make edits, regenerate, verify
+# ... iterative process ...
+```

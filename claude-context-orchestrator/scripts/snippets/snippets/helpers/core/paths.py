@@ -1,8 +1,7 @@
 """Path resolution and discovery utilities."""
 
-import os
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, Set, Tuple
 
 
 def get_default_config_path() -> Path:

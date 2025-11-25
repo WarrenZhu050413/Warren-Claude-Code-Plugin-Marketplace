@@ -22,7 +22,7 @@ def validate_snippet_file(snippet_path: Path) -> Tuple[bool, Optional[str]]:
         return False, f"Not a file: {snippet_path}"
 
     try:
-        with open(snippet_path, 'r', encoding='utf-8') as f:
+        with open(snippet_path, encoding='utf-8') as f:
             content = f.read()
             if not content.strip():
                 return False, f"File is empty: {snippet_path}"

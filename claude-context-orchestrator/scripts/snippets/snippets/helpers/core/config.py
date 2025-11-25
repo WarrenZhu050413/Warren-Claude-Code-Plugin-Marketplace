@@ -21,7 +21,7 @@ def load_config_file(config_path: Path) -> Dict:
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(config_path, encoding='utf-8') as f:
         return json.load(f)
 
 

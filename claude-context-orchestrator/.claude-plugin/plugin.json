@@ -1,24 +1,19 @@
 {
   "name": "claude-context-orchestrator",
-  "version": "3.0.0",
-  "description": "Hybrid context management system combining Agent Skills (model-invoked) + deterministic snippets (hook-based pattern matching). Includes Anthropic skills and custom meta-skills for skill management.",
+  "version": "3.1.0",
+  "description": "Regex-based context injection. Say SKILL or SNIPPET keywords to load context automatically.",
   "author": {
     "name": "Fucheng Warren Zhu",
     "email": "wzhu@college.harvard.edu"
   },
   "keywords": [
     "skills",
-    "agent-skills",
     "snippets",
-    "skill-management",
-    "snippet-management",
-    "best-practices",
-    "automation",
-    "meta-skills",
+    "regex",
+    "context-injection",
     "hooks"
   ],
   "license": "MIT",
-  "commands": "./commands",
   "skills": "./skills",
   "hooks": "./hooks/hooks.json"
 }

@@ -1,13 +1,14 @@
 """Tests for SnippetsClient core business logic."""
 
 import json
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from snippets.client import SnippetsClient, SnippetError
-from snippets.models import SnippetInfo, ValidationResult, PathsResponse
+import pytest
+
+from snippets.client import SnippetError, SnippetsClient
+from snippets.models import PathsResponse, SnippetInfo, ValidationResult
 
 
 @pytest.fixture

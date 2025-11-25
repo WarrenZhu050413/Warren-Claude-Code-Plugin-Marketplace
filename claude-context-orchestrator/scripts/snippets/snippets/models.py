@@ -1,6 +1,6 @@
 """Data models for snippets management."""
 
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 

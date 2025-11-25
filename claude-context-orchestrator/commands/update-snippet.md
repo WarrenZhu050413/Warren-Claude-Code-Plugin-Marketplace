@@ -1,1 +1,0 @@
-../skills/managing-snippets/updating.md

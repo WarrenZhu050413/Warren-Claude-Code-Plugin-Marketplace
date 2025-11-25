@@ -63,45 +63,66 @@ gh api /repos/{owner}/{repo}/issues
 
 ### Workflow 1: CREATE ISSUE
 
+**Step 0: Find the repository**
+
+```bash
+# If it's a package, check metadata first
+pip show package-name | grep "Home-page"
+
+# Verify with search (repo might be under different org)
+gh search repos "package-name" --limit 5
+```
+
 **ALWAYS: Look at past examples in the repo first**
 
 ```bash
 # Step 1: Search for similar issues (avoid duplicates)
-gh search issues --repo anthropics/claude-code "your search terms" --limit 10
+gh search issues --repo owner/repo "your search terms" --limit 10
 
 # Step 2: View format of 2-3 recent similar issues
-gh issue view --repo anthropics/claude-code [issue-number]
+gh issue view --repo owner/repo [issue-number]
 
 # Step 3: Identify the pattern (sections, detail level, tone)
-# Common patterns:
-# - Feature requests: Problem → Proposed Solution → Example Usage
-# - Bug reports: Description → Steps to Reproduce → Expected vs Actual
 ```
 
-**Create Issue Using Learned Format**
+**Keep It Short**
+
+Maintainers are overwhelmed. Good issues are:
+- **Clear title** - One line describing the problem
+- **Brief description** - 1-2 sentences
+- **Minimal repro** - Smallest code/steps to reproduce
+- **Short environment** - OS, version (one line)
+
+**Create Issue**
 
 ```bash
-gh issue create --repo anthropics/claude-code \
+# For multi-section issues, use --body-file
+gh issue create --repo owner/repo \
+  --title "Bug: X breaks when Y" \
+  --body-file body.md  # Clean content only, no metadata
+
+# For short issues, inline is fine
+gh issue create --repo owner/repo \
   --title "Clear, searchable title" \
-  --body "$(cat <<'EOF'
-## Problem / Description
-[What you're trying to do or what's wrong]
+  --body "Brief description.
 
-## Example / Steps to Reproduce
-[How to see the issue or use the feature]
+Repro steps.
 
-## Additional Context
-[Why this matters, related issues, etc.]
-EOF
-)"
+Environment: macOS 14.6.0"
 ```
+
+**Verify Bug Reports**
+
+Before submitting:
+- Read the actual code being referenced
+- Test reproduction steps
+- Confirm exact trigger (e.g., Ctrl+Q vs Ctrl+D)
 
 **Key Points:**
 - Search for duplicates BEFORE creating
-- Look at 2-3 recent issues to understand format
-- Match the repository's style, not a fixed template
-- Include concrete examples, not vague descriptions
-- Check available labels: `gh label list --repo anthropics/claude-code`
+- Look at 2-3 recent issues to match repo style
+- Keep it concise - respect maintainers' time
+- Verify behavior by reading code/testing
 
 ---
 

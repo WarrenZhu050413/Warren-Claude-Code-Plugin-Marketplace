@@ -14,17 +14,17 @@ Higher priority configs override lower priority ones when snippet names conflict
 """
 
 import json
-import sys
 import re
+import sys
 from pathlib import Path
 
 # Get plugin root directory
 # snippet_injector.py is in scripts/snippets/
 # Config files are in scripts/snippets/
-# Snippet files referenced in config are relative to scripts/ (e.g., ../snippets/local/...)
+# Snippet files referenced in config are relative to claude-context-orchestrator/ (e.g., ../../snippets/local/...)
 SCRIPT_DIR = Path(__file__).parent  # scripts/snippets/
 CONFIG_ROOT = SCRIPT_DIR  # Config files are in scripts/snippets/
-PLUGIN_ROOT = SCRIPT_DIR.parent  # scripts/ - base path for resolving snippet file paths
+PLUGIN_ROOT = SCRIPT_DIR.parent.parent  # claude-context-orchestrator/ - base path for resolving snippet file paths
 
 # Default priorities for standard config files
 DEFAULT_PRIORITIES = {

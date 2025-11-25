@@ -1,4 +1,4 @@
-claude_html
+claude_html/
 conversation-memory-plugin
 post-sender-plugin
 post-sender-plugin.backup
@@ -11,10 +11,15 @@ agent-sdk-tests
 .mcp.json
 .annotations
 .claude/settings.json
+.quibbler
+.quibbler-messages.txt
+claude-context-orchestrator/evals/
 
 # Private snippets with sensitive info
 claude-context-orchestrator/snippets/local/documentation/downloading-pdfs/
+claude-context-orchestrator/snippets/local/documentation/using-search-cli/
 claude-context-orchestrator/snippets/local/communication/posting-content/
+claude-context-orchestrator/skills/search-cli/
 
 # Python artifacts (global)
 __pycache__/
@@ -40,6 +45,7 @@ wheels/
 
 # Testing
 .pytest_cache/
+.ruff_cache/
 .coverage
 .coverage.*
 htmlcov/

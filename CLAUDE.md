@@ -1193,3 +1193,4 @@ Need model selection?
 - [TypeScript SDK](https://docs.claude.com/en/api/agent-sdk/typescript)
 - [Hooks Reference](https://docs.claude.com/en/docs/claude-code/hooks.md)
 - [MCP Specification](https://modelcontextprotocol.io/)
+- Always make install after you push.

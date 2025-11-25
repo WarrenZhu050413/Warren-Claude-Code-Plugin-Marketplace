@@ -1,24 +1,24 @@
 """Tests for helpers.core utilities."""
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 from snippets.helpers.core import (
     # Config
     add_mapping,
+    # Paths
+    discover_categories,
     find_mapping_by_pattern,
     load_config_file,
     load_merged_config,
     merge_configs,
     remove_mapping,
+    resolve_snippet_path,
     save_config_file,
     update_mapping,
-    # Paths
-    discover_categories,
-    resolve_snippet_path,
 )
-
 
 # =============================================================================
 # CONFIG TESTS

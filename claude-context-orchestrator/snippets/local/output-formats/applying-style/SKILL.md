@@ -235,3 +235,6 @@ User-specific instructions override this style guide.
 Other Rules:
 
 - Don't overuse Yet as a word. For example, instead of: "Yet we so easily brag about our meetings with VCs", have "However, we so easily brag about our meetings with VCs"
+  Or "Through this they persisted," instead of "Yet they persisted"
+
+Note that I don't want you to have so many quotes around everything that is not actually a quote around thins.

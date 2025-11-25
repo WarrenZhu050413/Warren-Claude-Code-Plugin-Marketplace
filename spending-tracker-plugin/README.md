@@ -2,6 +2,10 @@
 
 Track your Claude Code API spending with daily and hourly breakdowns. This plugin provides slash commands to view statistics and manage your spending data.
 
+![Spending Tracker Statusline](public/spending-tracker-statusline.png)
+
+*Example: Statusline showing session cost ($4.45), daily ($20.83/day), weekly ($20.83/wk), and hourly ($19.51/hr) spending*
+
 ## ⚠️ Important: Statusline Integration Required
 
 This plugin requires manual integration with your Claude Code statusline for automatic tracking. The plugin provides a Python script that you call from your statusline—no automatic hooks or helper scripts.
@@ -295,4 +299,4 @@ Contributions welcome! Please submit issues and pull requests to the marketplace
 
 ---
 
-**Last Updated:** 2025-10-10
+**Last Updated:** 2025-11-25

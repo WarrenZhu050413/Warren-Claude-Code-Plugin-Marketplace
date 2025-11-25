@@ -81,7 +81,13 @@ Attribution:  Photo: Wikimedia Commons, [License]
 </div>
 ```
 
-**Script location:** `${CLAUDE_PLUGIN_ROOT}/skills/fetching-images/scripts/fetch_wikimedia_image.py`
+**Script location:** `~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/documentation/fetching-images/scripts/fetch_wikimedia_image.py`
+
+**Alias tip:** Add to your shell profile:
+```bash
+alias wikimg='python3 ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/documentation/fetching-images/scripts/fetch_wikimedia_image.py'
+```
+Then use: `wikimg "mofongo" --count 5`
 
 ### Option 2: Manual Workflow (Full Control)
 

@@ -5,7 +5,6 @@ for managing Claude Code snippets. It is CLI-agnostic and can be used programmat
 """
 
 import json
-import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -15,8 +14,6 @@ from .helpers.core import (
     discover_categories,
     get_default_config_path,
     get_default_snippets_dir,
-    load_merged_config,
-    resolve_snippet_path,
     save_config_file,
 )
 from .models import (
@@ -25,7 +22,6 @@ from .models import (
     PathsResponse,
     SearchResult,
     SnippetInfo,
-    ValidationError,
     ValidationResult,
 )
 from .validators import validate_full_config, validate_regex_pattern
@@ -358,10 +354,16 @@ description: {description}
                 if not snippet_path.is_absolute():
                     # Try multiple resolution strategies
                     candidates = [
-                        self.snippets_dir.parent.parent / snippet_file,  # Relative to plugin root
-                        self.snippets_dir / snippet_file,  # Relative to snippets_dir
-                        Path.cwd() / snippet_file,  # Relative to current directory
+                        (self.config_path.parent / snippet_file).resolve(),  # Relative to config file
+                        (self.snippets_dir.parent.parent / snippet_file).resolve(),  # Relative to plugin root
+                        (self.snippets_dir / snippet_file).resolve(),  # Relative to snippets_dir
+                        (Path.cwd() / snippet_file).resolve(),  # Relative to current directory
                     ]
+
+                    # Smart fallback: if path contains 'snippets/', try from plugin root
+                    import re
+                    if match := re.search(r'\.\.?/?(snippets/.+)$', snippet_file):
+                        candidates.append((self.snippets_dir.parent.parent / match.group(1)).resolve())
 
                     for candidate in candidates:
                         if candidate.exists():
@@ -370,7 +372,7 @@ description: {description}
 
                 results.append(SnippetInfo(
                     name=snippet_name,
-                    path=str(snippet_path),
+                    path=str(snippet_path.resolve()),
                     pattern=mapping.get("pattern"),
                     priority=mapping.get("priority", 0),
                 ))
@@ -403,14 +405,27 @@ description: {description}
                 for snippet_file in snippet_files:
                     snippet_path = Path(snippet_file)
                     if not snippet_path.is_absolute():
-                        # Try relative to plugin root
-                        resolved = self.snippets_dir.parent.parent / snippet_file
-                        if resolved.exists():
-                            snippet_path = resolved
+                        # Try multiple resolution strategies
+                        candidates = [
+                            (self.config_path.parent / snippet_file).resolve(),  # Relative to config file
+                            (self.snippets_dir.parent.parent / snippet_file).resolve(),  # Relative to plugin root
+                            (self.snippets_dir / snippet_file).resolve(),  # Relative to snippets_dir
+                            (Path.cwd() / snippet_file).resolve(),  # Relative to current directory
+                        ]
+
+                        # Smart fallback: if path contains 'snippets/', try from plugin root
+                        import re
+                        if match := re.search(r'\.\.?/?(snippets/.+)$', snippet_file):
+                            candidates.append((self.snippets_dir.parent.parent / match.group(1)).resolve())
+
+                        for candidate in candidates:
+                            if candidate.exists():
+                                snippet_path = candidate
+                                break
 
                     matches.append(SnippetInfo(
                         name=name,
-                        path=str(snippet_path),
+                        path=str(snippet_path.resolve()),
                         pattern=pattern,
                         priority=mapping.get("priority", 0),
                     ))

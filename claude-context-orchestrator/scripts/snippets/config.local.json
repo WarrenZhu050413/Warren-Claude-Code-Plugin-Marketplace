@@ -20,7 +20,7 @@
     },
     {
       "name": "gcal",
-      "pattern": "\\b(GCAL|CALENDAR)\\b[.,;:!?]?",
+      "pattern": "\\b(GCAL|CAL)\\b[.,;:!?]?",
       "snippet": [
         "../snippets/local/calendar/scheduling-events/SKILL.md"
       ],
@@ -65,7 +65,7 @@
     },
     {
       "name": "post",
-      "pattern": "\\b(POST)\\b[.,;:!?]?",
+      "pattern": "\\b(EPOST)\\b[.,;:!?]?",
       "snippet": [
         "../snippets/local/communication/posting-content/SKILL.md"
       ],
@@ -236,7 +236,7 @@
     },
     {
       "name": "searching-deeply",
-      "pattern": "\\b(DEEPSEARCH|SEARCH)\\b[.,;:!?]?",
+      "pattern": "\\b(DEEPSEARCH)\\b[.,;:!?]?",
       "snippet": [
         "../skills/searching-deeply/SKILL.md"
       ],
@@ -370,24 +370,6 @@
       "enabled": true
     },
     {
-      "name": "mail",
-      "pattern": "\\b(MAIL|EMAIL)\\b[.,;:!?]?",
-      "snippet": [
-        "../skills/mail-wrapper/SKILL.md"
-      ],
-      "separator": "\n",
-      "enabled": true
-    },
-    {
-      "name": "gmaillm",
-      "pattern": "\\b(GMAILLM)\\b[.,;:!?]?",
-      "snippet": [
-        "../snippets/gmaillm-usage.md"
-      ],
-      "separator": "\n",
-      "enabled": true
-    },
-    {
       "name": "tutoring-report",
       "pattern": "\\b(TEACHREPORT)\\b[.,;:!?]?",
       "snippet": [
@@ -415,19 +397,91 @@
       "enabled": true
     },
     {
-      "name": "test-snippet",
-      "pattern": "\\b(TEST)\\b[.,;:!?]?",
+      "name": "condense",
+      "pattern": "\\b(CONDENSE)\\b[.,;:!?]?",
       "snippet": [
-        "snippets/local/development/test-snippet/SKILL.md"
+        "../snippets/local/communication/condensing-content/SNIPPET.md"
       ],
       "separator": "\n",
       "enabled": true
     },
     {
-      "name": "override-test",
-      "pattern": "\\b(NEW)\\b[.,;:!?]?",
+      "name": "markdown-preview",
+      "pattern": "\\b(MP|MDPREVIEW)\\b[.,;:!?]?",
       "snippet": [
-        "snippets/local/development/override-test/SKILL.md"
+        "../snippets/local/output-formats/markdown-preview/SNIPPET.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "google-drive",
+      "pattern": "\\b(GDRIVE|DRIVE)\\b[.,;:!?]?",
+      "snippet": [
+        "../skills/google-drive/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "gmail-assistant",
+      "pattern": "\\b(GMAIL|MAIL|EMAIL)\\b[.,;:!?]?",
+      "snippet": [
+        "../skills/gmail-assistant/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "dense-paragraph",
+      "pattern": "\\b(PARAGRAPH|PARAGRAPHS|DENSE)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/dense.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "faithful",
+      "pattern": "\\b(FAITHFUL|FAITHFULLY)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/faithful.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "search-cli",
+      "pattern": "\\b(SEARCHCLI|SEARCH)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/search-cli.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "format",
+      "pattern": "\\b(FORMAT)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/output-formats/formatting-files/FORMAT.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "ascii-diagrams",
+      "pattern": "\\b(ASCII|DIAGRAM)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/ascii-diagrams.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "pbcopy",
+      "pattern": "\\b(PBCOPY|CLIPBOARD)\\b[.,;:!?]?",
+      "snippet": [
+        "../snippets/local/productivity/pbcopy/SNIPPET.md"
       ],
       "separator": "\n",
       "enabled": true

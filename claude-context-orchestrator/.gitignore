@@ -13,8 +13,12 @@ __pycache__/
 
 # Virtual environments
 venv/
+.venv/
 env/
 ENV/
+scripts/.venv/
+scripts/snippets/.venv/
+web-viewer/venv/
 
 # IDE
 .vscode/
@@ -82,4 +86,10 @@ htmlcov/
 # Old backups
 old_scripts_backup/
 post-sender-plugin
+
+# Session evaluations
+evals/
+
+# Development tools
+web-viewer/
 
