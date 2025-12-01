@@ -34,7 +34,7 @@ You need OAuth2 credentials from Google Cloud Console.
 
 ```bash
 # Install from source
-cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/gmail-integration-plugin/scripts/gmaillm
+cd ~/.claude/plugins/gmail-plugin/scripts/gmaillm
 make install
 ```
 

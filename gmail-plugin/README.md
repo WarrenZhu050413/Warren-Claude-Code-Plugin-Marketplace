@@ -15,7 +15,7 @@ You want Claude to help compose emails, search your inbox, or send messages with
 
 2. Install the CLI:
    ```bash
-   cd /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/gmail-plugin/scripts/gmaillm
+   cd ~/.claude/plugins/gmail-plugin/scripts/gmaillm
    make install
    ```
 

@@ -40,7 +40,7 @@ pip install gcallm
 Verify installation:
 ```bash
 which gcallm
-# Should output: /Users/wz/.local/bin/gcallm
+# Should output: ~/.local/bin/gcallm (or similar)
 ```
 
 ## Step 3: Configure OAuth Path

@@ -1,0 +1,17 @@
+# Virtual environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Credentials (never commit)
+credentials.json
+oauth-keys.json
+*.credentials
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
