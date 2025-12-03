@@ -1,0 +1,21 @@
+Done! Here's your email groups in JSON format:
+
+**Summary:**
+- **4 groups total**
+- `me` - 3 members (your email addresses)
+- `posts-default` - 3 members
+- `posts-je` - 1 member
+- `posts-shit` - 3 members
+
+You can also pipe this to `jq` for filtering or processing:
+
+```bash
+# Get just the group names
+uv run gmail groups list --output-format json | jq -r '.[].name'
+
+# Get groups with more than 2 members
+uv run gmail groups list --output-format json | jq '.[] | select(.member_count > 2)'
+
+# Get a specific group's members
+uv run gmail groups list --output-format json | jq '.[] | select(.name=="posts-default") | .members'
+```

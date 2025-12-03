@@ -1,0 +1,10 @@
+{
+  "name": "gmail-plugin",
+  "version": "1.0.0",
+  "description": "Gmail CLI integration for composing, sending, searching, and managing emails",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "commands": "./commands"
+}

@@ -1,0 +1,16 @@
+# Google Drive API Settings Template
+# Copy this to ~/.gdrivelm/settings.yaml and update paths as needed
+
+client_config_backend: file
+client_config_file: ~/.gdrivelm/credentials.json
+
+save_credentials: True
+save_credentials_backend: file
+save_credentials_file: ~/.gdrivelm/token.json
+
+get_refresh_token: True
+
+oauth_scope:
+  - https://www.googleapis.com/auth/drive
+  - https://www.googleapis.com/auth/drive.file
+  - https://www.googleapis.com/auth/drive.metadata.readonly

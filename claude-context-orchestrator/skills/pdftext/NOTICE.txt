@@ -1,0 +1,20 @@
+pdftext
+Copyright 2025 Warren Zhu
+
+This skill was created based on research conducted in November 2025 comparing
+PDF extraction tools for academic research and LLM consumption.
+
+Research included testing of:
+- Docling (IBM Research)
+- PyMuPDF (Artifex Software)
+- pdfplumber (Jeremy Singer-Vine)
+- pdfminer.six
+- pypdf
+- Ghostscript (Artifex Software)
+- Poppler (pdftotext)
+
+All tool comparisons and benchmarks are based on independent testing on
+academic PDFs from the distributed cognition literature.
+
+No code from external projects is included in this skill. All example scripts
+are original work or standard usage patterns from public documentation.

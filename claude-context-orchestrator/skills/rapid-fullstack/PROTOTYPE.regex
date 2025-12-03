@@ -1,0 +1,31 @@
+# Regex patterns to auto-trigger rapid-fullstack skill
+
+# Direct prototyping requests
+(?i)(build|create|make|develop|prototype)\s+(a\s+)?(web\s?app|webapp|full[\s-]?stack\s+app|full[\s-]?stack\s+application)
+
+# MVP and prototype mentions
+(?i)(mvp|prototype|proof[\s-]of[\s-]concept|poc)\s+(for|of|with)
+
+# Backend + Frontend together
+(?i)(backend|api)\s+(and|with|\+)\s+(frontend|ui|interface)
+
+# Quick app building
+(?i)(quick|rapid|fast)\s+(web|fullstack|full[\s-]stack)\s+(app|application|project|prototype)
+
+# Testing/debugging full stack
+(?i)(test|debug|fix)\s+(the\s+)?(webapp|web\s+app|full[\s-]?stack|backend\s+and\s+frontend)
+
+# "Help me build" patterns
+(?i)help\s+(me\s+)?(build|create|make)\s+(a\s+)?.*(webapp|web\s+app|application|full[\s-]?stack)
+
+# Server + Client mentions
+(?i)(server|backend)\s+and\s+(client|frontend)
+
+# React/Vue/etc + API mentions
+(?i)(react|vue|svelte|angular)\s+(with|and|\+)\s+(api|backend|fastapi|flask|express|node)
+
+# Database + Frontend mentions
+(?i)(database|sqlite|postgres)\s+(with|and|\+)\s+(frontend|ui|react|vue)
+
+# WEBAPP in all caps (user often uses this)
+(?i)webapp

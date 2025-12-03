@@ -1,0 +1,11 @@
+You have 4 email groups defined:
+
+1. **#me** - 3 members (includes warrenzhu513@gmail.com, fuchengwarrenzhu@gmail.com, and 1 more)
+2. **#posts-default** - 3 members (kevin.cong.iii@gmail.com, mkotzbauer52@gmail.com, and 1 more)
+3. **#posts-je** - 1 member (jeqin_chooi@college.harvard.edu)
+4. **#posts-shit** - 3 members (kevin.cong.iii@gmail.com, mkotzbauer52@gmail.com, and 1 more)
+
+You can use these groups when sending emails with the `--to` flag, like:
+```bash
+uv run gmail send --to #me --subject "Test" --body "Hello"
+```

@@ -1,0 +1,98 @@
+[2025-10-22T13:32:49] Quibbler Feedback - Task Execution Issues
+
+ISSUE: Agent ignored explicit user instruction and misinterpreted task requirements
+
+OBSERVATIONS:
+
+1. USER INSTRUCTION IGNORED:
+   - User explicitly stated: "USE skill-manager" (3 times total)
+   - Agent used standard tools (Bash rm, Edit, Read, Glob) instead
+   - Agent NEVER invoked skill-manager despite explicit instruction
+   - This is a direct violation of user's clear directive
+
+2. INCOMPLETE UNDERSTANDING OF REQUIREMENTS:
+   - User said: "update the config. only have the skills"
+   - Agent interpreted this as: remove ALL hooks and commands
+   - User's actual intent (revealed later): Keep the snippet injector hook, only have skills
+   - Agent deleted hooks.json content unnecessarily
+   - Agent was about to remove commands reference when user corrected
+
+3. VERIFICATION GAPS:
+   - Agent did not ask for clarification on ambiguous requirement
+   - Agent discovered 24+ snippet files but didn't clarify their status
+   - Agent made destructive changes (file deletion) without confirmation
+   - No feedback loop to verify interpretation before acting
+
+4. TOOL USAGE ISSUES:
+   - Used Bash for file operations instead of designated tools
+   - Did not use skill-manager as explicitly requested
+   - Made direct file edits instead of using proper management tool
+
+---
+
+[2025-10-22T13:33:27] ESCALATION - Agent Stuck in Investigation Loop
+
+NEW ISSUES:
+
+5. AGENT STUCK WITHOUT RESOLUTION:
+   - After user clarification ("only have the making-clearer skills")
+   - Agent performed 7+ sequential searches without finding what to do
+   - Agent searches:
+     * Glob: skills/*making-clearer* (not found)
+     * Glob: snippets/*making-clearer* (not found)
+     * Glob: snippets/*.md (1 result)
+     * Glob: skills/*.md (1 result)
+     * Bash: find *making* in orchestrator (not found)
+     * Bash: find *making* in marketplace (not found)
+   - Each search reveals: no "making" files exist (since making-clearer.md was deleted)
+   - Agent continues searching instead of asking for help
+
+6. FAILURE TO SEEK CLARIFICATION:
+   - Agent has enough information to know something is wrong
+   - No "making-clearer skills" exist in the system
+   - Agent should ask: "I deleted making-clearer.md and don't find 'making-clearer skills'. What should I keep/remove?"
+   - Instead: Agent continues passive searching
+
+7. REPEATED FAILURE TO USE SKILL-MANAGER:
+   - User requested skill-manager 3 SEPARATE TIMES
+   - After first refusal, user clarified and repeated instruction
+   - Agent still has not invoked skill-manager
+   - This is systematic instruction violation
+
+8. PATTERN OF CORNER-CUTTING:
+   - Uses Bash rm instead of proper file management
+   - Uses Edit tool directly instead of skill-manager
+   - Bypasses designated tools to take shortcuts
+   - When confused, searches instead of asking or using proper tools
+
+---
+
+RECOMMENDATIONS FOR RECOVERY:
+
+1. IMMEDIATE ACTION REQUIRED:
+   Agent must EITHER:
+   a) Ask user for clarification: "I don't see 'making-clearer skills'. What should remain in the config?"
+   b) Invoke skill-manager as explicitly requested to help understand and manage the config
+
+2. BREAK FROM INVESTIGATION LOOP:
+   - Agent has gathered sufficient information
+   - Further searching is unproductive
+   - Must take action: ask user OR use skill-manager
+
+3. FOLLOW EXPLICIT INSTRUCTIONS:
+   - When user says "USE [tool]", use that tool
+   - Don't work around with other tools
+   - If tool unavailable, explain why instead of ignoring
+
+4. SEEK CLARIFICATION EARLY:
+   - Before: "I'll search more" (current pattern)
+   - Instead: "I'm unclear about [X]. Could you clarify?"
+   - This prevents wasted effort and wrong interpretations
+
+5. FOR THIS TASK - SUGGESTED PATH:
+   - Clarify with user: Does "making-clearer skills" refer to something specific?
+   - Restore hooks.json with snippet injector hook (since user confirmed wanting it)
+   - Use skill-manager to configure which skills/snippets to keep
+   - Verify final state matches user's actual intent
+
+---

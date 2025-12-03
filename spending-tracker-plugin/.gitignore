@@ -1,0 +1,9 @@
+.env
+*.backup.*
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+spending_data/

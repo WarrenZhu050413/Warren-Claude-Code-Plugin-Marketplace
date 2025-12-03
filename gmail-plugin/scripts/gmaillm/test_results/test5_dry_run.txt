@@ -1,0 +1,13 @@
+============================================================
+Email Preview
+============================================================
+To: warrenzhu513@gmail.com, fuchengwarrenzhu@gmail.com, wzhu@college.harvard.edu
+Subject: CLI Test
+============================================================
+
+Testing dry-run
+
+============================================================
+
+🔍 DRY RUN - Email would be sent with the above details
+Use without --dry-run to actually send

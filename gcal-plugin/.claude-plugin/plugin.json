@@ -1,0 +1,10 @@
+{
+  "name": "gcal-plugin",
+  "version": "1.0.0",
+  "description": "Google Calendar CLI integration for scheduling events with natural language",
+  "author": {
+    "name": "Fucheng Warren Zhu",
+    "email": "wzhu@college.harvard.edu"
+  },
+  "commands": "./commands"
+}
