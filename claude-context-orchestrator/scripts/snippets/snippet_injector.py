@@ -21,10 +21,11 @@ from pathlib import Path
 # Get plugin root directory
 # snippet_injector.py is in scripts/snippets/
 # Config files are in scripts/snippets/
-# Snippet files referenced in config are relative to claude-context-orchestrator/ (e.g., ../../snippets/local/...)
+# Snippet files referenced in config are relative to config file directory (scripts/snippets/)
+# e.g., ../../snippets/local/... resolves from scripts/snippets/ to claude-context-orchestrator/snippets/local/
 SCRIPT_DIR = Path(__file__).parent  # scripts/snippets/
 CONFIG_ROOT = SCRIPT_DIR  # Config files are in scripts/snippets/
-PLUGIN_ROOT = SCRIPT_DIR.parent.parent  # claude-context-orchestrator/ - base path for resolving snippet file paths
+SNIPPET_BASE = SCRIPT_DIR  # Base path for resolving snippet file paths (same as config location)
 
 # Default priorities for standard config files
 DEFAULT_PRIORITIES = {
@@ -123,7 +124,7 @@ try:
             # Load all files for this snippet and join with separator
             file_contents = []
             for snippet_file in snippet_files:
-                snippet_path = PLUGIN_ROOT / snippet_file
+                snippet_path = (SNIPPET_BASE / snippet_file).resolve()
                 if snippet_path.exists():
                     with open(snippet_path) as f:
                         content = f.read()
