@@ -136,15 +136,9 @@ try:
                 additional_context.append(combined_content)
 
         if additional_context:
-            # Return JSON with additional context
-            # additionalContext must be a string, not an array
-            output = {
-                "hookSpecificOutput": {
-                    "hookEventName": "UserPromptSubmit",
-                    "additionalContext": "\n\n".join(additional_context),
-                }
-            }
-            print(json.dumps(output))
+            # Output plain text - Claude Code adds any stdout as context
+            # This is simpler and more reliable than JSON format
+            print("\n\n".join(additional_context))
 
 except Exception as e:
     # Log error to stderr for debugging
