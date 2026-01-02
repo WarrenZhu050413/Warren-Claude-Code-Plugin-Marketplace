@@ -571,9 +571,9 @@ description: {description}
         Returns:
             ValidationResult with any errors found
         """
-        # Use config file's parent directory (scripts/) as base_dir for path resolution
-        # This matches snippet_injector.py's PLUGIN_ROOT behavior
-        config_base_dir = self.config_path.parent.parent  # scripts/snippets -> scripts
+        # Use config file's directory as base_dir for path resolution
+        # Relative paths like ../../snippets/local/... are resolved from here
+        config_base_dir = self.config_path.parent  # scripts/snippets/
         errors = validate_full_config(self.config, config_base_dir)
 
         return ValidationResult(
@@ -630,8 +630,8 @@ description: {description}
             for name, info in sorted(categories_dict.items())
         ]
 
-        # Use scripts/ as base_dir to match snippet_injector.py's PLUGIN_ROOT
-        config_base_dir = self.config_path.parent.parent  # scripts/snippets -> scripts
+        # Use config file's directory as base_dir for path resolution
+        config_base_dir = self.config_path.parent  # scripts/snippets/
 
         return PathsResponse(
             config_files=config_files,
