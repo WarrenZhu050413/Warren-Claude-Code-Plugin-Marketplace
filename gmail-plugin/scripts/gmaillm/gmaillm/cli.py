@@ -587,6 +587,7 @@ def send(
     ),
     yolo: bool = typer.Option(False, "--yolo", help="Send without confirmation"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be sent without actually sending"),
+    html: bool = typer.Option(False, "--html", help="Send body as HTML instead of plain text"),
     schema: bool = typer.Option(False, "--schema", help="Display JSON schema and exit"),
 ) -> None:
     """Send a new email from CLI args or JSON file.
@@ -635,6 +636,7 @@ def send(
             cc_list_raw = json_data.get("cc")
             bcc_list_raw = json_data.get("bcc")
             attachment_list = json_data.get("attachments")
+            is_html = json_data.get("is_html", False)
 
         # INTERACTIVE MODE: CLI arguments
         else:
@@ -651,6 +653,7 @@ def send(
             cc_list_raw = cc
             bcc_list_raw = bcc
             attachment_list = attachments
+            is_html = html
 
         # Expand email groups first (#groupname -> actual emails)
         to_list = expand_email_groups(to_list_raw)
@@ -676,6 +679,8 @@ def send(
             preview_details["Cc"] = ', '.join(cc_list)
         if bcc_list:
             preview_details["Bcc"] = ', '.join(bcc_list)
+        if is_html:
+            preview_details["Format"] = "HTML"
 
         show_operation_preview("Email Preview", preview_details)
         console.print(f"\n{email_body}\n")
@@ -699,7 +704,7 @@ def send(
 
         # Send email
         request = SendEmailRequest(
-            to=to_list, subject=email_subject, body=email_body, cc=cc_list, bcc=bcc_list, attachments=validated_attachments
+            to=to_list, subject=email_subject, body=email_body, cc=cc_list, bcc=bcc_list, attachments=validated_attachments, is_html=is_html
         )
         result = client.send_email(request)
 

@@ -40,6 +40,10 @@ SEND_EMAIL_JSON_SCHEMA = {
             "type": "array",
             "items": {"type": "string"},
             "description": "List of file paths for attachments (optional)"
+        },
+        "is_html": {
+            "type": "boolean",
+            "description": "Whether body is HTML (optional, default: false)"
         }
     },
     "additionalProperties": False
@@ -192,6 +196,11 @@ def validate_send_email_json(json_data: Dict[str, Any]) -> List[str]:
                     errors.append(f"Field 'attachments[{i}]' must be a string, got {type(path).__name__}")
                 elif not path.strip():
                     errors.append(f"Field 'attachments[{i}]' cannot be empty")
+
+    # Validate optional 'is_html' field
+    if "is_html" in json_data:
+        if not isinstance(json_data["is_html"], bool):
+            errors.append(f"Field 'is_html' must be a boolean, got {type(json_data['is_html']).__name__}")
 
     # Check for unexpected fields
     allowed_fields = set(SEND_EMAIL_JSON_SCHEMA["properties"].keys())

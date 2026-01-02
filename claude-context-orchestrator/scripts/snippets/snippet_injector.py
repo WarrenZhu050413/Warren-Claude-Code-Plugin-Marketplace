@@ -137,10 +137,11 @@ try:
 
         if additional_context:
             # Return JSON with additional context
+            # additionalContext must be a string, not an array
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "UserPromptSubmit",
-                    "additionalContext": additional_context,
+                    "additionalContext": "\n\n".join(additional_context),
                 }
             }
             print(json.dumps(output))
