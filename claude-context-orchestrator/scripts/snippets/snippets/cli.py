@@ -499,6 +499,7 @@ def delete(
 @app.command()
 def search(
     query: str = typer.Argument(..., help="Search query"),
+    print_path: bool = typer.Option(False, "--path", "-p", help="Print first match's path (no formatting)"),
     interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactively select and edit snippet"),
     output_format: OutputFormat = typer.Option(OutputFormat.RICH, "--output-format", help="Output format"),
     config_path: Optional[Path] = typer.Option(None, "--config", help="Path to config file"),
@@ -511,11 +512,17 @@ def search(
     [bold cyan]EXAMPLES[/bold cyan]:
       [dim]$[/dim] snippets search mail
       [dim]$[/dim] snippets search "error handling"
+      [dim]$[/dim] snippets search mail -p  [dim]# Print path only[/dim]
       [dim]$[/dim] snippets search mail -i  [dim]# Interactive mode[/dim]
     """
     try:
         client = _get_client(config_path, snippets_dir, use_base_config, config_name)
         result = client.search(query)
+
+        # Handle path mode: print raw path only
+        if print_path and result.matches:
+            print(result.matches[0].path)
+            return
 
         if output_format == OutputFormat.JSON:
             data = {
