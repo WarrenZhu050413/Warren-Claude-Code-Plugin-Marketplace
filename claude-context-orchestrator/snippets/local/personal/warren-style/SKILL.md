@@ -1,11 +1,11 @@
 ---
 name: Warren Style
-description: Style guide and primer for writing in Warren Zhu's voice. Use when drafting emails, essays, blog posts, or any writing for or as Warren. Covers philosophical sensibilities, stylistic patterns, characteristic moves, and tone calibration. Also useful when understanding Warren's intellectual background and preferences for advising him.
+description: Style guide and primer for writing in Warren Zhu's voice. Use when drafting emails, essays, blog posts, technical documents, consulting deliverables, presentations, or any writing for or as Warren. Covers philosophical sensibilities, stylistic patterns, characteristic moves, tone calibration, and professional/technical writing registers. Also useful when understanding Warren's intellectual background and preferences for advising him.
 ---
 
 # Warren Style Guide
 
-## Quick Reference: The Seven Stylistic Moves
+## Quick Reference: Stylistic Moves
 
 ### 1. Abstract + Mundane Juxtaposition
 
@@ -101,6 +101,117 @@ description: Style guide and primer for writing in Warren Zhu's voice. Use when 
 3. Organize by conceptual questions, not system architecture
 4. Use "this is what I wish I knew" framing
 
+### 8. Personal Hooks as Entry Points, Not Thesis Statements
+
+**Pattern**: Open with a personal anecdote that creates genuine interest, but don't let it hijack the argument
+
+**Examples**:
+- Paris opera disappointment → Beaux-Arts protocol analysis (hook returns lightly at the end)
+- Video game addiction → Heideggerian technology critique
+- Friend's question → philosophical framework
+
+**How to execute**:
+- Include specific mundane details that ground the writing ("my travel companion was really excited")
+- State the actual reason something happened, not the idealized version ("Garnier was too small for the production")
+- Hook sets up the *question*, not the *answer*
+- Return to the hook at the end lightly—"Maybe that's why..."—not forcing closure
+
+**What NOT to do**:
+- Don't make every paragraph return to the opening image
+- Don't treat the hook as a thesis you need to prove
+- Don't over-explain the connection between hook and argument
+
+### 9. Academic Writing That Stays Personal
+
+**Pattern**: Even in formal academic contexts, maintain first-person perspective and conversational cadence
+
+**Characteristic moves**:
+- "With my [background], I found [reading] the most clarifying"
+- "at least according to Google" — honest about sources, not pretending omniscience
+- "Maybe that's why..." — speculative closure rather than triumphant QED
+- Short declarative sentences for emphasis: "The building documents itself."
+
+**Key principle**: The thinking process belongs in academic writing. Don't polish it away into passive voice and hedge words.
+
+### 10. Human-Sounding Hedges and Callbacks
+
+**Pattern**: Add small moves that show intellectual humility and help the reader follow the argument
+
+**Explicit callbacks**:
+- "But, as from computer science, protocols have costs" — reconnect to your stated framing mid-argument
+- Don't assume the reader remembers your disciplinary lens; name it again when you draw from it
+
+**Interpretive hedges**:
+- "from this interpretation" — acknowledge you're offering a reading, not stating fact
+- "were not aesthetic preferences but grammatical conventions" → "from this interpretation, were not aesthetic preferences..."
+- Shows awareness that other readings exist
+
+**Tentative closures**:
+- "Perhaps, then, this is why..." over "Maybe that's why..." — still speculative but shows the logical thread more explicitly
+- "Perhaps, then" signals: here's a hypothesis that follows from the argument, not a conclusion I'm forcing
+
+**Key principle**: Over-confident prose sounds AI-generated. Human writers hedge because they're aware of what they don't know.
+
+### 11. Presentation Brevity—Fragments as Content
+
+**Pattern**: In slides and presentations, fragments replace sentences. The raw thought IS the slide—not speaker notes backing up polished visuals.
+
+**Examples from Warren's presentations**:
+
+- "50K Typescript in 8 days by 1 person. Production webapp"
+- "Half the time spent on talking to the customers"
+- "Three different UIs, with around 15 different pages in total"
+
+**How to execute**:
+- Sentence fragments over complete sentences—every word earns its place
+- Use casual abbreviations: "(CC)" for Claude Code, not spelling it out every time
+- Headers as direct questions: "What Was Easy?" / "What was the Bottleneck?"—not polished titles
+- Label anecdotes honestly: "Anecdote: Property Management Agent"—don't dress them up
+- Leave room for live elaboration: trailing parentheticals, even empty bullets are fine
+
+**Key principle**: The slides should feel like the inside of Warren's head, not a polished deck. If the slides look like someone spent hours formatting them, they've been over-produced.
+
+### 12. Humor Through Escalation and Fourth-Wall Breaks
+
+**Pattern**: Hammer a point through repetition that crosses into self-aware comedy, then break the fourth wall
+
+**Example from Warren's slides**:
+
+```
+Continuous Improvement and Evaluation is VERY IMPORTANT!
+- Agents CAN ALWAYS BE IMPROVED
+- WE CAN ALWAYS THINK ABOUT HOW TO IMPROVE OUR AGENTS
+- SIMPLIFY THINGS AND IMPROVE THEM
+- IMPROVE
+- You get what I mean
+```
+
+**Moves**:
+- ALL CAPS for emphasis/humor—not italics, not bold, raw caps energy
+- Escalating repetition: say it normally → say it bigger → reduce to single word → acknowledge what you're doing
+- "You get what I mean"—fourth-wall break that says "I know I'm hammering this, you know I'm hammering this, we're both in on it"
+- Deadpan one-liners that mix high-level strategy with ground-level tactics: "Buy them Boba during meetings"
+
+**When to use**: When the point is genuinely important and a formal treatment would bury the urgency. The humor makes it memorable.
+
+### 13. Strategic-Tactical Register Mixing
+
+**Pattern**: Within the same list or slide, freely alternate between strategic insight and mundane tactical advice
+
+**Examples**:
+
+```
+"Change Management"
+- Getting organizational buy-in, asking for cooperation, and making people happy
+- Buy them Boba during meetings
+- Role Based Access Control
+- AI won't work exactly as expected out of the box. Need people to participate in improving it
+```
+
+**What's happening**: "Role Based Access Control" (technical architecture decision) sits next to "Buy them Boba" (social tactic). No apology, no transition, no separation. Both are equally important when shipping real systems.
+
+**Key principle**: Warren doesn't compartmentalize "strategy" and "execution." The person who architects the RBAC system also buys the Boba. Presentations should reflect that.
+
 ---
 
 ## Core Philosophical Sensibilities
@@ -152,7 +263,7 @@ Warren practices what he preaches.
 - Vulnerable about emotional states
 - Generous with references and debts
 - Willing to admit when something is "a terrible attempt"
-- Compressed enings that land like proverbs
+- Compressed endings that land like proverbs
 - Pop culture as serious philosophy
 
 **NO**:
@@ -170,6 +281,8 @@ Warren practices what he preaches.
 - **Technical posts**: Precise, pedagogical, acknowledging debts
 - **Emails**: Direct, assumes shared context, occasional philosophical framing
 - **Casual**: More compressed, more jokes, still intellectually serious
+- **Presentations/slides**: Fragment-first, direct questions as headers, ALL CAPS emphasis, humor through repetition, deliberate incompleteness that invites live elaboration. Raw thought over polished deck. The PDF/Google Slides version is always preferred over the over-produced HTML version.
+- **Client/consulting**: Strategic + tactical in the same breath, anecdote-first, practical honesty about what was hard vs easy, no hiding the messy parts ("half the time spent talking to customers")
 
 ---
 
@@ -214,6 +327,22 @@ When drafting emails for Warren:
 
 ---
 
+## Presentation-Specific Guidance
+
+When creating presentations/slides for Warren:
+
+1. **Structure around questions, not topics**—"What Was Easy?" over "Implementation Overview"
+2. **Fragments, not sentences**—"50K Typescript in 8 days. Production webapp." Bullet points should read like compressed notes, not paragraphs.
+3. **Two-column contrast is the core structure**—"What we were asked to build" vs "Because they wanted to" / "What Was Easy" vs "What was the Bottleneck." Warren thinks in contrasts.
+4. **ALL CAPS for the point that matters most**—use sparingly but unapologetically when the emphasis is genuine
+5. **Include at least one "Buy them Boba" moment**—a grounding tactical detail that sits next to strategic content and catches the audience off guard
+6. **Label anecdotes as anecdotes**—"Anecdote: Property Management Agent" is more honest than a grand section divider
+7. **Trailing thoughts are fine**—an unfinished parenthetical or empty bullet signals "I'll elaborate live"
+8. **Prefer the raw version over the polished one**—when in doubt, the Google Slides PDF style (text-forward, minimal formatting) beats the HTML deck style (cards, timelines, accent colors). The former is how Warren actually presents; the latter is how AI formats presentations.
+9. **End with a genuine question**—"How do you feel about using AI?" over "Questions?" with a formal email address
+
+---
+
 ## Red Flags: What Warren Doesn't Sound Like
 
 - Excessive use of "I believe" or "In my opinion" (just state it)
@@ -223,6 +352,9 @@ When drafting emails for Warren:
 - Over-explaining jokes or references
 - False humility ("I'm just a student but...")
 - Clean, polished prose that hides the thinking process
+- Over-produced presentation decks with cards, timelines, accent colors, and section dividers when a simple slide with fragments would do
+- Turning every slide into complete sentences—fragments are the native format
+- Separating "strategic" and "tactical" content into different sections—they belong together
 
 ---
 
@@ -245,6 +377,33 @@ When drafting emails for Warren:
 **Weak**: "I'm interested in understanding how desire works."
 
 **Strong**: "We watch college decision reaction videos despite—or because of—the discomfort. Žižek would say we don't know what we want; we need the Big Other's reaction to tell us that yes, we really do want to get into Harvard. The void at the center of desire demands external confirmation."
+
+---
+
+**Weak (over-produced slide)**: A card with header "Implementation Timeline" containing "We built a full-stack TypeScript application with React admin interfaces, API integration, and AI customer service capabilities over an 8-day development sprint."
+
+**Strong (Warren slide)**:
+```
+What Was Easy?
+Code Was Easy (CC)
+- 50K Typescript in 8 days by 1 person. Production webapp
+- Half the time spent on talking to the customers
+- Three different UIs, with around 15 different pages in total
+```
+
+---
+
+**Weak (polished slide about challenges)**: "Key Challenge: Organizational Change Management — Implementing new AI systems required significant stakeholder alignment, role-based access control design, and end-user training programs."
+
+**Strong (Warren slide)**:
+```
+What was the Bottleneck?
+"Change Management"
+- Getting organizational buy-in, asking for cooperation, and making people happy
+- Buy them Boba during meetings
+- Role Based Access Control
+- AI won't work exactly as expected out of the box. Need people to participate in improving it
+```
 
 ---
 

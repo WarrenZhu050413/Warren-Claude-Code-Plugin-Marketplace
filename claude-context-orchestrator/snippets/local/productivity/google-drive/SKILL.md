@@ -3,11 +3,25 @@ name: google-drive
 description: Interact with Google Drive API using PyDrive2 for uploading, downloading, searching, and managing files. Use when working with Google Drive operations including file transfers, metadata queries, search operations, folder management, batch operations, and sharing. Authentication is pre-configured at ~/.gdrivelm/. Includes helper scripts for common operations and comprehensive API references. Helper script automatically detects markdown formatting and sets appropriate MIME types.
 ---
 
+## Prerequisites
+
+**Required Python package:** `pydrive2` must be installed.
+
+```bash
+# Install with pip
+pip install pydrive2
+
+# OR with uv
+uv pip install pydrive2
+```
+
+**Authentication:** Credentials must be configured at `~/.gdrivelm/`. See `references/auth_setup.md` for initial setup.
+
 ## Configuration
 
 **Helper script path:**
 ```
-/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts/gdrive_helper.py
+/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts/gdrive_helper.py
 ```
 
 **Authentication files** (use `~/.gdrivelm/` - expands to home directory):
@@ -25,7 +39,7 @@ Use `scripts/gdrive_helper.py` for common operations to avoid rewriting authenti
 
 ```python
 import sys
-sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts')
+sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts')
 from gdrive_helper import authenticate, upload_file, download_file, search_files, get_metadata
 
 # Authenticate once
@@ -63,17 +77,18 @@ print(f"Size: {metadata['size']} bytes")
 
 ### CLI Usage
 
-The helper script can also be used from command line:
+The helper script can be used from command line. First ensure `pydrive2` is installed:
 
 ```bash
-# Activate environment first
-cd ~/Desktop/zPersonalProjects/gdrivelm
-source venv/bin/activate
+# Install pydrive2 if needed (one-time setup)
+pip install pydrive2
+# OR with uv:
+uv pip install pydrive2
 
-# Run commands
-python ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts/gdrive_helper.py upload /path/to/file.txt
-python ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts/gdrive_helper.py search "title contains 'report'"
-python ~/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts/gdrive_helper.py download FILE_ID /path/to/save.txt
+# Run commands directly (no cd or venv activation needed)
+python /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts/gdrive_helper.py upload /path/to/file.txt
+python /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts/gdrive_helper.py search "title contains 'report'"
+python /Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts/gdrive_helper.py download FILE_ID /path/to/save.txt
 ```
 
 ## File Type Handling
@@ -86,7 +101,7 @@ Native Google formats require **export** with a specific MIME type, not direct d
 
 ```python
 import sys
-sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts')
+sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts')
 from gdrive_helper import authenticate
 
 drive = authenticate()
@@ -124,7 +139,7 @@ content = get_file_content(drive, 'FILE_ID')
 ```python
 # ✅ CORRECT: Import from global skill path directly
 import sys
-sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts')
+sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts')
 from gdrive_helper import authenticate
 
 drive = authenticate()
@@ -382,7 +397,7 @@ cd: no such file or directory: /Users/wz/Desktop/zPersonalProjects/gdrivelm
 ```python
 # ✅ CORRECT: Works from any directory
 import sys
-sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/skills/google-drive/scripts')
+sys.path.insert(0, '/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/productivity/google-drive/scripts')
 from gdrive_helper import authenticate
 
 # ❌ WRONG: Don't rely on project directory

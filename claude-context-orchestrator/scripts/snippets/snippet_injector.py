@@ -17,6 +17,14 @@ import json
 import re
 import sys
 from pathlib import Path
+from datetime import datetime
+
+# Debug logging to file
+DEBUG_LOG = Path("/tmp/snippet_hook_debug.log")
+
+def debug_log(msg):
+    with open(DEBUG_LOG, "a") as f:
+        f.write(f"[{datetime.now().isoformat()}] {msg}\n")
 
 # Get plugin root directory
 # snippet_injector.py is in scripts/snippets/
@@ -89,7 +97,9 @@ try:
     prompt = input_data.get("prompt", "")
 
     # Load merged config (base + local)
+    debug_log(f"Starting hook, prompt: {prompt[:100]}...")
     config = load_merged_config()
+    debug_log(f"Loaded config with {len(config.get('mappings', []))} mappings")
 
     # Check for matches (all patterns are regex)
     matched_snippets = []
@@ -102,6 +112,7 @@ try:
 
         # All patterns are treated as regex with case-sensitive matching
         if re.search(pattern, prompt):
+            debug_log(f"MATCH: {mapping.get('name')} with pattern {pattern}")
             # Store snippet files array and separator
             snippet_files = mapping["snippet"]  # Now always an array
             separator = mapping.get("separator", "\n")
@@ -138,12 +149,20 @@ try:
         if additional_context:
             # Output plain text - Claude Code adds any stdout as context
             # This is simpler and more reliable than JSON format
-            print("\n\n".join(additional_context))
+            output = "\n\n".join(additional_context)
+            debug_log(f"OUTPUT: {len(output)} chars")
+            print(output)
+        else:
+            debug_log("No context to output")
+    else:
+        debug_log("No matches found")
 
 except Exception as e:
     # Log error to stderr for debugging
+    debug_log(f"ERROR: {e}")
     print(f"Snippet injection hook error: {e}", file=sys.stderr)
     # Exit gracefully - don't block the prompt
     pass
 
+debug_log("Hook complete")
 sys.exit(0)

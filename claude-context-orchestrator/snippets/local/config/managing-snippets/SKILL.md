@@ -132,16 +132,15 @@ snippets paths email      # Shows categories matching "email"
 Determine the regex pattern that will trigger your snippet. Patterns must follow the standard format (see Regex Protocol below).
 
 **Pattern planning:**
-1. List all keywords that should trigger the snippet
+1. Choose ONE distinctive keyword for the snippet (e.g., "DOCKER")
 2. Convert to ALL CAPS (e.g., "docker" → "DOCKER")
 3. Handle multi-word patterns (use `_`, `-`, or no separator)
-4. Combine alternatives with `|`
-5. Apply standard format: `\b(PATTERN)\b[.,;:!?]?`
+4. Apply standard format: `\b(PATTERN)\b[.,;:!?]?`
 
 **Examples:**
 - Single keyword: `\b(DOCKER)\b[.,;:!?]?`
-- Multiple alternatives: `\b(DOCKER|CONTAINER|DOCKERFILE)\b[.,;:!?]?`
 - Multi-word: `\b(BUILD_ARTIFACT)\b[.,;:!?]?`
+- Compound: `\b(SNIPPETMGMT)\b[.,;:!?]?`
 
 ### Step 3: Creating a Snippet
 
@@ -154,7 +153,7 @@ Create snippets using the `create` command, which validates and registers the sn
    ---
    name: "Docker Best Practices"
    description: "Use when working with Docker containers, images, and containerization"
-   pattern: "\\b(DOCKER|CONTAINER|DOCKERFILE)\\b[.,;:!?]?"
+   pattern: "\\b(DOCKER)\\b[.,;:!?]?"
    ---
 
    # Docker Best Practices
@@ -360,13 +359,14 @@ If you need to restore:
 ```
 
 **Rules:**
-1. **Word boundaries:** `\b` at start and end
-2. **Parentheses:** Pattern wrapped in `()`
-3. **ALL CAPS:** Uppercase only (A-Z, 0-9)
-4. **Multi-word:** Use `_`, `-`, or no separator (never spaces)
-5. **No mixed separators:** Can't mix `_` and `-` in same pattern
-6. **Optional punctuation:** `[.,;:!?]?` at end
-7. **Alternation:** Use `|` for multiple keywords
+1. **Single keyword per snippet:** Each snippet should have exactly ONE trigger keyword (e.g., `DOCKER`, not `DOCKER|CONTAINER|DOCKERFILE`). This ensures predictable activation and avoids confusion about which keyword triggered what.
+2. **Word boundaries:** `\b` at start and end
+3. **Parentheses:** Pattern wrapped in `()`
+4. **ALL CAPS:** Uppercase only (A-Z, 0-9)
+5. **Multi-word:** Use `_`, `-`, or no separator (never spaces)
+6. **No mixed separators:** Can't mix `_` and `-` in same pattern
+7. **Optional punctuation:** `[.,;:!?]?` at end
+8. **Alternation discouraged:** Avoid `|` for multiple keywords—create separate snippets if needed
 
 ### Why Full Punctuation Matters
 
@@ -379,14 +379,13 @@ Users naturally add punctuation when typing. Excluding punctuation causes mismat
 ### Valid Examples
 
 ```
-\b(DOCKER)\b[.,;:!?]?                      # Single word
-\b(DOCKER|CONTAINER|DOCKERFILE)\b[.,;:!?]? # Alternation
+\b(DOCKER)\b[.,;:!?]?                      # Single keyword (preferred)
 \b(BUILD_ARTIFACT)\b[.,;:!?]?              # Underscore separator
 \b(BUILD-ARTIFACT)\b[.,;:!?]?              # Hyphen separator
 \b(BUILDARTIFACT)\b[.,;:!?]?               # No separator
 ```
 
-### Invalid Examples
+### Invalid/Discouraged Examples
 
 ```
 \b(docker)\b[.,;:!?]?              # ❌ Lowercase
@@ -394,22 +393,24 @@ Users naturally add punctuation when typing. Excluding punctuation causes mismat
 \b(BUILD_ART-IFACT)\b[.,;:!?]?     # ❌ Mixed separators
 \bDOCKER\b                         # ❌ Missing parens and punctuation
 \b(DOCKER)\b[.,;:]?                # ❌ Incomplete punctuation
+\b(DOCKER|CONTAINER|DOCKERFILE)\b[.,;:!?]? # ⚠️ Multiple keywords—avoid
 ```
 
 ### Pattern Transformation
 
 User input → Standard format:
 
-1. **Convert to ALL CAPS:**
+1. **Choose ONE keyword:**
+   - Pick the most distinctive/memorable keyword
+   - "docker, container, dockerfile" → Choose `DOCKER` (most distinctive)
+
+2. **Convert to ALL CAPS:**
    - "docker" → "DOCKER"
    - "build artifact" → "BUILD_ARTIFACT"
 
-2. **Handle multi-word:**
+3. **Handle multi-word:**
    - Choose one separator: `_` (preferred), `-`, or none
    - Apply consistently throughout pattern
-
-3. **Handle alternation:**
-   - "docker, container, dockerfile" → `(DOCKER|CONTAINER|DOCKERFILE)`
 
 4. **Apply standard format:**
    - Wrap in `\b` boundaries
@@ -433,13 +434,13 @@ Single `\b` becomes `\\b` in JSON.
 ### Example 1: Create Docker Snippet
 
 **Step 1:** Understand needs
-- Trigger: "docker", "container", "dockerfile"
+- Trigger: "DOCKER" (single distinctive keyword)
 - Provides: Docker best practices and commands
 - Frequent use: Yes
 
 **Step 2:** Plan pattern
-- Keywords: DOCKER, CONTAINER, DOCKERFILE
-- Pattern: `\b(DOCKER|CONTAINER|DOCKERFILE)\b[.,;:!?]?`
+- Keyword: DOCKER
+- Pattern: `\b(DOCKER)\b[.,;:!?]?`
 
 **Step 3:** Create snippet
 1. Create directory:
@@ -462,7 +463,7 @@ Single `\b` becomes `\\b` in JSON.
    ```json
    {
      "name": "docker",
-     "pattern": "\\b(DOCKER|CONTAINER|DOCKERFILE)\\b[.,;:!?]?",
+     "pattern": "\\b(DOCKER)\\b[.,;:!?]?",
      "snippet": ["../snippets/local/development/docker/SNIPPET.md"],
      "separator": "\n",
      "enabled": true
@@ -471,27 +472,17 @@ Single `\b` becomes `\\b` in JSON.
 
 **Step 4:** Test
 - Type "DOCKER" → snippet loads
-- Type "working with containers" → snippet loads
 
-### Example 2: Update Pattern After Mismatch
+### Example 2: Create a Related Snippet for Different Keyword
 
-**Scenario:** User typed "kubectl" but kubernetes snippet didn't load
+**Scenario:** User wants "kubectl" to also load kubernetes-related content
 
-**Step 5:** Update pattern
-1. Current pattern: `\b(KUBERNETES|K8S)\b[.,;:!?]?`
-2. Analysis: Missing "kubectl" keyword
-3. New pattern: `\b(KUBERNETES|K8S|KUBECTL)\b[.,;:!?]?`
+**Solution:** Create a separate snippet (single-keyword rule)
+1. Original snippet: `kubernetes` with pattern `\b(K8S)\b[.,;:!?]?`
+2. Create new snippet: `kubectl-guide` with pattern `\b(KUBECTL)\b[.,;:!?]?`
+3. Both can reference the same content files if needed
 
-4. Edit config.local.json:
-   ```json
-   {
-     "name": "kubernetes",
-     "pattern": "\\b(KUBERNETES|K8S|KUBECTL)\\b[.,;:!?]?",
-     ...
-   }
-   ```
-
-5. Test: Type "kubectl" → snippet now loads
+**Alternative:** If content is truly identical, consider renaming the keyword to something more general (e.g., `K8S`)
 
 ### Example 3: Delete Unused Snippet
 

@@ -14,6 +14,15 @@ description: Rule-based methodology for essay development. Load this index first
 
 **Rule**: If essay answers "who am I / what will I do?" → personal. If essay answers "what does this text/event mean?" → analytical.
 
+### Analytical Essays Quick Reference
+
+`analytical-essays.md` now includes:
+- **Phased Framework Methodology**: Organize arguments into temporal/thematic phases (Revolution → Reaction → Reform)
+- **Critical Argument Linkage**: Every paragraph must explicitly connect to thesis
+- **Paragraph Planning Tables**: Map paragraphs to phases, claims, evidence, and thesis linkage
+- **Primary Source Requirements**: Rules for evidence inventory and citation practices
+- **Expanded Self-Check Checklist**: Structure, evidence, and completeness checks
+
 ---
 
 ## Universal Principles

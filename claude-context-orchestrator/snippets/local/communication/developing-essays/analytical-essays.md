@@ -6,6 +6,68 @@ Rules for essays analyzing external topics: literary analysis, historical analys
 
 ---
 
+## Phased Framework Methodology
+
+### Why Use Phases
+
+Complex analytical essays benefit from organizing arguments into **temporal or thematic phases**. This prevents chronological dump and forces causal connections between sections.
+
+**Common phase structures:**
+- **Historical**: Revolution → Reaction → Reform
+- **Literary**: Setup → Complication → Resolution
+- **Argumentative**: Problem → Analysis → Implications
+- **Biographical**: Conditions → Actions → Consequences
+
+### Phase Planning Process
+
+**Step 1**: Identify the core thesis as a transformation or explanation
+- BAD: "Jiang Qing was vilified after Mao's death"
+- GOOD: "Jiang Qing's vilification functioned as a political mechanism enabling the CCP's post-Mao transition"
+
+**Step 2**: Map phases to thesis components
+| Phase | Thesis Component | Guiding Question |
+|-------|-----------------|------------------|
+| Phase 1 (e.g., Revolution) | Conditions | What created the situation? |
+| Phase 2 (e.g., Reaction) | Mechanism | How did the transformation occur? |
+| Phase 3 (e.g., Reform) | Outcome | What did this enable? |
+
+**Step 3**: Assign paragraphs to phases with specific claims
+
+**Example (Jiang Qing essay):**
+
+| Phase | Paragraphs | Content |
+|-------|------------|---------|
+| REVOLUTION | P1-P3 | Conditions creating outsider status (actress background, Confucian gender norms, early isolation) |
+| REVOLUTION | P4-P5 | Mao's strategic deployment (feminized cultural work, personal backing, dependent power) |
+| REACTION | P6-P7 | Post-1976 scapegoating (swift arrest, gender stereotypes, trial as symbolic cleansing) |
+| REFORM | P8 | Enabling ideological shift (political space for pragmatism, dismantling class-struggle politics) |
+
+---
+
+## Critical Argument Linkage
+
+### The Linkage Rule
+
+**Rule**: Each paragraph must explicitly answer: *How does this detail explain the thesis specifically?*
+
+**Elaboration**: Every piece of evidence should connect back to your central claim. If a detail is interesting but doesn't explain your thesis, cut it or make the connection explicit.
+
+**Test**: After each paragraph, ask: "How does this explain why [X]—specifically—became [Y]?" If you can't answer, the paragraph lacks linkage.
+
+**Example (Jiang Qing essay)**:
+- WITHOUT LINKAGE: "Her actress background conflicted with CCP discipline norms."
+- WITH LINKAGE: "Her actress background conflicted with CCP discipline norms, marking her as an outsider whose power could later be revoked without threatening party legitimacy—precisely what made her available as scapegoat."
+
+### Linkage Templates
+
+Use these patterns to ensure each paragraph connects to thesis:
+
+1. **Condition → Consequence**: "[Detail] created conditions that later enabled [thesis element]"
+2. **Evidence → Interpretation**: "[Fact] reveals [thesis-relevant insight]"
+3. **Counterpoint → Resolution**: "Although [apparent contradiction], this actually supports [thesis] because..."
+
+---
+
 ## Core Rules
 
 ### A1: Background vs. Analysis Distinction
@@ -173,15 +235,78 @@ Rules for essays analyzing external topics: literary analysis, historical analys
 
 ---
 
+## Paragraph-by-Paragraph Planning
+
+### Planning Table Method
+
+Before drafting, create a planning table mapping each paragraph to your argument structure:
+
+| P# | Phase | Claim | Evidence Needed | Thesis Linkage |
+|----|-------|-------|-----------------|----------------|
+| 1 | Setup | [Specific claim] | [Source/quote] | [How this explains thesis] |
+| 2 | Setup | [Specific claim] | [Source/quote] | [How this explains thesis] |
+| ... | ... | ... | ... | ... |
+
+### Paragraph Independence Test
+
+Each paragraph should:
+1. Make ONE clear claim (stated in topic sentence)
+2. Provide evidence for that claim
+3. Analyze the evidence (not just present it)
+4. Connect explicitly to thesis
+5. Transition to next paragraph's claim
+
+**Test**: Can someone read just your topic sentences and understand your argument's structure?
+
+---
+
+## Primary Sources and Citations
+
+### A11: Primary Source Requirement
+
+**Rule**: Every analytical essay needs primary source engagement—direct evidence from the object of analysis.
+
+**Elaboration**: Secondary sources provide context and scholarly conversation. Primary sources provide the actual evidence for your claims. An essay without primary sources is speculation.
+
+**For historical essays**: Government documents, speeches, contemporary accounts, visual sources
+**For literary essays**: Direct quotations from the text being analyzed
+**For social analysis**: Interviews, survey data, firsthand observations
+
+### A12: Annotated Evidence
+
+**Rule**: When revising, maintain an evidence inventory—a list of all primary sources cited and where they appear.
+
+**Elaboration**: This helps identify:
+- Paragraphs lacking primary evidence
+- Over-reliance on single sources
+- Gaps in your evidential foundation
+
+**Example**:
+| Evidence | Location | Paragraph | Function |
+|----------|----------|-----------|----------|
+| Deng speech on "settling accounts" | [Source] | P8 | Shows explicit linkage to reform agenda |
+| Trial footage description | [Source] | P7 | Demonstrates gendered vilification |
+
+---
+
 ## Self-Check Checklist
 
 Before submitting any analytical essay:
 
+**Structure & Argument**
 - [ ] Is thesis arguable (would someone disagree)?
-- [ ] Does each claim have textual evidence + contextual support + logical connection?
-- [ ] Are quotations integrated into sentences?
+- [ ] Are paragraphs organized into clear phases?
+- [ ] Does each paragraph link explicitly to thesis?
 - [ ] Does each paragraph argue ONE point?
+
+**Evidence & Analysis**
+- [ ] Does each claim have textual evidence + contextual support + logical connection?
+- [ ] Are primary sources cited in every analytical section?
+- [ ] Are quotations integrated into sentences?
 - [ ] Does each analytical point answer "so what?"
+
+**Completeness**
 - [ ] Is strongest counterargument addressed?
 - [ ] Does conclusion show implications beyond summary?
 - [ ] Is background distinguished from analysis?
+- [ ] Have you verified all factual claims and quotations?

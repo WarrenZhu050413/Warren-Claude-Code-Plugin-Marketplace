@@ -2,7 +2,7 @@
   "mappings": [
     {
       "name": "uv-debug",
-      "pattern": "\\b(UV)\\b[.,;:!?]?",
+      "pattern": "\\b(UV|UVDEBUG)\\b[.,;:!?]?",
       "snippet": [
         "../../snippets/local/development/uv-debug/SKILL.md"
       ],
@@ -221,15 +221,6 @@
       "pattern": "\\b(ARTIFACT)\\b[.,;:!?]?",
       "snippet": [
         "../../snippets/local/output-formats/building-artifacts/SKILL.md"
-      ],
-      "enabled": true,
-      "separator": "\n"
-    },
-    {
-      "name": "building-mcp",
-      "pattern": "\\b(MCP)\\b[.,;:!?]?",
-      "snippet": [
-        "../../snippets/local/development/building-mcp/SKILL.md"
       ],
       "enabled": true,
       "separator": "\n"
@@ -535,6 +526,59 @@
       "pattern": "\\b(PROTOTYPE)\\b[.,;:!?]?",
       "snippet": [
         "../../snippets/local/development/prototype/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "kindle-cli",
+      "pattern": "\\b(KINDLE)\\b[.,;:!?]?",
+      "snippet": [
+        "/Users/wz/.claude/plugins/marketplaces/warren-claude-code-plugin-marketplace/claude-context-orchestrator/snippets/local/kindle-cli.md"
+      ],
+      "priority": 0
+    },
+    {
+      "name": "canvas-lms",
+      "pattern": "\\b(CANVAS)\\b[.,;:!?]?",
+      "snippet": [
+        "../../snippets/local/productivity/canvas-lms/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "warren-wechat-style",
+      "pattern": "\\b(WECHAT|微信)\\b[.,;:!?]?",
+      "snippet": [
+        "../../snippets/local/warren-wechat-style.md"
+      ],
+      "enabled": true,
+      "separator": "\n"
+    },
+    {
+      "name": "transcribe-assemblyai",
+      "pattern": "\\b(TRANSCRIBE)\\b[.,;:!?]?",
+      "snippet": [
+        "../../snippets/local/productivity/transcribe-assemblyai/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "session-handoff",
+      "pattern": "\\b(HANDOFF)\\b[.,;:!?]?",
+      "snippet": [
+        "../../snippets/local/productivity/session-handoff/SKILL.md"
+      ],
+      "separator": "\n",
+      "enabled": true
+    },
+    {
+      "name": "check-implementations",
+      "pattern": "\\b(CHECK)\\b[.,;:!?]?",
+      "snippet": [
+        "../../snippets/local/productivity/checking-implementations/SNIPPET.md"
       ],
       "separator": "\n",
       "enabled": true

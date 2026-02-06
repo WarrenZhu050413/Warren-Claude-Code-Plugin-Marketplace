@@ -5,29 +5,43 @@ description: "Create GitHub issues (feature requests or bug reports) by learning
 
 # Creating Issues
 
-## Phase 1: Search Duplicates
+## Phase 1: Search Duplicates (MANDATORY)
+
+**CRITICAL**: Always search exhaustively BEFORE creating a new issue. Many issues have already been reported. Adding a +1 to an existing issue is MORE valuable than creating a duplicate.
 
 **1. Determine type:**
 - Feature request: New functionality, enhancement
 - Bug report: Broken, not working, error
 
-**2. Search existing:**
+**2. Search with MULTIPLE keyword variations:**
 ```bash
-gh search issues --repo anthropics/claude-code "{key terms}" --limit 15
+# Search at least 3-5 different keyword combinations
+gh search issues --repo anthropics/claude-code "input buffer" --limit 15
+gh search issues --repo anthropics/claude-code "text disappear" --limit 15
+gh search issues --repo anthropics/claude-code "prompt lost" --limit 15
+gh search issues --repo anthropics/claude-code "race condition" --limit 15
 ```
 
-**3. Check duplicates:**
+**Keyword strategy:**
+- Use synonyms (input/prompt/text, lost/disappear/cleared)
+- Try both technical terms ("race condition", "buffer") and user descriptions ("disappears", "gone")
+- Search for the symptom AND the cause
+
+**3. Check duplicates thoroughly:**
 - Show similar issues (titles, URLs)
 - View potential duplicates: `gh issue view --repo anthropics/claude-code [number] --comments`
-- Check if user engaged (commented, reacted)
+- Follow duplicate chains (issues often reference canonical issues)
+- Check if user already engaged (commented, reacted)
 - Ask: "Do any match what you're reporting?"
 
-**4. If duplicate:**
-- Not engaged: Offer +1 reaction/comment
+**4. If duplicate found:**
+- Not engaged: Add detailed +1 comment with your specific scenario
   ```bash
-  gh issue comment --repo anthropics/claude-code [number] --body "+1"
+  gh issue comment --repo anthropics/claude-code [number] --body "+1 Still experiencing this in v2.x. [Add your specific details]"
   ```
 - Already engaged: Note participation, end workflow
+
+**5. Only proceed to Phase 2 if NO duplicates found after thorough search.**
 
 ## Phase 2: Learn Format
 
@@ -201,17 +215,19 @@ gh label list --repo anthropics/claude-code
 ## Quick Reference
 
 ```bash
-# Search
+# Search (use MULTIPLE variations)
 gh search issues --repo anthropics/claude-code "{terms}" --limit 15
+gh search issues --repo anthropics/claude-code "{synonym1}" --limit 15
+gh search issues --repo anthropics/claude-code "{synonym2}" --limit 15
 
-# View
+# View with comments (to check for user engagement)
 gh issue view --repo anthropics/claude-code [number] --comments
 
-# Create
-gh issue create --repo anthropics/claude-code --title "Title" --body "Body"
+# +1 existing issue (PREFERRED over creating duplicate)
+gh issue comment --repo anthropics/claude-code [number] --body "+1 Still experiencing this. [specific details]"
 
-# Comment
-gh issue comment --repo anthropics/claude-code [number] --body "+1"
+# Create (only after exhaustive search)
+gh issue create --repo anthropics/claude-code --title "Title" --body "Body"
 
 # Labels
 gh label list --repo anthropics/claude-code
