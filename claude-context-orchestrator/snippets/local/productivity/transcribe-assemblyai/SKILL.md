@@ -19,7 +19,7 @@ Then transcribe that file. Always confirm which file you found before proceeding
 ## Environment
 
 - **Python venv**: `/Users/wz/Desktop/.venv` (assemblyai is installed here)
-- **API key**: `REDACTED_ASSEMBLYAI_KEY`
+- **API key**: Set via `ASSEMBLYAI_API_KEY` environment variable (see ~/.zshrc or ~/.zprofile)
 
 ## Required Configuration (CRITICAL)
 
@@ -46,7 +46,8 @@ First transcribe to a temp file next to the audio (using the original audio file
 ```bash
 cd /Users/wz/Desktop && source .venv/bin/activate && python3 -c "
 import assemblyai as aai
-aai.settings.api_key = 'REDACTED_ASSEMBLYAI_KEY'
+import os
+aai.settings.api_key = os.environ['ASSEMBLYAI_API_KEY']
 
 transcript = aai.Transcriber().transcribe(
     '/path/to/audio.m4a',
